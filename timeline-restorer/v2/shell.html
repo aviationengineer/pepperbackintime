@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeline Restorer: Back in Time</title>
+<style>
+/* ============================================================
+   TIMELINE RESTORER v2 — visual identity
+   Parchment + dark navy + gold + cyan temporal effects.
+   No external images or fonts; everything is CSS / SVG / text.
+   The animated scene is a Phaser canvas inside #phaser-wrap.
+   ============================================================ */
+:root{
+  --navy:#0b1226; --navy2:#111a36; --ink:#1d2433; --parchment:#f2e7c9;
+  --parchment2:#e8d9ae; --gold:#c9a227; --gold2:#e8c766; --cyan:#39d5e8;
+  --cyan-dim:#1d7f8f; --red:#d64545; --green:#4caf6d; --panel:#f7efdb;
+  --radius:10px; --focus:#ffcf3d;
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{
+  margin:0; background:var(--navy); color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif; line-height:1.45;
+  min-height:100vh;
+}
+button{font-family:inherit; cursor:pointer}
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible, input:focus-visible{
+  outline:3px solid var(--focus); outline-offset:2px;
+}
+h1,h2,h3{margin:.2em 0 .4em}
+#app{max-width:1060px; margin:0 auto; padding:0 10px 30px}
+
+/* ---------- header ---------- */
+header#topbar{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  padding:10px 4px; color:var(--parchment);
+}
+#topbar .brand{font-size:1.35rem; letter-spacing:.06em; color:var(--gold2)}
+#topbar .brand small{display:block; font-size:.7rem; letter-spacing:.28em; color:var(--cyan)}
+#topbar .act-label{margin-left:auto; font-weight:bold; color:var(--cyan)}
+.meters{display:flex; flex-direction:column; gap:4px; min-width:220px; flex:1}
+.meter-row{display:flex; align-items:center; gap:8px; font-size:.8rem}
+.meter-row span{width:150px; text-align:right; color:var(--parchment)}
+.meter{flex:1; height:12px; background:#1c2747; border:1px solid #3a4a7d; border-radius:6px; overflow:hidden}
+.meter > i{display:block; height:100%; transition:width .5s ease}
+#stability-fill{background:linear-gradient(90deg,#2e8b57,#7be3a2)}
+#paradox-fill{background:linear-gradient(90deg,#8b2e2e,#ff7a5c)}
+.meter-row b{width:44px; color:var(--parchment)}
+.topbtns{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+.btn{
+  background:var(--gold); color:#241a00; border:1px solid #8a6d1a;
+  border-radius:8px; padding:10px 16px; font-weight:bold; font-size:1rem;
+}
+.btn:hover{background:var(--gold2)}
+.btn.secondary{background:#233056; color:var(--parchment); border-color:#3a4a7d}
+.btn.secondary:hover{background:#2e3f6d}
+.btn.danger{background:#5c1d1d; color:#ffd9d9; border-color:#8b2e2e}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.btn.small{padding:6px 10px; font-size:.9rem}
+#volume-slider{width:90px; accent-color:var(--gold)}
+.vol-label{font-size:.8rem; color:var(--parchment)}
+
+/* ---------- screens ---------- */
+.screen{background:var(--panel); border:2px solid var(--gold); border-radius:var(--radius);
+  padding:18px; margin-top:8px; box-shadow:0 6px 30px rgba(0,0,0,.45)}
+.hidden{display:none !important}
+#screen-title{text-align:center; background:
+  radial-gradient(circle at 50% 20%, #3a2f14 0%, #141b31 55%, #0b1226 100%);
+  color:var(--parchment)}
+#screen-title h1{font-size:2.1rem; color:var(--gold2); letter-spacing:.04em}
+#screen-title .tag{color:var(--cyan); letter-spacing:.3em; font-size:.8rem}
+#screen-title .intro{max-width:640px; margin:12px auto; text-align:left; font-size:1rem}
+#screen-title .fact-tag{display:inline-block; border:1px solid var(--gold); color:var(--gold2);
+  border-radius:20px; padding:2px 10px; font-size:.75rem; margin:2px}
+#screen-title .v2-tag{display:inline-block; border:1px solid var(--cyan); color:var(--cyan);
+  border-radius:20px; padding:2px 10px; font-size:.75rem; margin:2px}
+.title-btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px}
+.howto{max-width:640px; margin:18px auto 0; text-align:left; font-size:.92rem;
+  border-top:1px solid #4a3f1c; padding-top:12px}
+.howto h3{color:var(--gold2)}
+
+/* ---------- scene (Phaser canvas) ---------- */
+#scene-wrap{position:relative}
+#scene{
+  position:relative; width:100%; aspect-ratio:16/9; border-radius:var(--radius);
+  border:2px solid var(--gold); overflow:hidden; color:#fff; background:var(--navy);
+  transition:filter .6s ease;
+}
+#phaser-wrap{position:absolute; inset:0}
+#phaser-wrap canvas{display:block; margin:0 auto}
+#scene .scene-caption{
+  position:absolute; left:0; right:0; bottom:0; padding:8px 12px;
+  background:linear-gradient(transparent, rgba(0,0,0,.72)); font-size:1rem;
+  text-align:center; z-index:5; pointer-events:none;
+}
+#scene .scene-name{
+  position:absolute; top:8px; left:10px; background:rgba(0,0,0,.55);
+  border:1px solid var(--gold); border-radius:6px; padding:3px 10px; font-size:.9rem;
+  z-index:5; pointer-events:none;
+}
+#scene-fallback{position:absolute; inset:0; z-index:4}
+/* paradox bands — visual distortion grows with the paradox level */
+body.px-minor #scene{filter:saturate(1.15) hue-rotate(8deg)}
+body.px-unstable #scene{filter:saturate(1.4) hue-rotate(22deg) contrast(1.08)}
+body.px-severe #scene{filter:saturate(1.7) hue-rotate(45deg) contrast(1.15)}
+body.px-critical #scene{filter:saturate(2) hue-rotate(80deg) contrast(1.25)}
+body.px-critical #app{animation:flicker 2.4s infinite}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.82}94%{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important}
+}
+
+/* ---------- hotspots (DOM fallback only) ---------- */
+.hotspot{
+  position:absolute; transform:translate(-50%,-50%);
+  background:rgba(11,18,38,.72); border:2px solid var(--cyan); color:#fff;
+  border-radius:10px; padding:6px 8px; font-size:.85rem; line-height:1.15;
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  min-width:64px; transition:transform .15s ease, box-shadow .15s ease;
+}
+.hotspot .hs-icon{font-size:1.5rem}
+.hotspot:hover, .hotspot:focus-visible{transform:translate(-50%,-50%) scale(1.1);
+  box-shadow:0 0 0 3px var(--gold), 0 0 18px var(--cyan); z-index:5}
+.hotspot.selected{border-color:var(--gold); box-shadow:0 0 0 3px var(--gold), 0 0 22px var(--gold2)}
+.hotspot.anomaly-hs{border-color:#ff7a5c; animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,92,.55)}50%{box-shadow:0 0 0 8px rgba(255,122,92,0)}}
+.hotspot:disabled{opacity:.4; cursor:not-allowed}
+
+/* ---------- exits / panel / actions ---------- */
+#exits{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0}
+#panel{
+  margin-top:10px; background:#fffdf4; border:1px solid #cbb96a; border-radius:var(--radius);
+  padding:12px 14px; min-height:86px; font-size:1.02rem;
+}
+#panel .speaker{font-weight:bold; color:#6b4d1f}
+#panel .fact{color:#1d5c2e}
+#panel .distort{color:#8b2e2e; font-weight:bold}
+#panel .clue{color:#1d5c7a; font-weight:bold}
+#actionbar{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px}
+#actionbar .btn{min-width:104px}
+#inventory-strip{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; align-items:center}
+#inventory-strip .inv-label{font-weight:bold; margin-right:4px}
+.inv-chip{
+  background:#fffdf4; border:1px solid var(--gold); border-radius:20px;
+  padding:6px 12px; font-size:.95rem; display:flex; gap:5px; align-items:center;
+}
+.inv-chip:hover{background:var(--gold2)}
+.inv-chip.selected{outline:3px solid var(--focus); background:var(--gold2)}
+#use-hint{font-size:.88rem; color:#6b4d1f; margin-top:6px}
+.stars{font-size:1.6rem; letter-spacing:.2em; text-align:center}
+
+/* ---------- modal ---------- */
+#modal-backdrop{
+  position:fixed; inset:0; background:rgba(5,8,18,.72); display:flex;
+  align-items:flex-start; justify-content:center; padding:24px 10px; z-index:50;
+  overflow-y:auto;
+}
+#modal{
+  background:var(--panel); border:2px solid var(--gold); border-radius:var(--radius);
+  max-width:640px; width:100%; padding:18px; box-shadow:0 10px 40px rgba(0,0,0,.6);
+}
+#modal h2{margin-top:0}
+#modal .modal-body{margin:10px 0}
+#modal .modal-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+.choice-btn{display:block; width:100%; text-align:left; margin:6px 0;
+  background:#fffdf4; border:1px solid var(--gold); border-radius:8px; padding:12px 14px; font-size:1.05rem}
+.choice-btn:hover{background:var(--gold2)}
+.choice-btn.selected{outline:3px solid var(--focus); background:var(--gold2)}
+.verdict-auth{border-left:6px solid var(--green); padding-left:10px}
+.verdict-anach{border-left:6px solid var(--red); padding-left:10px}
+.kbd-hint{font-size:.82rem; color:#5a4a22}
+.quiz-opt{display:block; width:100%; text-align:left; margin:6px 0; padding:12px 14px;
+  background:#fffdf4; border:1px solid #8a6d1a; border-radius:8px; font-size:1.05rem}
+.quiz-opt:hover{background:var(--gold2)}
+.quiz-opt.correct{background:#cdeed6; border-color:var(--green)}
+.quiz-opt.wrong{background:#f6d2d2; border-color:var(--red)}
+.seq-item{display:block; width:100%; text-align:left; margin:5px 0; padding:10px 12px;
+  background:#fffdf4; border:1px solid var(--gold); border-radius:8px; font-size:1.05rem}
+.seq-item.picked{background:#d9ecf7; border-color:var(--cyan)}
+.anach-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0}
+.anach-card{background:#fffdf4; border:2px solid var(--gold); border-radius:8px; padding:12px;
+  text-align:center; font-size:1rem}
+.anach-card .a-icon{font-size:1.8rem; display:block}
+.anach-card.selected{outline:3px solid var(--focus); background:#ffe9a8}
+input.code-input, input.text-input{
+  font-size:1.1rem; padding:8px 10px; border:2px solid var(--gold); border-radius:8px;
+  width:100%; margin:8px 0; font-family:inherit;
+}
+.score-table{width:100%; border-collapse:collapse; margin:8px 0}
+.score-table td, .score-table th{border:1px solid #cbb96a; padding:6px 9px; text-align:left}
+.debug-line{font-family:ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre-wrap}
+#debug-panel{
+  position:fixed; right:10px; bottom:10px; z-index:60; width:min(420px,94vw);
+  background:#0d1428; color:#cfe8ff; border:2px solid var(--cyan); border-radius:10px;
+  padding:12px; font-size:.85rem; max-height:70vh; overflow:auto;
+}
+#debug-panel h3{color:var(--cyan); margin:0 0 6px}
+#debug-panel .dbg-btns{display:flex; flex-wrap:wrap; gap:5px; margin:8px 0}
+#debug-panel pre{white-space:pre-wrap; margin:4px 0}
+#debug-log{max-height:150px; overflow:auto; border-top:1px solid #2c4a6b; padding-top:6px}
+#toast{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  background:#0d1428; color:var(--gold2); border:2px solid var(--gold);
+  border-radius:20px; padding:8px 18px; z-index:70; display:none; font-size:.95rem;
+}
+.flash{animation:flash .8s ease}
+@keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
+@media (max-width:640px){
+  .hotspot{font-size:.75rem; min-width:52px; padding:4px 5px}
+  .hotspot .hs-icon{font-size:1.15rem}
+  #actionbar .btn{min-width:0; flex:1 1 30%}
+  .anach-grid{grid-template-columns:repeat(2,1fr)}
+  .meter-row span{width:110px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar" aria-label="Game status">
+    <div class="brand">TIMELINE RESTORER<small>BACK IN TIME</small></div>
+    <div class="meters" role="status" aria-label="Timeline meters">
+      <div class="meter-row"><span>Timeline Stability</span><div class="meter"><i id="stability-fill" style="width:85%"></i></div><b id="stability-num">85%</b></div>
+      <div class="meter-row"><span>Paradox Level</span><div class="meter"><i id="paradox-fill" style="width:15%"></i></div><b id="paradox-num">15%</b></div>
+    </div>
+    <div class="act-label" id="act-label">ACT 1</div>
+    <div class="topbtns">
+      <button class="btn secondary small" id="btn-music" aria-label="Toggle music">🎵 Music On</button>
+      <button class="btn secondary small" id="btn-sound" aria-label="Toggle sound">🔊 Sound On</button>
+      <label class="vol-label" for="volume-slider">🔈</label>
+      <input type="range" id="volume-slider" min="0" max="100" value="80" aria-label="Volume">
+      <button class="btn secondary small" id="btn-save" aria-label="Save game">💾 Save</button>
+      <button class="btn secondary small" id="btn-menu" aria-label="Back to title">☰ Menu</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- TITLE SCREEN -->
+    <section id="screen-title" class="screen" aria-label="Title screen">
+      <p class="tag">A TIME-TRAVEL INVESTIGATION</p>
+      <h1>⏳ TIMELINE RESTORER<br>BACK IN TIME</h1>
+      <p>
+        <span class="fact-tag">HISTORICAL FACT</span>
+        <span class="fact-tag">ALTERNATE TIMELINE</span>
+        <span class="fact-tag">ORIGINAL STORY</span>
+        <span class="v2-tag">VERSION 2 — ANIMATED CHARACTERS</span>
+      </p>
+      <div class="intro">
+        <p>You are a <strong>Timeline Restorer</strong>, an investigator who travels through
+        history to repair what has been broken. A temporal disturbance has corrupted five
+        eras. Objects from the future have appeared where they do not belong, discoveries
+        have arrived before their time, and history itself is coming undone.</p>
+        <p>In this version you <strong>walk the eras yourself</strong>: your Time Cadet
+        explores each scene on foot. Click anywhere on the floor to walk there, click
+        people to talk to them, and use the <strong>Truth Check</strong> to tell real
+        history from distortion. Collect artifacts, solve puzzles, repair the anomalies
+        — and keep the Paradox Level down, or the timeline may collapse.</p>
+        <p>All characters, dialogue and puzzles in this game are original. Historical facts
+        are labelled <strong>FACT</strong>; distortions are labelled
+        <strong>ALTERNATE TIMELINE</strong> and are never presented as real history.</p>
+      </div>
+      <div class="title-btns">
+        <button class="btn" id="btn-new-game">▶ New Game</button>
+        <button class="btn secondary" id="btn-continue">↻ Continue</button>
+        <button class="btn secondary" id="btn-archive">📚 Historical Archive</button>
+      </div>
+      <div class="howto">
+        <h3>How to play</h3>
+        <p>🚶 <strong>Click the floor</strong> and your Time Cadet walks there.
+        <strong>Click people</strong> to talk, <strong>click glowing objects</strong> to
+        investigate them. Doors at the edges of a scene take you to the next room.</p>
+        <p>⌨️ <strong>Keyboard:</strong> arrow keys or WASD to walk, Enter to investigate
+        the nearest object, Tab to move, Escape to close panels, keys <strong>1–4</strong>
+        pick dialogue choices. <strong>Ctrl+Shift+D</strong> opens the developer console.</p>
+        <p>🔎 Use the action bar: <strong>LOOK</strong>, <strong>TALK</strong>,
+        <strong>INTERACT</strong>, <strong>USE</strong>, <strong>TRUTH CHECK</strong>,
+        <strong>INVENTORY</strong>, <strong>TIMELINE</strong>.</p>
+        <p>🎵 Music and sounds are made by the game itself — use the buttons above to
+        mute them or turn the volume down.</p>
+        <p>💾 Your game saves to this browser. Continue works after a refresh.</p>
+      </div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section id="screen-game" class="screen hidden" aria-label="Game screen">
+      <div id="scene-wrap">
+        <div id="scene" role="img" aria-label="Current scene">
+          <div id="phaser-wrap"></div>
+          <div id="scene-fallback" class="hidden"></div>
+          <div class="scene-name" id="scene-name">Workshop</div>
+          <div class="scene-caption" id="scene-caption"></div>
+        </div>
+      </div>
+      <div id="exits" aria-label="Scene exits"></div>
+      <div id="panel" aria-live="polite"></div>
+      <div id="actionbar" role="toolbar" aria-label="Actions">
+        <button class="btn" data-action="look" id="act-look">👁️ LOOK</button>
+        <button class="btn" data-action="talk" id="act-talk">💬 TALK</button>
+        <button class="btn" data-action="interact" id="act-interact">✋ INTERACT</button>
+        <button class="btn" data-action="use" id="act-use">🧰 USE</button>
+        <button class="btn" data-action="truth" id="act-truth">🔎 TRUTH CHECK</button>
+        <button class="btn" data-action="inventory" id="act-inventory">🎒 INVENTORY</button>
+        <button class="btn" data-action="timeline" id="act-timeline">⏳ TIMELINE</button>
+      </div>
+      <div id="inventory-strip" aria-label="Inventory"></div>
+      <div id="use-hint" aria-live="polite"></div>
+    </section>
+
+    <!-- ENDING SCREEN -->
+    <section id="screen-ending" class="screen hidden" aria-label="Ending screen">
+      <h2 id="ending-title">Timeline Restored</h2>
+      <div id="ending-body"></div>
+      <div class="title-btns">
+        <button class="btn" id="btn-replay-act">↻ Replay Act 5</button>
+        <button class="btn secondary" id="btn-new-timeline">⏳ New Timeline</button>
+        <button class="btn secondary" id="btn-ending-archive">📚 Historical Archive</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal-backdrop" class="hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div id="modal">
+    <h2 id="modal-title">Panel</h2>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<div id="debug-panel" class="hidden" aria-label="Developer console">
+  <h3>🛠️ Developer Console <span style="float:right"><button class="btn secondary small" id="btn-debug-close">✕</button></span></h3>
+  <pre id="debug-state">—</pre>
+  <div class="dbg-btns">
+    <button class="btn secondary small" data-dbg="score">+10 Score</button>
+    <button class="btn secondary small" data-dbg="paradox+">+10 Paradox</button>
+    <button class="btn secondary small" data-dbg="paradox-">−10 Paradox</button>
+    <button class="btn secondary small" data-dbg="item">Add Item</button>
+    <button class="btn secondary small" data-dbg="puzzle">Complete Puzzle</button>
+    <button class="btn secondary small" data-dbg="flag">Set Timeline Flag</button>
+    <button class="btn secondary small" data-dbg="nextact">Next Act</button>
+    <button class="btn secondary small" data-dbg="resetact">Reset Act</button>
+  </div>
+  <div id="debug-log" aria-label="Developer log"></div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+<!--PHASER_LIB-->
+</script>
+<script>
+<!--GAME_DATA-->
+</script>
+<script>
+<!--GAME_JS-->
+</script>
+</body>
+</html>
