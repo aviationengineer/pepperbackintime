@@ -2,8 +2,9 @@ class_name AudioManager
 extends Node
 
 ## Procedural audio: every sound is synthesised at startup into AudioStreamWAV
-## resources (no audio files). A gentle 12-second pentatonic motif loops as
-## background music; short tones serve as click / footstep / truth / pickup SFX.
+## resources (no audio files). A gentle 12-second motif loops as background
+## music; the motif's root and mode change per act (set_act). Short tones
+## serve as click / footstep / truth / pickup / solved / error SFX.
 
 const MIX_RATE := 22050
 
@@ -11,11 +12,22 @@ var music_player: AudioStreamPlayer
 var sfx_player: AudioStreamPlayer
 var step_player: AudioStreamPlayer
 var muted := false
+var volume_step := 0  # 0 = full, 1 = medium, 2 = quiet
+var act := 1
+
+# Per-act motif: [root Hz, is_minor, melody scale degrees (semitones from root)]
+const ACT_MOTIFS := {
+	1: [261.63, false, [0, 4, 7, 12, 7, 4, 2, 4, 7, 12, 16, 12, 7, 4, 2, 0, 4, 2, 0, -5, -2, 0, 2]],
+	2: [293.66, true, [0, 3, 7, 12, 10, 7, 5, 7, 10, 12, 15, 12, 10, 7, 5, 3, 7, 5, 3, 0, -2, 0, 3]],
+	3: [392.00, false, [0, 4, 7, 12, 14, 12, 9, 7, 9, 12, 16, 14, 12, 9, 7, 4, 7, 4, 2, 0, 2, 4, 7]],
+	4: [220.00, true, [0, 3, 7, 10, 12, 10, 7, 5, 3, 7, 10, 12, 15, 12, 10, 7, 5, 3, 5, 3, 0, -2, 0]],
+	5: [329.63, true, [0, 3, 7, 12, 15, 12, 10, 7, 10, 12, 15, 19, 15, 12, 10, 7, 5, 7, 10, 7, 5, 3, 0]],
+}
 
 func _ready() -> void:
 	music_player = AudioStreamPlayer.new()
 	music_player.name = "Music"
-	music_player.stream = _make_music_loop()
+	music_player.stream = _make_music_loop(act)
 	music_player.volume_db = -16.0
 	add_child(music_player)
 	sfx_player = AudioStreamPlayer.new()
@@ -27,10 +39,27 @@ func _ready() -> void:
 	add_child(step_player)
 	music_player.play()
 
+func set_act(p_act: int) -> void:
+	if p_act == act and music_player.stream != null:
+		return
+	act = clampi(p_act, 1, 5)
+	var was_playing := music_player.playing
+	music_player.stream = _make_music_loop(act)
+	if was_playing:
+		music_player.play()
+
 func toggle_mute() -> bool:
 	muted = not muted
 	AudioServer.set_bus_mute(0, muted)
 	return muted
+
+func cycle_volume() -> String:
+	volume_step = (volume_step + 1) % 3
+	var vols := [-16.0, -22.0, -30.0]
+	var labels := ["Vol: High", "Vol: Med", "Vol: Low"]
+	music_player.volume_db = vols[volume_step]
+	step_player.volume_db = vols[volume_step]
+	return labels[volume_step]
 
 func play_click() -> void:
 	sfx_player.stream = _tone(880.0, 0.07, 0.25, 0.0)
@@ -50,6 +79,23 @@ func play_pickup() -> void:
 
 func play_dialogue_blip() -> void:
 	sfx_player.stream = _tone(520.0, 0.12, 0.18, 0.0)
+	sfx_player.play()
+
+func play_solved() -> void:
+	# Bright rising fanfare.
+	sfx_player.stream = _arpeggio([523.25, 659.25, 783.99, 1046.50], 0.13, 0.24)
+	sfx_player.play()
+
+func play_act_complete() -> void:
+	sfx_player.stream = _arpeggio([392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51], 0.14, 0.22)
+	sfx_player.play()
+
+func play_error() -> void:
+	sfx_player.stream = _tone(130.0, 0.25, 0.30, 0.0)
+	sfx_player.play()
+
+func play_repair() -> void:
+	sfx_player.stream = _arpeggio([659.25, 783.99, 1046.50, 783.99, 1046.50], 0.12, 0.22)
 	sfx_player.play()
 
 # --- synthesis helpers -------------------------------------------------------
@@ -119,28 +165,33 @@ func _arpeggio(freqs: Array, note_len: float, amp: float) -> AudioStreamWAV:
 		samples[i] = amp * env * sin(TAU * float(freqs[idx]) * t)
 	return _samples_to_wav(samples)
 
-func _make_music_loop() -> AudioStreamWAV:
-	# 12 seconds: soft C-major pad + a gentle pentatonic pluck melody.
-	# 24 eighth-notes at 0.5s each; loop edges fade to avoid clicks.
+func _make_music_loop(p_act: int) -> AudioStreamWAV:
+	# 12 seconds: soft pad (root + third + fifth) + a gentle plucked melody
+	# in the act's scale. Loop edges fade to avoid clicks.
+	var motif: Array = ACT_MOTIFS.get(p_act, ACT_MOTIFS[1])
+	var root: float = motif[0]
+	var is_minor: bool = motif[1]
+	var melody: Array = motif[2]
+	var third := root * pow(2.0, (3.0 if is_minor else 4.0) / 12.0)
+	var fifth := root * pow(2.0, 7.0 / 12.0)
 	var seconds := 12.0
 	var count := int(MIX_RATE * seconds)
 	var samples := PackedFloat32Array()
 	samples.resize(count)
-	var melody := [3, 7, 10, 12, 10, 7, 5, 7, 10, 12, 15, 12, 10, 7, 5, 3, 7, 5, 3, 0, -2, 0, 3, 5]
 	var eighth := 0.5
 	for i in range(count):
 		var t := float(i) / MIX_RATE
 		var v := 0.0
-		# Soft pad: C4 + E4 + G4, slow swell.
+		# Soft pad: root + third + fifth, slow swell.
 		var swell := 0.75 + 0.25 * sin(TAU * t / seconds)
-		v += 0.045 * swell * sin(TAU * 261.63 * t)
-		v += 0.035 * swell * sin(TAU * 329.63 * t)
-		v += 0.035 * swell * sin(TAU * 392.00 * t)
+		v += 0.045 * swell * sin(TAU * root * t)
+		v += 0.035 * swell * sin(TAU * third * t)
+		v += 0.035 * swell * sin(TAU * fifth * t)
 		# Plucked melody note.
 		var idx := int(t / eighth) % melody.size()
 		var age := t - idx * eighth
 		if age < eighth:
-			var f := 440.0 * pow(2.0, float(melody[idx]) / 12.0)
+			var f := root * pow(2.0, float(melody[idx]) / 12.0)
 			var env := exp(-3.0 * age / eighth)
 			v += 0.16 * env * sin(TAU * f * t)
 			v += 0.05 * env * sin(TAU * f * 2.0 * t)

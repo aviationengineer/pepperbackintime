@@ -16,6 +16,7 @@ var sprite: Sprite2D
 var anim_player: AnimationPlayer
 var audio: AudioManager
 var moving := false
+var speed_scale := 1.0
 var _step_accum := 0.0
 
 func _ready() -> void:
@@ -62,7 +63,7 @@ func _physics_process(delta: float) -> void:
 	var dir := next_pos - global_position
 	if dir.length() < 4.0:
 		return
-	velocity = dir.normalized() * SPEED
+	velocity = dir.normalized() * SPEED * speed_scale
 	move_and_slide()
 	if velocity.x < -5.0:
 		sprite.flip_h = true

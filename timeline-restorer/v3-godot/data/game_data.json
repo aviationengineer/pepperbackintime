@@ -1,0 +1,3922 @@
+{
+ "acts": {
+  "1": {
+   "id": 1,
+   "title": "Act 1 — Philadelphia, 1764",
+   "subtitle": "The Founding Mind That Shouldn't Be",
+   "intro": "Philadelphia, 1764. The city smells of ink, river water and woodsmoke. Something is wrong here: Benjamin Franklin — printer, thinker, experimenter — has begun speaking of devices no one in this century could know. Find what changed, prove it, and repair it before the distortion spreads.",
+   "anomaly": "A portable music player hums on Franklin's workbench — an object from the late 20th century, two hundred years too early.",
+   "keyDigit": 7,
+   "keyName": "the Kite Digit",
+   "scenes": [
+    "workshop",
+    "printshop",
+    "marketplace",
+    "library",
+    "street",
+    "meeting"
+   ]
+  },
+  "2": {
+   "id": 2,
+   "title": "Act 2 — Manchester, 1830s",
+   "subtitle": "The Machine That Arrived Too Early",
+   "intro": "Manchester, England, in the 1830s. The mills never sleep. But inside Grimshaw's textile mill, a machine hums that should not exist for another seventy years — and the workers' stories do not agree about when it arrived.",
+   "anomaly": "A small radio receiver crackles in the mill — a device from the 20th century, decades too early.",
+   "keyDigit": 3,
+   "keyName": "the Loom Digit",
+   "scenes": [
+    "mill",
+    "cottage",
+    "warehouse"
+   ]
+  },
+  "3": {
+   "id": 3,
+   "title": "Act 3 — Europe, 1690s",
+   "subtitle": "The Discovery Out of Time",
+   "intro": "Europe, in the last years of the 17th century. Scholars argue by candlelight over the new philosophy. But a chart on the apothecary's wall shows a theory of disease that no one alive could have proven — the chain of discovery has been broken.",
+   "anomaly": "A germ-theory chart hangs in the apothecary — correct, and two centuries too early.",
+   "keyDigit": 1,
+   "keyName": "the Lens Digit",
+   "scenes": [
+    "observatory",
+    "apothecary",
+    "university"
+   ]
+  },
+  "4": {
+   "id": 4,
+   "title": "Act 4 — An Airfield, 1912",
+   "subtitle": "The Aircraft That Changed History",
+   "intro": "An airfield in the early years of powered flight. Canvas, wood, wire and courage. But in the hangar, a turbine blade gleams — metal from the jet age, fitted to a machine of wood and linen.",
+   "anomaly": "A jet turbine blade is bolted to a 1912 biplane — technology from the 1940s, thirty years too early.",
+   "keyDigit": 9,
+   "keyName": "the Wing Digit",
+   "scenes": [
+    "airfield",
+    "hangar",
+    "office"
+   ]
+  },
+  "5": {
+   "id": 5,
+   "title": "Act 5 — The Temporal Core",
+   "subtitle": "Who Changed History?",
+   "intro": "Outside normal time, the Temporal Core turns. Every anomaly you repaired left a trace here. The Chronarch — custodian of the timelines — has been waiting for you. The cause of the disturbances is finally within reach.",
+   "anomaly": "The Core itself is fractured: four key digits, one from each act you repaired, will seal it.",
+   "keyDigit": 0,
+   "keyName": "the Core Digit",
+   "scenes": [
+    "core",
+    "gallery",
+    "dais"
+   ]
+  }
+ },
+ "scenes": {
+  "workshop": {
+   "id": "workshop",
+   "act": 1,
+   "name": "Franklin's Workshop",
+   "emblem": "🕯️",
+   "backdrop": "bg-workshop",
+   "caption": "A workbench crowded with tools, jars and papers — and something that does not belong.",
+   "desc": "Franklin's workshop. Glass jars, copper wire, a Leyden jar and scattered notes cover the bench. A small black device hums softly where no device should hum.",
+   "hotspots": [
+    {
+     "id": "music_player",
+     "name": "Humming Device",
+     "icon": "📻",
+     "x": 50,
+     "y": 38,
+     "desc": "A small black rectangle with a glowing screen. It plays music no instrument in 1764 could make. It is the anomaly — handle it with care.",
+     "actions": [
+      "look",
+      "truth",
+      "interact"
+     ],
+     "truth": "music_player",
+     "anomaly": true,
+     "useTarget": "music_player"
+    },
+    {
+     "id": "bench_puzzle",
+     "name": "The Cluttered Workbench",
+     "icon": "🧩",
+     "x": 60,
+     "y": 80,
+     "desc": "A clutter of tools and devices. Somewhere here are objects that do not belong in 1764.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "anachronism_workshop"
+    },
+    {
+     "id": "magnifier_ws",
+     "name": "Magnifying Glass",
+     "icon": "🔍",
+     "x": 20,
+     "y": 62,
+     "desc": "A brass magnifying glass, left beside a stack of letters.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "magnifier"
+    },
+    {
+     "id": "leyden_jar",
+     "name": "Leyden Jar",
+     "icon": "⚗️",
+     "x": 72,
+     "y": 60,
+     "desc": "A glass jar lined with metal foil — Franklin's electrical storage jar. FACT: the Leyden jar was invented in 1745–46 and Franklin used it in his electrical experiments.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "leyden_jar"
+    },
+    {
+     "id": "franklin_ws",
+     "name": "Benjamin Franklin",
+     "icon": "👴",
+     "x": 86,
+     "y": 42,
+     "desc": "Benjamin Franklin, printer and natural philosopher, frowning at the humming device.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "franklin",
+     "truth": "franklin_man"
+    },
+    {
+     "id": "workbench_notes",
+     "name": "Workbench Notes",
+     "icon": "📝",
+     "x": 34,
+     "y": 30,
+     "desc": "Notes in Franklin's hand about electricity — and a sketch of the humming device, drawn as if he had seen it in a dream.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "journal"
+    }
+   ],
+   "exits": [
+    {
+     "to": "printshop",
+     "label": "🚶 Printing Shop"
+    },
+    {
+     "to": "street",
+     "label": "🚶 Street"
+    }
+   ]
+  },
+  "printshop": {
+   "id": "printshop",
+   "act": 1,
+   "name": "Printing Shop",
+   "emblem": "📰",
+   "backdrop": "bg-printshop",
+   "caption": "The press groans, the type is set, and the smell of fresh ink fills the air.",
+   "desc": "Franklin's printing shop. The great press dominates the room. Trays of movable type, ink balls and paper stacks surround it.",
+   "hotspots": [
+    {
+     "id": "press",
+     "name": "Printing Press",
+     "icon": "🖨️",
+     "x": 42,
+     "y": 45,
+     "desc": "A wooden screw press. FACT: Franklin ran a successful printing business in Philadelphia from 1728, publishing the Pennsylvania Gazette from 1729.",
+     "actions": [
+      "look",
+      "truth",
+      "interact"
+     ],
+     "truth": "press",
+     "item": "printing_type"
+    },
+    {
+     "id": "printer_npc",
+     "name": "Abel Crowe, Master Printer",
+     "icon": "🧔",
+     "x": 78,
+     "y": 48,
+     "desc": "Abel Crowe, the master printer, wiping ink from his hands. He has worked this press for twenty years.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "printer",
+     "truth": "printer_man"
+    },
+    {
+     "id": "copper_wire",
+     "name": "Spool of Copper Wire",
+     "icon": "🧵",
+     "x": 18,
+     "y": 66,
+     "desc": "A spool of fine copper wire, used for electrical experiments.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "copper_wire"
+    },
+    {
+     "id": "ink_pot",
+     "name": "Ink Pot",
+     "icon": "🫙",
+     "x": 62,
+     "y": 70,
+     "desc": "A pot of thick black printing ink.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "ink_pot"
+    }
+   ],
+   "exits": [
+    {
+     "to": "workshop",
+     "label": "🚶 Workshop"
+    },
+    {
+     "to": "marketplace",
+     "label": "🚶 Marketplace"
+    }
+   ]
+  },
+  "marketplace": {
+   "id": "marketplace",
+   "act": 1,
+   "name": "Marketplace",
+   "emblem": "🧺",
+   "backdrop": "bg-marketplace",
+   "caption": "Stalls of bread, cloth and iron — and one stall selling something impossible.",
+   "desc": "The Philadelphia marketplace. Vendors call out their wares. One stall displays a strange, clear bottle that catches the light oddly.",
+   "hotspots": [
+    {
+     "id": "vendor_npc",
+     "name": "Silas Green, Vendor",
+     "icon": "🧑‍🌾",
+     "x": 30,
+     "y": 48,
+     "desc": "Silas Green sells iron goods and oddities. He is cheerful, talkative, and knows more than he lets on.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "vendor",
+     "truth": "vendor_man"
+    },
+    {
+     "id": "lodestone_stall",
+     "name": "Lodestone",
+     "icon": "🧲",
+     "x": 58,
+     "y": 62,
+     "desc": "A dark, heavy stone that pulls iron to itself. FACT: lodestones — naturally magnetic rock — have been known for thousands of years.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "lodestone"
+    },
+    {
+     "id": "plastic_bottle",
+     "name": "Clear Bottle",
+     "icon": "🧴",
+     "x": 76,
+     "y": 36,
+     "desc": "A perfectly clear, feather-light bottle. No glassblower in 1764 could make this. It is a distortion.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "plastic_bottle"
+    },
+    {
+     "id": "apprentice_npc",
+     "name": "Tom Beck, Apprentice",
+     "icon": "🧑",
+     "x": 88,
+     "y": 62,
+     "desc": "Tom Beck, Franklin's young apprentice, carrying a bundle of freshly printed sheets.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "apprentice",
+     "truth": "apprentice_man"
+    }
+   ],
+   "exits": [
+    {
+     "to": "printshop",
+     "label": "🚶 Printing Shop"
+    },
+    {
+     "to": "library",
+     "label": "🚶 Library"
+    },
+    {
+     "to": "street",
+     "label": "🚶 Street"
+    }
+   ]
+  },
+  "library": {
+   "id": "library",
+   "act": 1,
+   "name": "Library Company",
+   "emblem": "📚",
+   "backdrop": "bg-library",
+   "caption": "Shelves of books, the smell of old paper, and a librarian who misses nothing.",
+   "desc": "The Library Company of Philadelphia. FACT: founded by Franklin in 1731, it was America's first lending library. The librarian guards its collection fiercely.",
+   "hotspots": [
+    {
+     "id": "librarian_npc",
+     "name": "Prudence Hale, Librarian",
+     "icon": "👩‍🏫",
+     "x": 26,
+     "y": 46,
+     "desc": "Prudence Hale, librarian of the Library Company. She notices every book out of place — and every fact out of time.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "librarian",
+     "truth": "librarian_woman"
+    },
+    {
+     "id": "glass_tube",
+     "name": "Glass Tube",
+     "icon": "🧪",
+     "x": 60,
+     "y": 60,
+     "desc": "A slender glass tube from the instrument cabinet, used in electrical demonstrations.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "glass_tube"
+    },
+    {
+     "id": "electric_lamp",
+     "name": "Glowing Lamp",
+     "icon": "💡",
+     "x": 82,
+     "y": 34,
+     "desc": "A glass bulb glowing without flame or oil. FACT: practical electric lamps did not exist until Edison's work in 1879 — more than a century from now.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "electric_lamp"
+    },
+    {
+     "id": "shelf_books",
+     "name": "Book Shelves",
+     "icon": "📖",
+     "x": 44,
+     "y": 30,
+     "desc": "Rows of bound volumes: philosophy, natural history, law. The library's catalogue is meticulous.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "library_company"
+    },
+    {
+     "id": "franklin_timeline",
+     "name": "A Timeline of Franklin's Life",
+     "icon": "📜",
+     "x": 84,
+     "y": 66,
+     "desc": "A chart of Franklin's milestones on the wall. Some of them are out of order.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "sequence_franklin"
+    }
+   ],
+   "exits": [
+    {
+     "to": "marketplace",
+     "label": "🚶 Marketplace"
+    },
+    {
+     "to": "meeting",
+     "label": "🚶 Meeting Room"
+    }
+   ]
+  },
+  "street": {
+   "id": "street",
+   "act": 1,
+   "name": "Philadelphia Street",
+   "emblem": "🏛️",
+   "backdrop": "bg-street",
+   "caption": "Cobblestones, carriages and townsfolk — the city going about its day.",
+   "desc": "A Philadelphia street in 1764. Carriages rattle over cobblestones. A notice board carries the day's proclamations.",
+   "hotspots": [
+    {
+     "id": "notice_board",
+     "name": "Notice Board",
+     "icon": "📋",
+     "x": 40,
+     "y": 42,
+     "desc": "Posted notices: a lost dog, a meeting of the Philosophical Society, and a warning about a 'strange humming' heard near the workshop.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "brass_key"
+    },
+    {
+     "id": "candle_stall",
+     "name": "Candle Stall",
+     "icon": "🕯️",
+     "x": 68,
+     "y": 62,
+     "desc": "A stall selling tallow candles — the honest light of 1764.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "candle"
+    },
+    {
+     "id": "kite_sketch",
+     "name": "Kite Sketch",
+     "icon": "🪁",
+     "x": 84,
+     "y": 30,
+     "desc": "A child's kite, painted with a key. FACT: Franklin's famous kite experiment of 1752 showed lightning is electricity — but he did not fly the kite alone in a storm to 'discover' electricity, and he was not struck by lightning.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "kite_experiment"
+    }
+   ],
+   "exits": [
+    {
+     "to": "workshop",
+     "label": "🚶 Workshop"
+    },
+    {
+     "to": "marketplace",
+     "label": "🚶 Marketplace"
+    },
+    {
+     "to": "meeting",
+     "label": "🚶 Meeting Room"
+    }
+   ]
+  },
+  "meeting": {
+   "id": "meeting",
+   "act": 1,
+   "name": "Meeting Room",
+   "emblem": "🏛️",
+   "backdrop": "bg-meeting",
+   "caption": "A quiet room where the city's thinkers gather to argue — politely, mostly.",
+   "desc": "The meeting room of the Philosophical Society. A long table, chairs, a globe, and a locked document box.",
+   "hotspots": [
+    {
+     "id": "document_box",
+     "name": "Document Box",
+     "icon": "🗄️",
+     "x": 46,
+     "y": 46,
+     "desc": "A locked box of society papers. It opens with a brass key.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "document",
+     "requirement": {
+      "item": "brass_key"
+     },
+     "lockedMsg": "The box is locked. It needs a brass key — the notice board in the street mentioned one lost near the market."
+    },
+    {
+     "id": "sealing_wax",
+     "name": "Sealing Wax",
+     "icon": "🕯️",
+     "x": 70,
+     "y": 64,
+     "desc": "Sticks of red sealing wax for letters and documents.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "sealing_wax"
+    },
+    {
+     "id": "compass",
+     "name": "Brass Compass",
+     "icon": "🧭",
+     "x": 22,
+     "y": 62,
+     "desc": "A brass compass, its needle steady and true.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "compass"
+    },
+    {
+     "id": "globe",
+     "name": "Terrestrial Globe",
+     "icon": "🌍",
+     "x": 86,
+     "y": 32,
+     "desc": "A globe showing the known world of 1764 — the Americas, Europe, Africa and Asia, with vast blank spaces still unmapped.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "globe_1764"
+    }
+   ],
+   "exits": [
+    {
+     "to": "library",
+     "label": "🚶 Library"
+    },
+    {
+     "to": "street",
+     "label": "🚶 Street"
+    }
+   ]
+  },
+  "mill": {
+   "id": "mill",
+   "act": 2,
+   "name": "Grimshaw's Textile Mill",
+   "emblem": "🏭",
+   "backdrop": "bg-mill",
+   "caption": "Looms thunder, belts spin, and a small radio crackles where no radio should be.",
+   "desc": "The mill floor. Power looms clatter in rows. In the corner, behind a loom, a small wooden box crackles with voices from nowhere.",
+   "hotspots": [
+    {
+     "id": "radio_set",
+     "name": "Crackling Box",
+     "icon": "📻",
+     "x": 62,
+     "y": 38,
+     "desc": "A wooden box with a glowing dial, speaking in voices. FACT: radio broadcasting did not exist until the early 20th century — this is a distortion.",
+     "actions": [
+      "look",
+      "truth",
+      "interact"
+     ],
+     "truth": "radio_set",
+     "anomaly": true,
+     "useTarget": "radio_set"
+    },
+    {
+     "id": "mill_owner",
+     "name": "Josiah Grimshaw, Mill Owner",
+     "icon": "🎩",
+     "x": 26,
+     "y": 46,
+     "desc": "Josiah Grimshaw, owner of the mill. Proud of his machines, nervous about the strange box.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "mill_owner",
+     "truth": "mill_owner_man"
+    },
+    {
+     "id": "wrench_mill",
+     "name": "Wrench",
+     "icon": "🔧",
+     "x": 82,
+     "y": 64,
+     "desc": "A heavy iron wrench, used on the looms.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "wrench"
+    },
+    {
+     "id": "power_loom",
+     "name": "Power Loom",
+     "icon": "🧵",
+     "x": 44,
+     "y": 62,
+     "desc": "A power loom. FACT: Edmund Cartwright patented the power loom in 1785; by the 1830s, steam-driven looms filled Manchester's mills.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "power_loom"
+    },
+    {
+     "id": "loom_sequence",
+     "name": "The Mill's Work Chart",
+     "icon": "🧵",
+     "x": 12,
+     "y": 34,
+     "desc": "A chart shows the stages of cloth-making — but the order has been scrambled.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "sequence_loom"
+    }
+   ],
+   "exits": [
+    {
+     "to": "cottage",
+     "label": "🚶 Worker's Cottage"
+    },
+    {
+     "to": "warehouse",
+     "label": "🚶 Canal Warehouse"
+    }
+   ]
+  },
+  "cottage": {
+   "id": "cottage",
+   "act": 2,
+   "name": "Worker's Cottage",
+   "emblem": "🏠",
+   "backdrop": "bg-cottage",
+   "caption": "A small cottage, a tired family, and three different stories about the box.",
+   "desc": "The Fletcher cottage. Tommy Fletcher, a mill worker, sits by the fire with his family. Three people here will tell you three different stories about the crackling box.",
+   "hotspots": [
+    {
+     "id": "worker_npc",
+     "name": "Tommy Fletcher, Mill Worker",
+     "icon": "🧑‍🏭",
+     "x": 34,
+     "y": 48,
+     "desc": "Tommy Fletcher, who has worked the looms since he was a boy. He was there the night the box arrived.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "worker",
+     "truth": "worker_man"
+    },
+    {
+     "id": "three_stories",
+     "name": "The Workers' Accounts",
+     "icon": "🗣️",
+     "x": 12,
+     "y": 66,
+     "desc": "Three workers describe the same night. Their stories do not agree.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "testimony"
+    },
+    {
+     "id": "oil_can",
+     "name": "Oil Can",
+     "icon": "🛢️",
+     "x": 64,
+     "y": 62,
+     "desc": "A can of machine oil.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "oil_can"
+    },
+    {
+     "id": "cotton_bale",
+     "name": "Cotton Bale",
+     "icon": "📦",
+     "x": 82,
+     "y": 40,
+     "desc": "A bale of raw cotton from across the Atlantic. FACT: Manchester's mills ran on cotton grown largely by enslaved labour in the Americas — the industry's wealth had a human cost.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "cotton_trade"
+    }
+   ],
+   "exits": [
+    {
+     "to": "mill",
+     "label": "🚶 Mill"
+    },
+    {
+     "to": "warehouse",
+     "label": "🚶 Canal Warehouse"
+    }
+   ]
+  },
+  "warehouse": {
+   "id": "warehouse",
+   "act": 2,
+   "name": "Canal Warehouse",
+   "emblem": "🚢",
+   "backdrop": "bg-warehouse",
+   "caption": "Barges, bales and ledgers — the paperwork of an empire of cloth.",
+   "desc": "The canal warehouse. Barges unload cotton; ledgers record every bale. The engineer Eliza Hart is checking a delivery.",
+   "hotspots": [
+    {
+     "id": "engineer_npc",
+     "name": "Eliza Hart, Mill Engineer",
+     "icon": "👩‍🔧",
+     "x": 30,
+     "y": 46,
+     "desc": "Eliza Hart, the mill's engineer. She understands machines better than anyone in Manchester — and she knows the box is impossible.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "engineer",
+     "truth": "engineer_woman"
+    },
+    {
+     "id": "loom_shuttle",
+     "name": "Loom Shuttle",
+     "icon": "🛶",
+     "x": 58,
+     "y": 62,
+     "desc": "A wooden shuttle, worn smooth by years of weaving.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "loom_shuttle"
+    },
+    {
+     "id": "ledger_book",
+     "name": "Delivery Ledger",
+     "icon": "📒",
+     "x": 78,
+     "y": 38,
+     "desc": "A ledger of deliveries. The entries stop making sense the week the box appeared.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "ledger"
+    },
+    {
+     "id": "wire_warehouse",
+     "name": "Copper Wire",
+     "icon": "🧵",
+     "x": 88,
+     "y": 64,
+     "desc": "A coil of copper wire among the spare parts.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "copper_wire"
+    }
+   ],
+   "exits": [
+    {
+     "to": "mill",
+     "label": "🚶 Mill"
+    },
+    {
+     "to": "cottage",
+     "label": "🚶 Worker's Cottage"
+    }
+   ]
+  },
+  "observatory": {
+   "id": "observatory",
+   "act": 3,
+   "name": "Observatory Tower",
+   "emblem": "🔭",
+   "backdrop": "bg-observatory",
+   "caption": "Brass, glass and starlight — the new science of the heavens.",
+   "desc": "The observatory tower. A great brass telescope points at the night sky. Master Corvin charts the planets by candlelight.",
+   "hotspots": [
+    {
+     "id": "astronomer_npc",
+     "name": "Master Corvin, Astronomer",
+     "icon": "🧙",
+     "x": 30,
+     "y": 46,
+     "desc": "Master Corvin, astronomer. He has read Newton and argues about comets with anyone who will listen.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "astronomer",
+     "truth": "astronomer_man"
+    },
+    {
+     "id": "telescope",
+     "name": "Brass Telescope",
+     "icon": "🔭",
+     "x": 62,
+     "y": 40,
+     "desc": "A long brass telescope. FACT: telescopes transformed astronomy in the 1600s; Newton's reflecting telescope dates to 1668.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "telescope"
+    },
+    {
+     "id": "star_chart",
+     "name": "Star Chart",
+     "icon": "🗺️",
+     "x": 82,
+     "y": 62,
+     "desc": "A hand-drawn chart of the planets, carefully inked.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "star_chart"
+    },
+    {
+     "id": "wax_observatory",
+     "name": "Sealing Wax",
+     "icon": "🕯️",
+     "x": 52,
+     "y": 68,
+     "desc": "Sealing wax for letters to fellow scholars.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "sealing_wax"
+    }
+   ],
+   "exits": [
+    {
+     "to": "apothecary",
+     "label": "🚶 Apothecary"
+    },
+    {
+     "to": "university",
+     "label": "🚶 University Hall"
+    }
+   ]
+  },
+  "apothecary": {
+   "id": "apothecary",
+   "act": 3,
+   "name": "The Apothecary",
+   "emblem": "⚗️",
+   "backdrop": "bg-apothecary",
+   "caption": "Herbs, jars and a chart that knows too much.",
+   "desc": "The apothecary's shop. Jars of herbs line the walls. On the wall hangs a chart describing tiny creatures causing disease — drawn with impossible precision.",
+   "hotspots": [
+    {
+     "id": "germ_chart",
+     "name": "Germ-Theory Chart",
+     "icon": "🦠",
+     "x": 58,
+     "y": 36,
+     "desc": "A chart showing tiny creatures causing disease, with cures listed beside them. FACT: germ theory was not proven until the 1860s — this chart is two centuries too early.",
+     "actions": [
+      "look",
+      "truth",
+      "interact"
+     ],
+     "truth": "germ_chart",
+     "anomaly": true,
+     "useTarget": "germ_chart"
+    },
+    {
+     "id": "apothecary_npc",
+     "name": "Sister Agnes, Apothecary",
+     "icon": "👩‍⚕️",
+     "x": 26,
+     "y": 48,
+     "desc": "Sister Agnes, apothecary and healer. She hung the chart herself — she swears she copied it from a book that no longer exists.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "apothecary",
+     "truth": "apothecary_woman"
+    },
+    {
+     "id": "ink_pot_apoth",
+     "name": "Ink Pot",
+     "icon": "🫙",
+     "x": 80,
+     "y": 62,
+     "desc": "A pot of iron-gall ink.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "ink_pot"
+    },
+    {
+     "id": "microscope",
+     "name": "Simple Microscope",
+     "icon": "🔬",
+     "x": 42,
+     "y": 64,
+     "desc": "A simple microscope. FACT: Leeuwenhoek's microscopes of the 1670s revealed tiny living things — but no one then connected them to disease.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "microscope"
+    },
+    {
+     "id": "traveller_note",
+     "name": "The Traveller's Letter",
+     "icon": "✉️",
+     "x": 12,
+     "y": 30,
+     "desc": "A coded letter left by the pedlar. The code looks simple — a letter shift.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "cipher_letter"
+    }
+   ],
+   "exits": [
+    {
+     "to": "observatory",
+     "label": "🚶 Observatory"
+    },
+    {
+     "to": "university",
+     "label": "🚶 University Hall"
+    }
+   ]
+  },
+  "university": {
+   "id": "university",
+   "act": 3,
+   "name": "University Hall",
+   "emblem": "🎓",
+   "backdrop": "bg-university",
+   "caption": "Scholars debate the new philosophy — and one student asks the right question.",
+   "desc": "The university hall. Candlelit desks, disputed theses, and Pieter, a student who has noticed that the discoveries are arriving in the wrong order.",
+   "hotspots": [
+    {
+     "id": "student_npc",
+     "name": "Pieter, Student",
+     "icon": "🧑‍🎓",
+     "x": 32,
+     "y": 48,
+     "desc": "Pieter, a student of natural philosophy. He has listed the great discoveries on a slate — and the order troubles him.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "student",
+     "truth": "student_man"
+    },
+    {
+     "id": "manuscript",
+     "name": "Bound Manuscript",
+     "icon": "📜",
+     "x": 62,
+     "y": 60,
+     "desc": "A bound manuscript of lecture notes, ready for correction.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "manuscript"
+    },
+    {
+     "id": "quill",
+     "name": "Quill Pen",
+     "icon": "🪶",
+     "x": 80,
+     "y": 38,
+     "desc": "A goose-quill pen, freshly cut.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "quill"
+    },
+    {
+     "id": "principia",
+     "name": "Principia Volume",
+     "icon": "📕",
+     "x": 50,
+     "y": 30,
+     "desc": "A copy of Newton's Principia. FACT: published in 1687, it set out the laws of motion and universal gravitation.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "principia"
+    },
+    {
+     "id": "scholar_slate",
+     "name": "The Scholar's Slate",
+     "icon": "📐",
+     "x": 14,
+     "y": 68,
+     "desc": "Four great discoveries are chalked on a slate — in the wrong order.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "sequence_discovery"
+    }
+   ],
+   "exits": [
+    {
+     "to": "observatory",
+     "label": "🚶 Observatory"
+    },
+    {
+     "to": "apothecary",
+     "label": "🚶 Apothecary"
+    }
+   ]
+  },
+  "airfield": {
+   "id": "airfield",
+   "act": 4,
+   "name": "The Airfield",
+   "emblem": "✈️",
+   "backdrop": "bg-airfield",
+   "caption": "Wind, canvas and the smell of castor oil — flight is barely nine years old.",
+   "desc": "The airfield. A biplane stands on the grass, its propeller turning lazily in the wind. Captain Mallory is preparing for a test flight.",
+   "hotspots": [
+    {
+     "id": "pilot_npc",
+     "name": "Captain Rose Mallory, Pilot",
+     "icon": "👩‍✈️",
+     "x": 30,
+     "y": 46,
+     "desc": "Captain Rose Mallory, pilot. She has flown in wind, rain and fog — and she refuses to fly a machine she does not trust.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "pilot",
+     "truth": "pilot_woman"
+    },
+    {
+     "id": "biplane",
+     "name": "Biplane",
+     "icon": "🛩️",
+     "x": 62,
+     "y": 42,
+     "desc": "A wood-and-linen biplane. FACT: the Wright brothers first flew a powered aeroplane in 1903; by 1912, biplanes were crossing channels and carrying mail.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "biplane"
+    },
+    {
+     "id": "flight_log",
+     "name": "Flight Log",
+     "icon": "📓",
+     "x": 82,
+     "y": 62,
+     "desc": "The airfield's flight log, recording every takeoff and landing.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "flight_log"
+    },
+    {
+     "id": "spark_plug",
+     "name": "Spark Plug",
+     "icon": "🔌",
+     "x": 52,
+     "y": 68,
+     "desc": "A spare spark plug for the rotary engine.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "spark_plug"
+    },
+    {
+     "id": "assembly_notes",
+     "name": "The Assembly Notes",
+     "icon": "📋",
+     "x": 12,
+     "y": 66,
+     "desc": "A fitter's notes on building an aeroplane — the steps are jumbled.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "sequence_assembly"
+    }
+   ],
+   "exits": [
+    {
+     "to": "hangar",
+     "label": "🚶 Hangar"
+    },
+    {
+     "to": "office",
+     "label": "🚶 Hangar Office"
+    }
+   ]
+  },
+  "hangar": {
+   "id": "hangar",
+   "act": 4,
+   "name": "The Hangar",
+   "emblem": "🔧",
+   "backdrop": "bg-hangar",
+   "caption": "Tools, oil and canvas — and a blade that belongs to another age.",
+   "desc": "The hangar. Workbenches, engine parts and a half-built wing. Bolted to the biplane's nose is a blade of strange, gleaming metal.",
+   "hotspots": [
+    {
+     "id": "turbine_blade",
+     "name": "Turbine Blade",
+     "icon": "⚙️",
+     "x": 58,
+     "y": 38,
+     "desc": "A curved metal blade, light and impossibly strong. FACT: jet turbine engines were developed in the late 1930s and 1940s — this blade is thirty years too early.",
+     "actions": [
+      "look",
+      "truth",
+      "interact"
+     ],
+     "truth": "turbine_blade",
+     "anomaly": true,
+     "useTarget": "turbine_blade"
+    },
+    {
+     "id": "mechanic_npc",
+     "name": "Gus Berger, Mechanic",
+     "icon": "🧑‍🔧",
+     "x": 26,
+     "y": 48,
+     "desc": "Gus Berger, mechanic. He fitted the blade himself — he swears it arrived in a crate with no sender.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "mechanic",
+     "truth": "mechanic_man"
+    },
+    {
+     "id": "wrench_hangar",
+     "name": "Wrench",
+     "icon": "🔧",
+     "x": 80,
+     "y": 62,
+     "desc": "A heavy wrench, sized for engine bolts.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "wrench"
+    },
+    {
+     "id": "fabric_roll",
+     "name": "Linen Fabric Roll",
+     "icon": "🧵",
+     "x": 42,
+     "y": 66,
+     "desc": "A roll of linen fabric for covering wings.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "fabric_roll"
+    },
+    {
+     "id": "parts_bench",
+     "name": "The Parts Bench",
+     "icon": "🔩",
+     "x": 12,
+     "y": 32,
+     "desc": "A jumble of aircraft parts. Some are authentic 1912 parts; some are impostors.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "parts_pick"
+    }
+   ],
+   "exits": [
+    {
+     "to": "airfield",
+     "label": "🚶 Airfield"
+    },
+    {
+     "to": "office",
+     "label": "🚶 Hangar Office"
+    }
+   ]
+  },
+  "office": {
+   "id": "office",
+   "act": 4,
+   "name": "Hangar Office",
+   "emblem": "🗄️",
+   "backdrop": "bg-office",
+   "caption": "Blueprints, telegrams and a crate with no sender.",
+   "desc": "The hangar office. Blueprints cover the desk. A crate stands in the corner — its label is blank where a sender's name should be.",
+   "hotspots": [
+    {
+     "id": "engineer4_npc",
+     "name": "Clara Webb, Engineer",
+     "icon": "👩‍💼",
+     "x": 30,
+     "y": 46,
+     "desc": "Clara Webb, aeronautical engineer. She has done the sums: the blade cannot work on this airframe, and yet the machine flew.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "engineer4",
+     "truth": "engineer4_woman"
+    },
+    {
+     "id": "blueprint",
+     "name": "Biplane Blueprint",
+     "icon": "📐",
+     "x": 60,
+     "y": 40,
+     "desc": "The biplane's blueprint. Every part is accounted for — except the blade.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "blueprint"
+    },
+    {
+     "id": "rivet_box",
+     "name": "Box of Rivets",
+     "icon": "🔩",
+     "x": 80,
+     "y": 62,
+     "desc": "A box of steel rivets.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "rivet"
+    },
+    {
+     "id": "propeller_blade",
+     "name": "Spare Propeller Blade",
+     "icon": "🪶",
+     "x": 50,
+     "y": 66,
+     "desc": "A wooden propeller blade, carved and balanced by hand.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "propeller_blade"
+    }
+   ],
+   "exits": [
+    {
+     "to": "airfield",
+     "label": "🚶 Airfield"
+    },
+    {
+     "to": "hangar",
+     "label": "🚶 Hangar"
+    }
+   ]
+  },
+  "core": {
+   "id": "core",
+   "act": 5,
+   "name": "The Temporal Core",
+   "emblem": "🌀",
+   "backdrop": "bg-core",
+   "caption": "A chamber outside time, where the repaired past glows like stars.",
+   "desc": "The Temporal Core. Streams of light — each one a timeline you repaired — flow into a great fractured ring. The fracture pulses with the last of the distortion.",
+   "hotspots": [
+    {
+     "id": "core_fracture",
+     "name": "The Fracture",
+     "icon": "💠",
+     "x": 50,
+     "y": 38,
+     "desc": "The fracture in the Core. Four key digits — one from each act you repaired — will seal it.",
+     "actions": [
+      "look",
+      "truth",
+      "interact"
+     ],
+     "truth": "core_fracture",
+     "anomaly": true,
+     "puzzle": "final_code"
+    },
+    {
+     "id": "chronarch_npc",
+     "name": "The Chronarch",
+     "icon": "🧝",
+     "x": 28,
+     "y": 50,
+     "desc": "The Chronarch, custodian of the timelines. Neither young nor old, neither kind nor cruel — only patient.",
+     "actions": [
+      "look",
+      "talk",
+      "truth"
+     ],
+     "npc": "chronarch",
+     "truth": "chronarch_being"
+    },
+    {
+     "id": "timeline_stream1",
+     "name": "Stream of 1764",
+     "icon": "✨",
+     "x": 74,
+     "y": 60,
+     "desc": "A stream of light: Philadelphia, 1764, steady and bright since your repair.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "stream_1764"
+    }
+   ],
+   "exits": [
+    {
+     "to": "gallery",
+     "label": "🚶 Memory Gallery"
+    },
+    {
+     "to": "dais",
+     "label": "🚶 The Dais"
+    }
+   ]
+  },
+  "gallery": {
+   "id": "gallery",
+   "act": 5,
+   "name": "Memory Gallery",
+   "emblem": "🏛️",
+   "backdrop": "bg-gallery",
+   "caption": "Every choice you made, kept as light.",
+   "desc": "The Memory Gallery. The Core shows you your own journey: the moments you chose well, and the moments you did not.",
+   "hotspots": [
+    {
+     "id": "memory_franklin",
+     "name": "Memory: Franklin",
+     "icon": "🕯️",
+     "x": 32,
+     "y": 44,
+     "desc": "A memory of Philadelphia. What you told Franklin echoes here.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "puzzle": "memory_recall"
+    },
+    {
+     "id": "memory_mill",
+     "name": "Memory: The Mill",
+     "icon": "🏭",
+     "x": 60,
+     "y": 42,
+     "desc": "A memory of Manchester. The workers' voices still argue.",
+     "actions": [
+      "look",
+      "truth"
+     ],
+     "truth": "stream_mill"
+    },
+    {
+     "id": "chronarch_sigil",
+     "name": "Chronarch's Sigil",
+     "icon": "🔮",
+     "x": 80,
+     "y": 64,
+     "desc": "A small sigil left by the Chronarch. Take it — you will need proof of your deeds.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "chronarch_sigil"
+    }
+   ],
+   "exits": [
+    {
+     "to": "core",
+     "label": "🚶 The Core"
+    },
+    {
+     "to": "dais",
+     "label": "🚶 The Dais"
+    }
+   ]
+  },
+  "dais": {
+   "id": "dais",
+   "act": 5,
+   "name": "The Dais",
+   "emblem": "👑",
+   "backdrop": "bg-dais",
+   "caption": "The Chronarch's dais. The final reckoning waits here.",
+   "desc": "The Dais. The Chronarch stands ready to hear your final report. When the Core is sealed, the timeline will be judged.",
+   "hotspots": [
+    {
+     "id": "chronarch2_npc",
+     "name": "The Chronarch",
+     "icon": "🧝",
+     "x": 40,
+     "y": 46,
+     "desc": "The Chronarch, waiting. 'Speak, Restorer. What did you learn?'",
+     "actions": [
+      "look",
+      "talk"
+     ],
+     "npc": "chronarch_final"
+    },
+    {
+     "id": "final_seal",
+     "name": "The Final Seal",
+     "icon": "🔏",
+     "x": 68,
+     "y": 50,
+     "desc": "The seal that will close the Core — once the fracture is repaired and the final quiz is passed.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "requirement": {
+      "flag": "a5_core_sealed"
+     },
+     "lockedMsg": "The seal is inert. The Core's fracture must be repaired first."
+    }
+   ],
+   "exits": [
+    {
+     "to": "core",
+     "label": "🚶 The Core"
+    },
+    {
+     "to": "gallery",
+     "label": "🚶 Memory Gallery"
+    }
+   ]
+  }
+ },
+ "characters": {
+  "franklin": {
+   "id": "franklin",
+   "name": "Benjamin Franklin",
+   "role": "Printer and natural philosopher",
+   "scene": "workshop",
+   "icon": "👴",
+   "dialogue": "franklin_intro"
+  },
+  "printer": {
+   "id": "printer",
+   "name": "Abel Crowe",
+   "role": "Master Printer",
+   "scene": "printshop",
+   "icon": "🧔",
+   "dialogue": "printer_intro"
+  },
+  "vendor": {
+   "id": "vendor",
+   "name": "Silas Green",
+   "role": "Market Vendor",
+   "scene": "marketplace",
+   "icon": "🧑‍🌾",
+   "dialogue": "vendor_intro"
+  },
+  "apprentice": {
+   "id": "apprentice",
+   "name": "Tom Beck",
+   "role": "Printer's Apprentice",
+   "scene": "marketplace",
+   "icon": "🧑",
+   "dialogue": "apprentice_intro"
+  },
+  "librarian": {
+   "id": "librarian",
+   "name": "Prudence Hale",
+   "role": "Librarian",
+   "scene": "library",
+   "icon": "👩‍🏫",
+   "dialogue": "librarian_intro"
+  },
+  "mill_owner": {
+   "id": "mill_owner",
+   "name": "Josiah Grimshaw",
+   "role": "Mill Owner",
+   "scene": "mill",
+   "icon": "🎩",
+   "dialogue": "mill_owner_intro"
+  },
+  "worker": {
+   "id": "worker",
+   "name": "Tommy Fletcher",
+   "role": "Mill Worker",
+   "scene": "cottage",
+   "icon": "🧑‍🏭",
+   "dialogue": "worker_intro"
+  },
+  "engineer": {
+   "id": "engineer",
+   "name": "Eliza Hart",
+   "role": "Mill Engineer",
+   "scene": "warehouse",
+   "icon": "👩‍🔧",
+   "dialogue": "engineer_intro"
+  },
+  "astronomer": {
+   "id": "astronomer",
+   "name": "Master Corvin",
+   "role": "Astronomer",
+   "scene": "observatory",
+   "icon": "🧙",
+   "dialogue": "astronomer_intro"
+  },
+  "apothecary": {
+   "id": "apothecary",
+   "name": "Sister Agnes",
+   "role": "Apothecary",
+   "scene": "apothecary",
+   "icon": "👩‍⚕️",
+   "dialogue": "apothecary_intro"
+  },
+  "student": {
+   "id": "student",
+   "name": "Pieter",
+   "role": "Student of Natural Philosophy",
+   "scene": "university",
+   "icon": "🧑‍🎓",
+   "dialogue": "student_intro"
+  },
+  "pilot": {
+   "id": "pilot",
+   "name": "Captain Rose Mallory",
+   "role": "Pilot",
+   "scene": "airfield",
+   "icon": "👩‍✈️",
+   "dialogue": "pilot_intro"
+  },
+  "mechanic": {
+   "id": "mechanic",
+   "name": "Gus Berger",
+   "role": "Mechanic",
+   "scene": "hangar",
+   "icon": "🧑‍🔧",
+   "dialogue": "mechanic_intro"
+  },
+  "engineer4": {
+   "id": "engineer4",
+   "name": "Clara Webb",
+   "role": "Aeronautical Engineer",
+   "scene": "office",
+   "icon": "👩‍💼",
+   "dialogue": "engineer4_intro"
+  },
+  "chronarch": {
+   "id": "chronarch",
+   "name": "The Chronarch",
+   "role": "Custodian of the Timelines",
+   "scene": "core",
+   "icon": "🧝",
+   "dialogue": "chronarch_intro"
+  },
+  "chronarch_final": {
+   "id": "chronarch_final",
+   "name": "The Chronarch",
+   "role": "Custodian of the Timelines",
+   "scene": "dais",
+   "icon": "🧝",
+   "dialogue": "chronarch_final_intro"
+  }
+ },
+ "dialogues": {
+  "franklin_intro": {
+   "npc": "franklin",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Franklin looks up from the humming device. “You carry yourself like a person out of their century, friend. That box sings, and I cannot say how. Tell me — what do you make of it?”",
+     "choices": [
+      {
+       "text": "“It is a scientific instrument. Best left alone.”",
+       "response": "Franklin nods slowly. “A cautious answer. Caution is a virtue I have come to respect.” He sets the device down and steps back from it.",
+       "effects": {
+        "paradox": -2,
+        "score": 20,
+        "flag": "franklin_warned"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“It is from the future. Two hundred years from now.”",
+       "response": "Franklin's eyes widen — and then, dangerously, they gleam. “The future! Then tell me everything. What wonders come? What machines? What knowledge?” The device hums louder, as if pleased.",
+       "effects": {
+        "paradox": 8,
+        "score": 0,
+        "flag": "franklin_knows_future"
+       },
+       "next": "n3"
+      },
+      {
+       "text": "“I found it in the marketplace.”",
+       "response": "“The marketplace?” Franklin frowns. “Then someone in this city is selling tomorrow. That is a trade I would like to understand — and stop.”",
+       "effects": {
+        "paradox": 0,
+        "score": 10,
+        "flag": "franklin_suspects_market"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "[Truth Check] Examine Franklin first",
+       "response": "You study him carefully. He is a man of his time — ink on his fingers, curiosity in his eyes. The distortion is the device, not the man.",
+       "effects": {
+        "paradox": 0,
+        "score": 10,
+        "truth": "franklin_man"
+       },
+       "next": "n1"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“The device is not of this age, I am certain of that much,” Franklin says. “I have spent my life studying electricity, and this box holds lightning in a way I do not understand. If you can silence it without harming my workshop, I will help you however I can.”",
+     "choices": [
+      {
+       "text": "“I need to build a resonator — wire, lodestone and glass.”",
+       "response": "“Wire I have. Lodestone you will find in the market. Glass tubing, in the library's instrument cabinet. Build it, and I will hold the door against interruption.”",
+       "effects": {
+        "score": 30,
+        "flag": "franklin_helping"
+       },
+       "next": null
+      },
+      {
+       "text": "“Tell me about your kite experiment.”",
+       "response": "“Ah — the kite. In 1752 I showed that lightning is electricity. Some say I flew it in a storm alone; I did not. My son William stood with me, and we were careful. History will embroider the rest.”",
+       "effects": {
+        "score": 25,
+        "truth": "kite_experiment"
+       },
+       "next": null
+      }
+     ]
+    },
+    "n3": {
+     "text": "“The future!” Franklin laughs, delighted. “Do they fly? Do they speak across oceans without wires? Tell me one thing — only one — and I shall keep it safe.”",
+     "choices": [
+      {
+       "text": "Refuse. “Some knowledge must wait for its own time.”",
+       "response": "Franklin studies you for a long moment, then nods. “You are right, of course. A seed planted in winter rots. I shall forget what I have guessed.” The device dims slightly.",
+       "effects": {
+        "paradox": -5,
+        "score": 40,
+        "flag": "franklin_warned"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "Tell him about electric light.",
+       "response": "“Light without flame!” Franklin breathes. “I shall think of nothing else for a month.” The distortion in the room deepens — the lamp in the library begins to glow of its own accord.",
+       "effects": {
+        "paradox": 10,
+        "score": 0,
+        "flag": "franklin_knows_light"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "printer_intro": {
+   "npc": "printer",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Abel Crowe wipes his hands on his apron. “Thirty years at this press, friend. I know every squeak of it. But this week the press has started printing words I never set — words about machines that fly and voices in boxes.”",
+     "choices": [
+      {
+       "text": "“Show me the strange print.”",
+       "response": "He shows you a proof sheet: the words are English, but they speak of a world of 'broadcasts' and 'batteries'. “I never set this type,” he says, pale. “I would swear it on the press itself.”",
+       "effects": {
+        "score": 25,
+        "flag": "printer_proof_seen"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Has anyone new visited the shop?”",
+       "response": "“A pedlar, last Tuesday. Sold Franklin a box that hums. I told him not to buy it. Printers know: some bargains cost more than coin.”",
+       "effects": {
+        "score": 25,
+        "flag": "pedlar_clue"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“If you can put this right, do it quietly,” Crowe says. “A printer's reputation is his livelihood. And take this — spare type, in case your work needs letters set.”",
+     "choices": [
+      {
+       "text": "Take the printing type.",
+       "response": "You take a small tray of movable type. It may prove useful.",
+       "effects": {
+        "score": 10,
+        "item": "printing_type"
+       },
+       "next": null
+      },
+      {
+       "text": "“Thank you. I will be discreet.”",
+       "response": "“Discretion,” Crowe says approvingly, “is the better part of printing.”",
+       "effects": {
+        "score": 20
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "vendor_intro": {
+   "npc": "vendor",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Silas Green spreads his hands wide. “Iron goods! Honest iron! And — for a discerning customer — curiosities from far away. A pedlar brought me that clear bottle. Pretty thing, is it not?”",
+     "choices": [
+      {
+       "text": "“Where is the pedlar now?”",
+       "response": "“Gone west, two days past. He sold the bottle, a humming box to Franklin, and a lamp to the library — then vanished like smoke. Odd fellow. Paid in coins I had never seen.”",
+       "effects": {
+        "score": 30,
+        "flag": "pedlar_clue",
+        "truth": "plastic_bottle"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“That bottle is not glass. It is not of this century.”",
+       "response": "Green laughs, then stops when he sees your face. “Not glass? Then what is it? …You know, it never did feel right in the hand. Too light. Too perfect.”",
+       "effects": {
+        "score": 20,
+        "truth": "plastic_bottle"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“Take the lodestone, friend,” Green says, pressing the dark stone into your hand. “If you are chasing a pedlar who sells tomorrow, you will want something that points true.”",
+     "choices": [
+      {
+       "text": "Take the lodestone.",
+       "response": "The lodestone is heavy and cool. It tugs gently at your compass.",
+       "effects": {
+        "score": 10,
+        "item": "lodestone"
+       },
+       "next": null
+      },
+      {
+       "text": "“Keep your eyes open for the pedlar.”",
+       "response": "“Always,” Green says. “A vendor remembers every face. If he comes back, I will send word.”",
+       "effects": {
+        "score": 15,
+        "flag": "vendor_watch"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "apprentice_intro": {
+   "npc": "apprentice",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Tom Beck shifts his bundle of printed sheets. “Mr. Franklin has been strange all week, sir. He hums tunes nobody taught him. And he asked me if I knew what a 'recording' was. I did not know what to say.”",
+     "choices": [
+      {
+       "text": "“You did well to notice. Keep watching him.”",
+       "response": "Tom stands a little straighter. “I will, sir. Someone should.”",
+       "effects": {
+        "score": 20,
+        "flag": "apprentice_watch"
+       },
+       "next": null
+      },
+      {
+       "text": "“What tunes does he hum?”",
+       "response": "Tom hums a few bars — a melody that will not be written for two hundred years. It raises the hairs on your neck.",
+       "effects": {
+        "score": 25,
+        "truth": "music_player"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "librarian_intro": {
+   "npc": "librarian",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Prudence Hale does not look up from her catalogue. “The lamp appeared on Tuesday. No one brought it. No one shelved it. It simply was there, glowing. I have catalogued it under 'Impossibilities'.”",
+     "choices": [
+      {
+       "text": "“May I examine the instrument cabinet?”",
+       "response": "“You may — if you promise to return everything to its place. A library is a machine for finding things, young person, and it only works when everything is where it belongs.”",
+       "effects": {
+        "score": 20,
+        "flag": "librarian_permission"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“What do you know about the pedlar?”",
+       "response": "“He asked for books about the future. I told him the future has not been written yet. He laughed and said, 'Not in this library.'”",
+       "effects": {
+        "score": 25,
+        "flag": "pedlar_clue"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“The Library Company was founded in 1731,” she says, “so that knowledge might be shared. What you are hunting is knowledge in the wrong place at the wrong time. That is the worst kind of mis-shelving.”",
+     "choices": [
+      {
+       "text": "“I will put it right.”",
+       "response": "“See that you do,” she says, and slides a glass tube across the desk. “You will need this. Do not break it.”",
+       "effects": {
+        "score": 15,
+        "item": "glass_tube"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "mill_owner_intro": {
+   "npc": "mill_owner",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Grimshaw puffs out his chest. “My mill is the most modern in Manchester, sir. Steam power, power looms, two hundred hands. And now — this box. It speaks, sir. It speaks in voices from London, or so it claims, with no wires at all.”",
+     "choices": [
+      {
+       "text": "“When did the box arrive?”",
+       "response": "“Tuesday last. A pedlar sold it to my foreman — said it was a 'wireless'. I had it put behind the looms so the hands would not be distracted. The hands are distracted anyway.”",
+       "effects": {
+        "score": 25,
+        "flag": "pedlar_clue2"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“The box is impossible. It must be removed.”",
+       "response": "“Impossible or not, it cost me five pounds,” Grimshaw grumbles. “But if it frightens my workers, it goes. You may take it once it is silenced — I want no more of it.”",
+       "effects": {
+        "score": 15,
+        "flag": "owner_permission"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“Eliza Hart, my engineer, has examined it,” Grimshaw says. “She says it cannot work, and yet it works. Talk to her — she is at the warehouse. And mind the belts.”",
+     "choices": [
+      {
+       "text": "“I will speak with Miss Hart.”",
+       "response": "“Do. She is the cleverest person in this mill, myself included.”",
+       "effects": {
+        "score": 15
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "worker_intro": {
+   "npc": "worker",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Tommy Fletcher stares into the fire. “I was there the night it came, sir. Three of us saw it. But ask us separately and you will hear three different nights.”",
+     "choices": [
+      {
+       "text": "“Tell me exactly what you saw.”",
+       "response": "“A man with a cart, after midnight. He carried the box into the mill himself. I asked where he was from and he said — 'from later'. I thought he meant later that night.”",
+       "effects": {
+        "score": 25,
+        "flag": "worker_true_account"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Did the others see the same man?”",
+       "response": "“Martha says she saw a woman. Old Jeb says he saw no one at all, only the box, already there in the morning. One of us is wrong — or the night itself was.”",
+       "effects": {
+        "score": 20,
+        "flag": "testimony_puzzle_hint"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“The box talks of a world where the mills are silent,” Tommy says quietly. “I do not know if that frightens me or gives me hope.”",
+     "choices": [
+      {
+       "text": "“The mills will change — but not like this, not yet.”",
+       "response": "Tommy nods. “Then put it right, sir. For all our sakes.”",
+       "effects": {
+        "score": 20,
+        "paradox": -2
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "engineer_intro": {
+   "npc": "engineer",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Eliza Hart does not look up from her drawings. “The box receives voices through the air. I have tested it. There is no wire, no tube, no trick I can find. By every law of natural philosophy I know, it cannot exist.”",
+     "choices": [
+      {
+       "text": "“What would silence it safely?”",
+       "response": "“Its heart is a coil of some kind. Ground it — drain its charge into the earth through copper — and it should go quiet. I have copper wire in the warehouse, and a wrench in the mill.”",
+       "effects": {
+        "score": 30,
+        "flag": "engineer_plan"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Could it be a trick — ventriloquism, a hidden wire?”",
+       "response": "“I checked for wires myself, in the dark, with a candle. There are none. I dislike mysteries, sir. I dislike them very much.”",
+       "effects": {
+        "score": 20
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“One more thing,” Hart says. “The loom sequence matters. Raw cotton, carding, spinning, weaving — in that order, always. Whoever built this mill's future forgot that machines obey order. Remember it.”",
+     "choices": [
+      {
+       "text": "“Cotton, carding, spinning, weaving. Understood.”",
+       "response": "“Good. Now go and put the future back where it belongs.”",
+       "effects": {
+        "score": 20,
+        "truth": "power_loom"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "astronomer_intro": {
+   "npc": "astronomer",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Master Corvin gestures at the stars. “Newton showed us the laws in 1687 — the Principia, the greatest book of our age. And yet a chart in the apothecary claims knowledge of creatures no eye has truly seen. Order, friend. Discovery has an order, and someone has broken it.”",
+     "choices": [
+      {
+       "text": "“What is the correct order of the great discoveries?”",
+       "response": "“Harvey showed the blood's circulation in 1628. Boyle his law of airs in 1662. Leeuwenhoek his tiny creatures in the 1670s. Newton his Principia in 1687. Each stands on the last. Remove one stone and the arch falls.”",
+       "effects": {
+        "score": 30,
+        "flag": "discovery_order_hint",
+        "truth": "principia"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Tell me about the telescope.”",
+       "response": "“Newton's reflecting telescope, 1668 — a mirror instead of a lens, and the heavens opened. Without it, we would still be squinting through coloured glass.”",
+       "effects": {
+        "score": 20,
+        "truth": "telescope"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“The apothecary's chart must be corrected, not burned,” Corvin says. “Knowledge is not the enemy — timing is. Write the correction, seal it, and place it where the false chart hangs.”",
+     "choices": [
+      {
+       "text": "“I will write the correction.”",
+       "response": "“Then you will need ink, a manuscript and wax. The apothecary has ink; the university has paper; I have wax. Go.”",
+       "effects": {
+        "score": 20
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "apothecary_intro": {
+   "npc": "apothecary",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Sister Agnes wrings her hands. “I copied the chart from a book, I swear it. A traveller left the book here — it described tiny creatures and their cures in perfect detail. When I went to show my sisters, the book was gone. Only my copy remains.”",
+     "choices": [
+      {
+       "text": "“The book described germs — a theory two centuries early.”",
+       "response": "“Two centuries?” She pales. “Then I have hung a lie on my wall, even if the lie is true. Take it down, I beg you — but write the truth in its place, so the next healer is not misled.”",
+       "effects": {
+        "score": 25,
+        "flag": "apothecary_remorse"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Describe the traveller.”",
+       "response": "“A pedlar, with a cart of oddities. He paid for his herbs in coins no mint I know has struck.”",
+       "effects": {
+        "score": 20,
+        "flag": "pedlar_clue3"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“The chart is written in a cipher, did you notice?” Agnes says. “The traveller's note at the bottom — letters shifted, like a child's puzzle. I could never read it.”",
+     "choices": [
+      {
+       "text": "“I will decode it.”",
+       "response": "“Then you are cleverer than I. The letters march three places forward, I think — a Caesar's trick, if my Latin serves.”",
+       "effects": {
+        "score": 25,
+        "flag": "cipher_hint"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "student_intro": {
+   "npc": "student",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Pieter shows you his slate. Four discoveries, written in a row — but the order is wrong, and he knows it. “Harvey, Boyle, Leeuwenhoek, Newton,” he says. “Or is it Newton first? My master says the order matters more than the dates.”",
+     "choices": [
+      {
+       "text": "“The order is: Harvey, Boyle, Leeuwenhoek, Newton.”",
+       "response": "Pieter beams. “Yes! Each discovery rests on the one before. Harvey's blood, Boyle's air, Leeuwenhoek's tiny creatures, Newton's laws. You understand!”",
+       "effects": {
+        "score": 30,
+        "flag": "student_order_correct"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Let me look at your slate more closely.”",
+       "response": "The slate lists the discoveries with dates: Harvey 1628, Boyle 1662, Leeuwenhoek 1670s, Newton 1687. The chain is clear once you see the years.",
+       "effects": {
+        "score": 20,
+        "flag": "discovery_order_hint"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“If you fix the chart,” Pieter says, “promise me you will also fix the slate. I want to learn the true order — not the broken one.”",
+     "choices": [
+      {
+       "text": "“I promise.”",
+       "response": "“Then here — take my quill. You will need a steady hand for the correction.”",
+       "effects": {
+        "score": 15,
+        "item": "quill"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "pilot_intro": {
+   "npc": "pilot",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Captain Mallory folds her arms. “Nine years since the Wrights flew, and already people want miracles. That blade on my machine — it is no propeller I know. It is too light, too strong, and it hums at a pitch that sets my teeth on edge.”",
+     "choices": [
+      {
+       "text": "“What does the blade do to the machine?”",
+       "response": "“It makes her fly too fast and too far, and the wings were never built for it. Gus fitted it. Clara did the sums. We all agree: it does not belong.”",
+       "effects": {
+        "score": 25,
+        "flag": "blade_assessment"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Have you flown with the blade fitted?”",
+       "response": "“Once. Never again. The machine shuddered like a living thing, and the airspeed needle went where no needle should go. I landed and walked away, and I do not walk away from much.”",
+       "effects": {
+        "score": 25,
+        "flag": "blade_flight"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“Remove it properly,” Mallory says. “Wrench, patience, and the right order: frame, wings, engine, propeller. Machines are built in order, and they are unbuilt in order.”",
+     "choices": [
+      {
+       "text": "“Frame, wings, engine, propeller. Understood.”",
+       "response": "“Good. And when it is done, I will fly her properly — the way she was meant to fly.”",
+       "effects": {
+        "score": 20
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "mechanic_intro": {
+   "npc": "mechanic",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Gus Berger wipes grease from his hands. “The blade came in a crate, no sender, no papers. It fitted the hub like it was made for it — which is the strangest part, because no one here made it.”",
+     "choices": [
+      {
+       "text": "“Could you remove it?”",
+       "response": "“With the right wrench, yes. But the bolts are strange — they need patience, not force. And the blade must come off before the propeller goes back on, or the balance will be wrong.”",
+       "effects": {
+        "score": 25,
+        "flag": "mechanic_plan"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Who delivered the crate?”",
+       "response": "“A pedlar, of all people. A cart, a smile, and coins from no country I know. He said the blade was 'from later'. I thought he meant later that week.”",
+       "effects": {
+        "score": 25,
+        "flag": "pedlar_clue4"
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“Here,” Gus says, handing you a wrench. “It is the one I use for engine bolts. Bring me the blade when it is off, and I will see it melted down myself.”",
+     "choices": [
+      {
+       "text": "Take the wrench.",
+       "response": "The wrench is heavy and honest.",
+       "effects": {
+        "score": 10,
+        "item": "wrench"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "engineer4_intro": {
+   "npc": "engineer4",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "Clara Webb spreads her calculations across the desk. “Lift must exceed weight. Thrust must exceed drag. The blade gives thrust the airframe cannot bear — the numbers do not lie, even when the machine flies.”",
+     "choices": [
+      {
+       "text": "“Which parts belong on a 1912 biplane?”",
+       "response": "“Wood, linen, wire and a rotary engine. The propeller is carved wood. The wings are fabric over spruce. Anything of gleaming alloy and impossible lightness does not belong.”",
+       "effects": {
+        "score": 30,
+        "flag": "parts_hint"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“What happens if the blade stays?”",
+       "response": "“The wings will fail in flight, or the machine will outrun its own design and tear itself apart. Either way, someone dies — and history remembers a disaster instead of a triumph.”",
+       "effects": {
+        "score": 25,
+        "paradox": -2
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“The blueprint is on the desk,” Clara says. “Study it. When you know what belongs, you will know what does not.”",
+     "choices": [
+      {
+       "text": "“I will study it.”",
+       "response": "“Good. Knowledge first, tools second. That is the whole of engineering.”",
+       "effects": {
+        "score": 15,
+        "truth": "blueprint"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "chronarch_intro": {
+   "npc": "chronarch",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "The Chronarch regards you with eyes like distant stars. “You repaired four timelines, Restorer. Each time, the same hand: a pedlar with a cart of impossibilities, selling tomorrow to yesterday. I did not send him. I have been trying to catch him.”",
+     "choices": [
+      {
+       "text": "“Who is the pedlar?”",
+       "response": "“A collector. He trades in futures — small ones, at first: a song, a voice, a cure, a blade. Each sale bends a timeline a little. Enough small bends, and the whole river changes course.”",
+       "effects": {
+        "score": 40,
+        "flag": "pedlar_revealed"
+       },
+       "next": "n2"
+      },
+      {
+       "text": "“Why did you not stop him yourself?”",
+       "response": "“I am the custodian, not the repairer. I keep the Core; you walk the timelines. That is the division of our labours — and it has held for a very long time.”",
+       "effects": {
+        "score": 20
+       },
+       "next": "n2"
+      }
+     ]
+    },
+    "n2": {
+     "text": "“The Core is fractured,” the Chronarch says. “Four digits will seal it — one from each act you repaired. The Kite, the Loom, the Lens and the Wing. Speak them in order, and the pedlar's work unravels.”",
+     "choices": [
+      {
+       "text": "“I have the digits. I will seal the Core.”",
+       "response": "“Then go to the fracture. And Restorer — whatever you told Franklin in 1764, the Core remembers. Choose your final words with care.”",
+       "effects": {
+        "score": 30
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  },
+  "chronarch_final_intro": {
+   "npc": "chronarch_final",
+   "start": "n1",
+   "nodes": {
+    "n1": {
+     "text": "The Chronarch stands at the dais. “The Core is sealed. Now, Restorer — the reckoning. What did you learn, walking through the centuries?”",
+     "choices": [
+      {
+       "text": "“That history is fragile — and worth protecting.”",
+       "response": "“Well said. The timeline is not a river to be dammed, nor a toy to be bent. It is a trust. You have kept it.”",
+       "effects": {
+        "score": 50,
+        "paradox": -5,
+        "flag": "final_wisdom"
+       },
+       "next": null
+      },
+      {
+       "text": "“That the future should stay in the future.”",
+       "response": "“Mostly,” the Chronarch says, with the faintest smile. “Though the future arrives soon enough on its own. Your work was to keep it from arriving early.”",
+       "effects": {
+        "score": 40,
+        "paradox": -3,
+        "flag": "final_wisdom"
+       },
+       "next": null
+      }
+     ]
+    }
+   }
+  }
+ },
+ "items": {
+  "magnifier": {
+   "id": "magnifier",
+   "name": "Magnifying Glass",
+   "desc": "A brass magnifying glass. It reveals what the naked eye misses — including hidden ink.",
+   "icon": "🔍",
+   "era": "1764",
+   "category": "tool",
+   "usableWith": [],
+   "combineWith": [
+    "document"
+   ],
+   "paradoxValue": 0
+  },
+  "document": {
+   "id": "document",
+   "name": "Historical Document",
+   "desc": "A society letter, written in ordinary ink — and, you suspect, something more.",
+   "icon": "📜",
+   "era": "1764",
+   "category": "document",
+   "usableWith": [],
+   "combineWith": [
+    "magnifier"
+   ],
+   "paradoxValue": 0
+  },
+  "copper_wire": {
+   "id": "copper_wire",
+   "name": "Copper Wire",
+   "desc": "A spool of fine copper wire. It carries a charge well.",
+   "icon": "🧵",
+   "era": "1764",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [
+    "lodestone",
+    "wrench"
+   ],
+   "paradoxValue": 0
+  },
+  "lodestone": {
+   "id": "lodestone",
+   "name": "Lodestone",
+   "desc": "A naturally magnetic stone. It pulls iron to itself and points, roughly, north.",
+   "icon": "🧲",
+   "era": "1764",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [
+    "copper_wire"
+   ],
+   "paradoxValue": 0
+  },
+  "glass_tube": {
+   "id": "glass_tube",
+   "name": "Glass Tube",
+   "desc": "A slender glass tube from the instrument cabinet.",
+   "icon": "🧪",
+   "era": "1764",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [
+    "resonator_coil"
+   ],
+   "paradoxValue": 0
+  },
+  "printing_type": {
+   "id": "printing_type",
+   "name": "Printing Type",
+   "desc": "A tray of movable metal type, ready to be set.",
+   "icon": "🔤",
+   "era": "1764",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "candle": {
+   "id": "candle",
+   "name": "Tallow Candle",
+   "desc": "A plain tallow candle — the honest light of 1764.",
+   "icon": "🕯️",
+   "era": "1764",
+   "category": "tool",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "journal": {
+   "id": "journal",
+   "name": "Franklin's Journal Notes",
+   "desc": "Notes on electricity, in Franklin's hand, with a sketch of the humming device.",
+   "icon": "📝",
+   "era": "1764",
+   "category": "document",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "brass_key": {
+   "id": "brass_key",
+   "name": "Brass Key",
+   "desc": "A small brass key, found near the notice board.",
+   "icon": "🗝️",
+   "era": "1764",
+   "category": "tool",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "ink_pot": {
+   "id": "ink_pot",
+   "name": "Ink Pot",
+   "desc": "A pot of thick black ink.",
+   "icon": "🫙",
+   "era": "1764",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [
+    "manuscript"
+   ],
+   "paradoxValue": 0
+  },
+  "sealing_wax": {
+   "id": "sealing_wax",
+   "name": "Sealing Wax",
+   "desc": "Sticks of red sealing wax for letters and documents.",
+   "icon": "🕯️",
+   "era": "1764",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [
+    "draft_correction"
+   ],
+   "paradoxValue": 0
+  },
+  "compass": {
+   "id": "compass",
+   "name": "Brass Compass",
+   "desc": "A brass compass. Its needle is steady and true.",
+   "icon": "🧭",
+   "era": "1764",
+   "category": "tool",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "hidden_ink_clue": {
+   "id": "hidden_ink_clue",
+   "name": "Hidden-Ink Clue",
+   "desc": "Revealed under the magnifier: 'THE KITE DRAWS THE SPARK. DISCHARGE THE DEVICE WITH THE RESONATOR, AND THE TIMELINE WILL HEAL.' Also, a number: 7.",
+   "icon": "✨",
+   "era": "1764",
+   "category": "clue",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "resonator_coil": {
+   "id": "resonator_coil",
+   "name": "Resonator Coil",
+   "desc": "Copper wire wound tight around the lodestone. It hums faintly when near the device.",
+   "icon": "🌀",
+   "era": "1764",
+   "category": "device",
+   "usableWith": [],
+   "combineWith": [
+    "glass_tube"
+   ],
+   "paradoxValue": 0
+  },
+  "resonator": {
+   "id": "resonator",
+   "name": "Aetheric Resonator",
+   "desc": "A coil of wire and lodestone sealed in a glass tube — a device of this century's materials, built to discharge the future device safely.",
+   "icon": "⚡",
+   "era": "1764",
+   "category": "device",
+   "usableWith": [
+    "music_player"
+   ],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "wrench": {
+   "id": "wrench",
+   "name": "Iron Wrench",
+   "desc": "A heavy iron wrench, sized for engine bolts.",
+   "icon": "🔧",
+   "era": "1830s",
+   "category": "tool",
+   "usableWith": [
+    "turbine_blade"
+   ],
+   "combineWith": [
+    "copper_wire"
+   ],
+   "paradoxValue": 0
+  },
+  "oil_can": {
+   "id": "oil_can",
+   "name": "Oil Can",
+   "desc": "A can of machine oil.",
+   "icon": "🛢️",
+   "era": "1830s",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "cotton_bale": {
+   "id": "cotton_bale",
+   "name": "Cotton Bale",
+   "desc": "A bale of raw cotton.",
+   "icon": "📦",
+   "era": "1830s",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "loom_shuttle": {
+   "id": "loom_shuttle",
+   "name": "Loom Shuttle",
+   "desc": "A wooden shuttle, worn smooth by years of weaving.",
+   "icon": "🛶",
+   "era": "1830s",
+   "category": "tool",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "ledger": {
+   "id": "ledger",
+   "name": "Delivery Ledger",
+   "desc": "A ledger of mill deliveries. The entries stop making sense the week the box appeared.",
+   "icon": "📒",
+   "era": "1830s",
+   "category": "document",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "grounding_wrench": {
+   "id": "grounding_wrench",
+   "name": "Grounding Wrench",
+   "desc": "A wrench wrapped in copper wire — a tool for draining a strange charge safely into the earth.",
+   "icon": "🔧",
+   "era": "1830s",
+   "category": "device",
+   "usableWith": [
+    "radio_set"
+   ],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "star_chart": {
+   "id": "star_chart",
+   "name": "Star Chart",
+   "desc": "A hand-drawn chart of the planets.",
+   "icon": "🗺️",
+   "era": "1690s",
+   "category": "document",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "manuscript": {
+   "id": "manuscript",
+   "name": "Bound Manuscript",
+   "desc": "A bound manuscript of lecture notes, ready for correction.",
+   "icon": "📜",
+   "era": "1690s",
+   "category": "document",
+   "usableWith": [],
+   "combineWith": [
+    "ink_pot"
+   ],
+   "paradoxValue": 0
+  },
+  "quill": {
+   "id": "quill",
+   "name": "Quill Pen",
+   "desc": "A goose-quill pen, freshly cut.",
+   "icon": "🪶",
+   "era": "1690s",
+   "category": "tool",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "draft_correction": {
+   "id": "draft_correction",
+   "name": "Draft Correction",
+   "desc": "The germ chart, corrected in fresh ink: the tiny creatures are real, but their role in disease is not yet proven.",
+   "icon": "📝",
+   "era": "1690s",
+   "category": "document",
+   "usableWith": [],
+   "combineWith": [
+    "sealing_wax"
+   ],
+   "paradoxValue": 0
+  },
+  "sealed_correction": {
+   "id": "sealed_correction",
+   "name": "Sealed Correction",
+   "desc": "The corrected chart, sealed with red wax. It can replace the false chart.",
+   "icon": "🔏",
+   "era": "1690s",
+   "category": "document",
+   "usableWith": [
+    "germ_chart"
+   ],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "flight_log": {
+   "id": "flight_log",
+   "name": "Flight Log",
+   "desc": "The airfield's flight log, recording every takeoff and landing.",
+   "icon": "📓",
+   "era": "1912",
+   "category": "document",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "spark_plug": {
+   "id": "spark_plug",
+   "name": "Spark Plug",
+   "desc": "A spare spark plug for the rotary engine.",
+   "icon": "🔌",
+   "era": "1912",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "fabric_roll": {
+   "id": "fabric_roll",
+   "name": "Linen Fabric Roll",
+   "desc": "A roll of linen fabric for covering wings.",
+   "icon": "🧵",
+   "era": "1912",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "rivet": {
+   "id": "rivet",
+   "name": "Box of Rivets",
+   "desc": "A box of steel rivets.",
+   "icon": "🔩",
+   "era": "1912",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "propeller_blade": {
+   "id": "propeller_blade",
+   "name": "Wooden Propeller Blade",
+   "desc": "A wooden propeller blade, carved and balanced by hand.",
+   "icon": "🪶",
+   "era": "1912",
+   "category": "material",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "chronarch_sigil": {
+   "id": "chronarch_sigil",
+   "name": "Chronarch's Sigil",
+   "desc": "A small sigil of the Core. Proof of your deeds.",
+   "icon": "🔮",
+   "era": "outside time",
+   "category": "artifact",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "temporal_key_1": {
+   "id": "temporal_key_1",
+   "name": "Temporal Key — Kite Digit (7)",
+   "desc": "A fragment of sealed time. The number 7 — the Kite Digit, earned in Philadelphia, 1764.",
+   "icon": "🗝️",
+   "era": "outside time",
+   "category": "key",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "temporal_key_2": {
+   "id": "temporal_key_2",
+   "name": "Temporal Key — Loom Digit (3)",
+   "desc": "A fragment of sealed time. The number 3 — the Loom Digit, earned in Manchester.",
+   "icon": "🗝️",
+   "era": "outside time",
+   "category": "key",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "temporal_key_3": {
+   "id": "temporal_key_3",
+   "name": "Temporal Key — Lens Digit (1)",
+   "desc": "A fragment of sealed time. The number 1 — the Lens Digit, earned in Europe, 1690s.",
+   "icon": "🗝️",
+   "era": "outside time",
+   "category": "key",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "temporal_key_4": {
+   "id": "temporal_key_4",
+   "name": "Temporal Key — Wing Digit (9)",
+   "desc": "A fragment of sealed time. The number 9 — the Wing Digit, earned at the airfield, 1912.",
+   "icon": "🗝️",
+   "era": "outside time",
+   "category": "key",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  }
+ },
+ "recipes": [
+  {
+   "inputs": [
+    "magnifier",
+    "document"
+   ],
+   "output": "hidden_ink_clue",
+   "message": "Under the magnifier, hidden ink blooms across the letter: 'THE KITE DRAWS THE SPARK. DISCHARGE THE DEVICE WITH THE RESONATOR.' And a number: 7."
+  },
+  {
+   "inputs": [
+    "copper_wire",
+    "lodestone"
+   ],
+   "output": "resonator_coil",
+   "message": "You wind the copper wire tight around the lodestone. The coil hums faintly."
+  },
+  {
+   "inputs": [
+    "resonator_coil",
+    "glass_tube"
+   ],
+   "output": "resonator",
+   "message": "You seal the coil inside the glass tube. The Aetheric Resonator is complete — a device of this century's materials, built to discharge the future device."
+  },
+  {
+   "inputs": [
+    "wrench",
+    "copper_wire"
+   ],
+   "output": "grounding_wrench",
+   "message": "You wrap the wrench in copper wire. A grounding wrench — a tool for draining a strange charge safely into the earth."
+  },
+  {
+   "inputs": [
+    "ink_pot",
+    "manuscript"
+   ],
+   "output": "draft_correction",
+   "message": "You write the correction in fresh ink: the tiny creatures are real, but their role in disease is not yet proven. The manuscript now tells the truth of its time."
+  },
+  {
+   "inputs": [
+    "draft_correction",
+    "sealing_wax"
+   ],
+   "output": "sealed_correction",
+   "message": "You seal the corrected manuscript with red wax. It is ready to replace the false chart."
+  }
+ ],
+ "truths": {
+  "press": {
+   "id": "press",
+   "object": "Franklin's Printing Press",
+   "status": "authentic",
+   "fact": "FACT: Benjamin Franklin ran a successful printing business in Philadelphia from 1728, and published the Pennsylvania Gazette from 1729. Printing was his trade and his fortune.",
+   "confidence": 98,
+   "paradox": 0,
+   "clue": "The press is genuine. The distortion is elsewhere."
+  },
+  "leyden_jar": {
+   "id": "leyden_jar",
+   "object": "Leyden Jar",
+   "status": "authentic",
+   "fact": "FACT: the Leyden jar — a glass jar lined with metal foil that stores static electricity — was invented in 1745–46. Franklin used it in his electrical experiments in the 1750s.",
+   "confidence": 97,
+   "paradox": 0,
+   "clue": "Period materials, correctly used."
+  },
+  "kite_experiment": {
+   "id": "kite_experiment",
+   "object": "Kite Sketch",
+   "status": "authentic",
+   "fact": "FACT: Franklin's kite experiment of 1752 demonstrated that lightning is electricity. He did not fly the kite alone in a storm, and he was not struck by lightning — his son William assisted, and they were careful.",
+   "confidence": 96,
+   "paradox": 0,
+   "clue": "A real experiment — but remember, the kite is not the anomaly."
+  },
+  "library_company": {
+   "id": "library_company",
+   "object": "Library Company",
+   "status": "authentic",
+   "fact": "FACT: Franklin founded the Library Company of Philadelphia in 1731 — America's first lending library. Members pooled money to buy books they could not afford alone.",
+   "confidence": 99,
+   "paradox": 0,
+   "clue": "The library belongs here. The lamp inside it does not."
+  },
+  "globe_1764": {
+   "id": "globe_1764",
+   "object": "Terrestrial Globe",
+   "status": "authentic",
+   "fact": "FACT: globes of 1764 showed the Americas, Europe, Africa and Asia — with vast blank spaces where the Pacific and the interior of continents were still unmapped.",
+   "confidence": 95,
+   "paradox": 0,
+   "clue": "An honest map of an honestly incomplete world."
+  },
+  "franklin_man": {
+   "id": "franklin_man",
+   "object": "Benjamin Franklin",
+   "status": "authentic",
+   "fact": "FACT: Benjamin Franklin (1706–1790) was a printer, scientist, inventor and statesman. In 1764 he was in Philadelphia, already famous for his electrical work.",
+   "confidence": 99,
+   "paradox": 0,
+   "clue": "The man is real. The device has changed him — not the other way around."
+  },
+  "printer_man": {
+   "id": "printer_man",
+   "object": "Abel Crowe",
+   "status": "authentic",
+   "fact": "A fictional character — a master printer of the period. Master printers ran the presses, trained apprentices, and set type by hand.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "A man of his trade, in his time."
+  },
+  "vendor_man": {
+   "id": "vendor_man",
+   "object": "Silas Green",
+   "status": "authentic",
+   "fact": "A fictional character — a market vendor of the period. Philadelphia's markets sold iron, cloth, bread and goods from across the Atlantic.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "He sold the pedlar's goods without knowing what they were."
+  },
+  "apprentice_man": {
+   "id": "apprentice_man",
+   "object": "Tom Beck",
+   "status": "authentic",
+   "fact": "A fictional character — a printer's apprentice. Apprentices lived with their masters, learned the trade over years, and did the heavy work of the shop.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "He noticed the tunes first. Children always notice first."
+  },
+  "librarian_woman": {
+   "id": "librarian_woman",
+   "object": "Prudence Hale",
+   "status": "authentic",
+   "fact": "A fictional character — a librarian of the Library Company. Lending libraries kept careful catalogues; every book had its place.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "She catalogued the lamp under 'Impossibilities'."
+  },
+  "music_player": {
+   "id": "music_player",
+   "object": "Portable Music Player",
+   "status": "anachronistic",
+   "fact": "ALTERNATE TIMELINE: portable digital music players appeared in the late 20th century. In 1764 there were no batteries, no transistors, no recorded sound. This object is the anchor of the Act 1 anomaly.",
+   "confidence": 99,
+   "expectedEra": "Late 20th century",
+   "currentEra": "1764",
+   "paradox": 12,
+   "clue": "It hums with stored lightning. It needs a counter-frequency to discharge safely — a resonator built from this century's materials."
+  },
+  "plastic_bottle": {
+   "id": "plastic_bottle",
+   "object": "Clear Bottle",
+   "status": "anachronistic",
+   "fact": "ALTERNATE TIMELINE: plastics as we know them are a 20th-century invention. A feather-light, perfectly clear bottle could not exist in 1764.",
+   "confidence": 99,
+   "expectedEra": "20th century",
+   "currentEra": "1764",
+   "paradox": 8,
+   "clue": "One of the pedlar's goods. The pedlar sold tomorrow in three places."
+  },
+  "electric_lamp": {
+   "id": "electric_lamp",
+   "object": "Glowing Lamp",
+   "status": "anachronistic",
+   "fact": "ALTERNATE TIMELINE: practical electric lamps did not exist until Edison's work in 1879 — more than a century from now. In 1764, light meant flame, candle or oil.",
+   "confidence": 99,
+   "expectedEra": "1879 and later",
+   "currentEra": "1764",
+   "paradox": 8,
+   "clue": "The lamp appeared the same Tuesday as the music player. Same pedlar, same hand."
+  },
+  "power_loom": {
+   "id": "power_loom",
+   "object": "Power Loom",
+   "status": "authentic",
+   "fact": "FACT: Edmund Cartwright patented the power loom in 1785. By the 1830s, steam-driven looms filled Manchester's mills — and the city's population had exploded around them.",
+   "confidence": 97,
+   "paradox": 0,
+   "clue": "The looms belong here. The box behind them does not."
+  },
+  "cotton_trade": {
+   "id": "cotton_trade",
+   "object": "Cotton Bale",
+   "status": "authentic",
+   "fact": "FACT: Manchester's mills ran on cotton grown largely by enslaved labour in the Americas. The industry's wealth, and its human cost, were bound together.",
+   "confidence": 98,
+   "paradox": 0,
+   "clue": "Remember the cost, not only the machines."
+  },
+  "radio_set": {
+   "id": "radio_set",
+   "object": "Crackling Box (Radio)",
+   "status": "anachronistic",
+   "fact": "ALTERNATE TIMELINE: radio broadcasting began in the early 20th century. In the 1830s there were no radio waves carrying voices — only wires, and not even those for speech.",
+   "confidence": 99,
+   "expectedEra": "Early 20th century",
+   "currentEra": "1830s",
+   "paradox": 12,
+   "clue": "Its heart is a coil. Ground it — drain its charge into the earth through copper — and it will go quiet."
+  },
+  "mill_owner_man": {
+   "id": "mill_owner_man",
+   "object": "Josiah Grimshaw",
+   "status": "authentic",
+   "fact": "A fictional character — a Manchester mill owner of the 1830s. Mill owners built fortunes on steam, cotton and the labour of hundreds.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "Proud of his machines, frightened of the box."
+  },
+  "worker_man": {
+   "id": "worker_man",
+   "object": "Tommy Fletcher",
+   "status": "authentic",
+   "fact": "A fictional character — a mill worker. In the 1830s, mill hands worked long hours in dangerous conditions; children worked beside adults until the Factory Act of 1833 began to limit it.",
+   "confidence": 92,
+   "paradox": 0,
+   "clue": "Three witnesses, three stories. Only one saw the pedlar clearly."
+  },
+  "engineer_woman": {
+   "id": "engineer_woman",
+   "object": "Eliza Hart",
+   "status": "authentic",
+   "fact": "A fictional character — a mill engineer. Women engineers were rare in the 1830s, but women worked throughout the mills as spinners, weavers and mechanics.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "She knows machines — and she knows the box is impossible."
+  },
+  "telescope": {
+   "id": "telescope",
+   "object": "Brass Telescope",
+   "status": "authentic",
+   "fact": "FACT: Newton's reflecting telescope of 1668 used a mirror instead of a lens and opened the heavens. Telescopes transformed astronomy in the 1600s.",
+   "confidence": 97,
+   "paradox": 0,
+   "clue": "The sky is honest. The chart on the apothecary's wall is not."
+  },
+  "microscope": {
+   "id": "microscope",
+   "object": "Simple Microscope",
+   "status": "authentic",
+   "fact": "FACT: Antonie van Leeuwenhoek's microscopes of the 1670s revealed tiny living things — 'animalcules' — in water and plaque. But no one then connected them to disease.",
+   "confidence": 97,
+   "paradox": 0,
+   "clue": "Seeing is not understanding. Leeuwenhoek saw the creatures; he did not know what they did."
+  },
+  "principia": {
+   "id": "principia",
+   "object": "Principia Volume",
+   "status": "authentic",
+   "fact": "FACT: Isaac Newton's Principia Mathematica, published in 1687, set out the laws of motion and universal gravitation — the foundation of classical physics.",
+   "confidence": 99,
+   "paradox": 0,
+   "clue": "1687: the last stone of the arch. The chain is Harvey, Boyle, Leeuwenhoek, Newton."
+  },
+  "germ_chart": {
+   "id": "germ_chart",
+   "object": "Germ-Theory Chart",
+   "status": "anachronistic",
+   "fact": "ALTERNATE TIMELINE: germ theory — the idea that specific microbes cause specific diseases — was not proven until the 1860s, with Pasteur and Lister. A correct germ chart in the 1690s is two centuries too early.",
+   "confidence": 99,
+   "expectedEra": "1860s",
+   "currentEra": "1690s",
+   "paradox": 12,
+   "clue": "Correct, and impossible. It must be corrected, not burned — write the truth of its time and seal it."
+  },
+  "astronomer_man": {
+   "id": "astronomer_man",
+   "object": "Master Corvin",
+   "status": "authentic",
+   "fact": "A fictional character — an astronomer of the late 1600s, working in the new science of Newton and the Royal Society's tradition.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "He knows the order of discovery. Ask him about it."
+  },
+  "apothecary_woman": {
+   "id": "apothecary_woman",
+   "object": "Sister Agnes",
+   "status": "authentic",
+   "fact": "A fictional character — an apothecary and healer. Apothecaries mixed medicines from herbs, minerals and tradition, and were often the first healers the sick would see.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "She copied the chart in good faith. The fault is the pedlar's, not hers."
+  },
+  "student_man": {
+   "id": "student_man",
+   "object": "Pieter",
+   "status": "authentic",
+   "fact": "A fictional character — a student of natural philosophy. Universities of the late 1600s taught the new philosophy alongside the old — and argued fiercely about both.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "He has the order right. Listen to him."
+  },
+  "biplane": {
+   "id": "biplane",
+   "object": "Biplane",
+   "status": "authentic",
+   "fact": "FACT: the Wright brothers first flew a powered aeroplane in 1903. By 1912, biplanes of wood, linen and wire were crossing the English Channel (Blériot, 1909) and carrying mail.",
+   "confidence": 98,
+   "paradox": 0,
+   "clue": "Wood, linen, wire and a rotary engine. That is a 1912 aeroplane."
+  },
+  "blueprint": {
+   "id": "blueprint",
+   "object": "Biplane Blueprint",
+   "status": "authentic",
+   "fact": "FACT: early aircraft were designed on paper first — wood frames, linen covering, wire bracing, rotary engines. Every part was accounted for on the blueprint.",
+   "confidence": 96,
+   "paradox": 0,
+   "clue": "Every part is accounted for — except the blade."
+  },
+  "turbine_blade": {
+   "id": "turbine_blade",
+   "object": "Turbine Blade",
+   "status": "anachronistic",
+   "fact": "ALTERNATE TIMELINE: jet turbine engines were developed in the late 1930s and 1940s (Whittle, von Ohain). A turbine blade bolted to a 1912 biplane is thirty years too early.",
+   "confidence": 99,
+   "expectedEra": "Late 1930s–1940s",
+   "currentEra": "1912",
+   "paradox": 12,
+   "clue": "It must be removed with a wrench, in the right order — and the wooden propeller restored."
+  },
+  "pilot_woman": {
+   "id": "pilot_woman",
+   "object": "Captain Rose Mallory",
+   "status": "authentic",
+   "fact": "A fictional character — a pilot of 1912. Women flew from the earliest days of aviation: Raymonde de Laroche earned the first pilot's licence in 1910.",
+   "confidence": 92,
+   "paradox": 0,
+   "clue": "She flew with the blade once. Never again."
+  },
+  "mechanic_man": {
+   "id": "mechanic_man",
+   "object": "Gus Berger",
+   "status": "authentic",
+   "fact": "A fictional character — an airfield mechanic. Early mechanics built, repaired and flew the machines they maintained, often with little more than hand tools.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "He fitted the blade. He wants it melted down."
+  },
+  "engineer4_woman": {
+   "id": "engineer4_woman",
+   "object": "Clara Webb",
+   "status": "authentic",
+   "fact": "A fictional character — an aeronautical engineer. Early aviation engineering was done with slide rules and wind tunnels; lift had to exceed weight, thrust had to exceed drag.",
+   "confidence": 90,
+   "paradox": 0,
+   "clue": "She did the sums. The blade cannot work on this airframe."
+  },
+  "core_fracture": {
+   "id": "core_fracture",
+   "object": "The Fracture",
+   "status": "anachronistic",
+   "fact": "ALTERNATE TIMELINE: the Core is fractured by four acts of interference — one pedlar, four sales, four timelines bent. The fracture is the sum of every anomaly you repaired.",
+   "confidence": 100,
+   "expectedEra": "Outside time",
+   "currentEra": "Outside time",
+   "paradox": 0,
+   "clue": "Four key digits seal it: Kite 7, Loom 3, Lens 1, Wing 9."
+  },
+  "chronarch_being": {
+   "id": "chronarch_being",
+   "object": "The Chronarch",
+   "status": "authentic",
+   "fact": "A fictional being — custodian of the timelines. Neither young nor old, neither kind nor cruel — only patient.",
+   "confidence": 100,
+   "paradox": 0,
+   "clue": "The Chronarch keeps the Core. You walk the timelines. That is the division of labours."
+  },
+  "stream_1764": {
+   "id": "stream_1764",
+   "object": "Stream of 1764",
+   "status": "authentic",
+   "fact": "FACT: Philadelphia in 1764 was a thriving colonial port — printing, trade, philosophy and the first stirrings of the ideas that would become a revolution.",
+   "confidence": 95,
+   "paradox": 0,
+   "clue": "Steady and bright, since your repair."
+  },
+  "stream_mill": {
+   "id": "stream_mill",
+   "object": "Memory: The Mill",
+   "status": "authentic",
+   "fact": "FACT: Manchester's mills transformed Britain — and the world — in the 19th century, for good and for ill.",
+   "confidence": 95,
+   "paradox": 0,
+   "clue": "The workers' voices still argue. You chose the true account."
+  }
+ },
+ "puzzles": {
+  "anachronism_workshop": {
+   "id": "anachronism_workshop",
+   "type": "anachronism",
+   "title": "What Does Not Belong?",
+   "instructions": "Look at the objects on the workbench. Three of them do not belong in 1764. Select all three, then confirm.",
+   "hint": "Ask yourself: could this be made, powered or understood in 1764? Music from a box, light without flame, a bottle lighter than glass — none of these belong.",
+   "score": 150,
+   "paradoxReward": -5,
+   "options": [
+    {
+     "id": "o_press",
+     "label": "Printing Press",
+     "icon": "🖨️",
+     "anachronistic": false
+    },
+    {
+     "id": "o_music",
+     "label": "Portable Music Player",
+     "icon": "📻",
+     "anachronistic": true
+    },
+    {
+     "id": "o_leyden",
+     "label": "Leyden Jar",
+     "icon": "⚗️",
+     "anachronistic": false
+    },
+    {
+     "id": "o_lamp",
+     "label": "Electric Lamp",
+     "icon": "💡",
+     "anachronistic": true
+    },
+    {
+     "id": "o_candle",
+     "label": "Tallow Candle",
+     "icon": "🕯️",
+     "anachronistic": false
+    },
+    {
+     "id": "o_bottle",
+     "label": "Plastic Bottle",
+     "icon": "🧴",
+     "anachronistic": true
+    }
+   ]
+  },
+  "sequence_franklin": {
+   "id": "sequence_franklin",
+   "type": "sequence",
+   "title": "Franklin's Milestones",
+   "instructions": "Put Franklin's real milestones in chronological order. Click them in order, from earliest to latest, then confirm.",
+   "hint": "Printing came first — his trade. Then the library. The kite and the lightning rod both belong to the early 1750s, the kite first.",
+   "score": 150,
+   "paradoxReward": -5,
+   "correct": [
+    "s_print",
+    "s_lib",
+    "s_kite",
+    "s_rod"
+   ],
+   "steps": [
+    {
+     "id": "s_lib",
+     "label": "Library Company founded",
+     "detail": "1731"
+    },
+    {
+     "id": "s_kite",
+     "label": "Kite experiment",
+     "detail": "1752"
+    },
+    {
+     "id": "s_print",
+     "label": "Printing business begins",
+     "detail": "1728"
+    },
+    {
+     "id": "s_rod",
+     "label": "Lightning rod devised",
+     "detail": "1752–53"
+    }
+   ]
+  },
+  "cipher_letter": {
+   "id": "cipher_letter",
+   "type": "cipher",
+   "title": "The Traveller's Note",
+   "instructions": "The apothecary found this note at the bottom of the false chart. The letters are shifted — decode it to learn the name at the heart of the discovery chain.",
+   "hint": "A Caesar shift: each letter marches three places forward in the alphabet. Shift each letter back by three to read it. (Q → N, H → E…)",
+   "score": 150,
+   "paradoxReward": -5,
+   "encoded": "Q H Z W R Q",
+   "shift": 3,
+   "answer": "NEWTON"
+  },
+  "sequence_loom": {
+   "id": "sequence_loom",
+   "type": "sequence",
+   "title": "The Loom's Order",
+   "instructions": "Cloth is made in order — always. Put the four stages of making cloth in their correct order, from first to last.",
+   "hint": "Raw cotton first. Then carding — combing the fibres straight. Then spinning into thread. Then weaving into cloth.",
+   "score": 150,
+   "paradoxReward": -5,
+   "correct": [
+    "s_cotton",
+    "s_card",
+    "s_spin",
+    "s_weave"
+   ],
+   "steps": [
+    {
+     "id": "s_weave",
+     "label": "Weaving",
+     "detail": "thread becomes cloth"
+    },
+    {
+     "id": "s_cotton",
+     "label": "Raw cotton",
+     "detail": "from the bale"
+    },
+    {
+     "id": "s_spin",
+     "label": "Spinning",
+     "detail": "fibre becomes thread"
+    },
+    {
+     "id": "s_card",
+     "label": "Carding",
+     "detail": "fibres combed straight"
+    }
+   ]
+  },
+  "testimony": {
+   "id": "testimony",
+   "type": "testimony",
+   "title": "Three Stories, One Night",
+   "instructions": "Three people saw the night the box arrived — and they tell three different stories. Only one account fits all the facts. Choose it.",
+   "hint": "Tommy was there at midnight and saw the cart. Martha's 'woman' and Old Jeb's 'no one' do not match the footprints by the mill door — or the coins the pedlar paid with.",
+   "score": 150,
+   "paradoxReward": -5,
+   "statements": [
+    {
+     "id": "t_martha",
+     "text": "“A woman brought the box, in daylight, and left it by the door.” — Martha, neighbour",
+     "correct": false,
+     "why": "Martha was not at the mill that day, and the box arrived at night."
+    },
+    {
+     "id": "t_tommy",
+     "text": "“A man with a cart, after midnight. He carried the box in himself and said he was 'from later'.” — Tommy Fletcher",
+     "correct": true,
+     "why": "Tommy was there. The cart tracks, the midnight hour and the pedlar's own words all agree."
+    },
+    {
+     "id": "t_jeb",
+     "text": "“No one brought it. It was simply there in the morning, like dew.” — Old Jeb",
+     "correct": false,
+     "why": "Jeb sleeps through the night shift. The box did not appear by itself."
+    }
+   ]
+  },
+  "sequence_discovery": {
+   "id": "sequence_discovery",
+   "type": "sequence",
+   "title": "The Chain of Discovery",
+   "instructions": "Discovery has an order — each great finding stands on the one before. Put the four discoveries in chronological order.",
+   "hint": "Harvey's blood (1628) first. Then Boyle's air (1662). Then Leeuwenhoek's tiny creatures (1670s). Then Newton's laws (1687).",
+   "score": 150,
+   "paradoxReward": -5,
+   "correct": [
+    "s_harvey",
+    "s_boyle",
+    "s_leeuw",
+    "s_newton"
+   ],
+   "steps": [
+    {
+     "id": "s_newton",
+     "label": "Newton's Principia",
+     "detail": "laws of motion, 1687"
+    },
+    {
+     "id": "s_leeuw",
+     "label": "Leeuwenhoek's microbes",
+     "detail": "tiny creatures, 1670s"
+    },
+    {
+     "id": "s_harvey",
+     "label": "Harvey's circulation",
+     "detail": "blood circulates, 1628"
+    },
+    {
+     "id": "s_boyle",
+     "label": "Boyle's law",
+     "detail": "pressure and volume, 1662"
+    }
+   ]
+  },
+  "parts_pick": {
+   "id": "parts_pick",
+   "type": "anachronism",
+   "mode": "authentic",
+   "title": "What Belongs on a 1912 Biplane?",
+   "instructions": "Six parts lie on the bench. Three belong on a 1912 biplane. Three do not. Select the three that belong, then confirm.",
+   "hint": "A 1912 aeroplane is wood, linen, wire and a rotary engine. Anything of gleaming alloy, jet fuel or radar does not belong.",
+   "score": 150,
+   "paradoxReward": -5,
+   "options": [
+    {
+     "id": "o_prop",
+     "label": "Wooden Propeller",
+     "icon": "🪶",
+     "anachronistic": false
+    },
+    {
+     "id": "o_turbine",
+     "label": "Turbine Blade",
+     "icon": "⚙️",
+     "anachronistic": true
+    },
+    {
+     "id": "o_linen",
+     "label": "Linen Wing Fabric",
+     "icon": "🧵",
+     "anachronistic": false
+    },
+    {
+     "id": "o_radar",
+     "label": "Radar Dish",
+     "icon": "📡",
+     "anachronistic": true
+    },
+    {
+     "id": "o_rotary",
+     "label": "Rotary Engine",
+     "icon": "⚙️",
+     "anachronistic": false
+    },
+    {
+     "id": "o_jetfuel",
+     "label": "Jet Fuel Canister",
+     "icon": "🛢️",
+     "anachronistic": true
+    }
+   ]
+  },
+  "sequence_assembly": {
+   "id": "sequence_assembly",
+   "type": "sequence",
+   "title": "Build Her in Order",
+   "instructions": "A machine is built in order — and unbuilt in order. Put the four stages of assembling the biplane in their correct order.",
+   "hint": "Frame first — the skeleton. Then the wings. Then the engine. Last, the propeller.",
+   "score": 150,
+   "paradoxReward": -5,
+   "correct": [
+    "s_frame",
+    "s_wings",
+    "s_engine",
+    "s_prop"
+   ],
+   "steps": [
+    {
+     "id": "s_engine",
+     "label": "Fit the engine",
+     "detail": "rotary engine"
+    },
+    {
+     "id": "s_frame",
+     "label": "Build the frame",
+     "detail": "wood skeleton"
+    },
+    {
+     "id": "s_prop",
+     "label": "Mount the propeller",
+     "detail": "carved wood"
+    },
+    {
+     "id": "s_wings",
+     "label": "Attach the wings",
+     "detail": "linen over spruce"
+    }
+   ]
+  },
+  "memory_recall": {
+   "id": "memory_recall",
+   "type": "sequence",
+   "title": "The Order of Ages",
+   "instructions": "The Core asks you to remember. Put the four eras you visited in chronological order, from earliest to latest.",
+   "hint": "The scholars of the 1690s came first. Then Franklin's Philadelphia. Then the mills. Last, the airfield.",
+   "score": 150,
+   "paradoxReward": -5,
+   "correct": [
+    "s_europe",
+    "s_phila",
+    "s_mill",
+    "s_air"
+   ],
+   "steps": [
+    {
+     "id": "s_mill",
+     "label": "Manchester, the Mills",
+     "detail": "1830s"
+    },
+    {
+     "id": "s_phila",
+     "label": "Philadelphia",
+     "detail": "1764"
+    },
+    {
+     "id": "s_air",
+     "label": "The Airfield",
+     "detail": "1912"
+    },
+    {
+     "id": "s_europe",
+     "label": "Europe, the Scholars",
+     "detail": "1690s"
+    }
+   ]
+  },
+  "final_code": {
+   "id": "final_code",
+   "type": "code",
+   "title": "Seal the Core",
+   "instructions": "Four key digits — one from each act you repaired. Enter them in order: Kite, Loom, Lens, Wing.",
+   "hint": "The Kite Digit is 7 (the hidden-ink clue in Philadelphia). The Loom Digit is 3. The Lens Digit is 1. The Wing Digit is 9. Together: 7319.",
+   "score": 300,
+   "paradoxReward": -10,
+   "answer": "7319"
+  }
+ },
+ "quizzes": {
+  "act1": {
+   "title": "Act 1 — Historical Verification: Philadelphia, 1764",
+   "questions": [
+    {
+     "q": "What was Benjamin Franklin's main trade in Philadelphia?",
+     "options": [
+      "Printing",
+      "Automobile manufacturing",
+      "Television broadcasting",
+      "Computer programming"
+     ],
+     "answer": 0,
+     "explanation": "FACT: Franklin ran a successful printing business in Philadelphia from 1728, publishing the Pennsylvania Gazette from 1729."
+    },
+    {
+     "q": "In which year did Franklin help found the Library Company of Philadelphia?",
+     "options": [
+      "1690",
+      "1731",
+      "1752",
+      "1800"
+     ],
+     "answer": 1,
+     "explanation": "FACT: the Library Company was founded in 1731 — America's first lending library."
+    },
+    {
+     "q": "What did Franklin's kite experiment of 1752 demonstrate?",
+     "options": [
+      "That kites can fly in rain",
+      "That lightning is caused by the moon",
+      "That lightning is electricity",
+      "That electricity comes from the sun"
+     ],
+     "answer": 2,
+     "explanation": "FACT: the 1752 kite experiment showed that lightning is electricity."
+    },
+    {
+     "q": "What did Franklin devise to protect buildings from lightning?",
+     "options": [
+      "A lightning net",
+      "A lightning bell",
+      "A lightning rod",
+      "A lightning mirror"
+     ],
+     "answer": 2,
+     "explanation": "FACT: Franklin devised the lightning rod in 1752–53."
+    },
+    {
+     "q": "Which of these did NOT exist in 1764?",
+     "options": [
+      "Printing press",
+      "Tallow candle",
+      "Horse-drawn carriage",
+      "Plastic bottle"
+     ],
+     "answer": 3,
+     "explanation": "ALTERNATE TIMELINE: plastics are a 20th-century invention. The other three were everyday objects in 1764."
+    }
+   ]
+  },
+  "act2": {
+   "title": "Act 2 — Historical Verification: Manchester, 1830s",
+   "questions": [
+    {
+     "q": "In which year did the Liverpool and Manchester Railway open?",
+     "options": [
+      "1800",
+      "1830",
+      "1850",
+      "1900"
+     ],
+     "answer": 1,
+     "explanation": "FACT: the Liverpool and Manchester Railway opened in 1830 — the world's first inter-city railway."
+    },
+    {
+     "q": "Who patented the power loom, and when?",
+     "options": [
+      "James Watt, 1776",
+      "Edmund Cartwright, 1785",
+      "Richard Arkwright, 1769",
+      "George Stephenson, 1814"
+     ],
+     "answer": 1,
+     "explanation": "FACT: Edmund Cartwright patented the power loom in 1785."
+    },
+    {
+     "q": "What did the Factory Act of 1833 begin to limit?",
+     "options": [
+      "Steam power",
+      "Cotton imports",
+      "Child labour",
+      "Railway building"
+     ],
+     "answer": 2,
+     "explanation": "FACT: the Factory Act of 1833 began to limit child labour in textile mills."
+    },
+    {
+     "q": "What powered Manchester's mills in the 1830s?",
+     "options": [
+      "Electricity",
+      "Steam engines",
+      "Diesel engines",
+      "Wind turbines"
+     ],
+     "answer": 1,
+     "explanation": "FACT: steam engines — Watt's improved engine from 1776 — powered the mills."
+    },
+    {
+     "q": "What is the correct order of making cloth?",
+     "options": [
+      "Weaving, spinning, carding, cotton",
+      "Cotton, carding, spinning, weaving",
+      "Spinning, cotton, weaving, carding",
+      "Carding, weaving, cotton, spinning"
+     ],
+     "answer": 1,
+     "explanation": "FACT: raw cotton, then carding, then spinning into thread, then weaving into cloth."
+    }
+   ]
+  },
+  "act3": {
+   "title": "Act 3 — Historical Verification: Europe, 1690s",
+   "questions": [
+    {
+     "q": "In which year was Newton's Principia published?",
+     "options": [
+      "1628",
+      "1662",
+      "1687",
+      "1752"
+     ],
+     "answer": 2,
+     "explanation": "FACT: the Principia Mathematica was published in 1687."
+    },
+    {
+     "q": "Who first described the circulation of the blood?",
+     "options": [
+      "Isaac Newton",
+      "Robert Boyle",
+      "William Harvey, 1628",
+      "Galileo Galilei"
+     ],
+     "answer": 2,
+     "explanation": "FACT: William Harvey described the circulation of the blood in 1628."
+    },
+    {
+     "q": "What did Leeuwenhoek's microscopes reveal in the 1670s?",
+     "options": [
+      "Germs causing disease",
+      "Atoms",
+      "Tiny living creatures",
+      "Cells dividing"
+     ],
+     "answer": 2,
+     "explanation": "FACT: Leeuwenhoek saw tiny living creatures — 'animalcules' — but did not connect them to disease."
+    },
+    {
+     "q": "What did Boyle's law of 1662 describe?",
+     "options": [
+      "The laws of motion",
+      "The circulation of blood",
+      "The relationship between the pressure and volume of a gas",
+      "The speed of light"
+     ],
+     "answer": 2,
+     "explanation": "FACT: Boyle's law relates the pressure and volume of a gas at fixed temperature."
+    },
+    {
+     "q": "When was germ theory proven?",
+     "options": [
+      "1690s",
+      "1750s",
+      "1830s",
+      "1860s"
+     ],
+     "answer": 3,
+     "explanation": "FACT: germ theory was proven in the 1860s, with Pasteur and Lister — two centuries after the chart in the apothecary."
+    }
+   ]
+  },
+  "act4": {
+   "title": "Act 4 — Historical Verification: Aviation, 1912",
+   "questions": [
+    {
+     "q": "In what year did the Wright brothers first fly a powered aeroplane?",
+     "options": [
+      "1890",
+      "1903",
+      "1912",
+      "1927"
+     ],
+     "answer": 1,
+     "explanation": "FACT: the Wright brothers first flew at Kitty Hawk in 1903."
+    },
+    {
+     "q": "Who was first to fly across the English Channel?",
+     "options": [
+      "The Wright brothers",
+      "Louis Blériot, 1909",
+      "Charles Lindbergh",
+      "Amelia Earhart"
+     ],
+     "answer": 1,
+     "explanation": "FACT: Louis Blériot crossed the Channel in 1909."
+    },
+    {
+     "q": "What were early aeroplanes mostly made of?",
+     "options": [
+      "Steel and aluminium",
+      "Wood, linen and wire",
+      "Carbon fibre",
+      "Titanium"
+     ],
+     "answer": 1,
+     "explanation": "FACT: early aeroplanes were wood frames covered in linen, braced with wire."
+    },
+    {
+     "q": "The turbine blade in the hangar belonged to which era?",
+     "options": [
+      "Steam engines",
+      "Rotary engines",
+      "Jet engines of the late 1930s–1940s",
+      "Gliders"
+     ],
+     "answer": 2,
+     "explanation": "ALTERNATE TIMELINE: jet turbine engines were developed in the late 1930s and 1940s — thirty years after 1912."
+    },
+    {
+     "q": "What must lift exceed for an aeroplane to fly?",
+     "options": [
+      "Drag",
+      "Weight",
+      "Speed",
+      "Fuel"
+     ],
+     "answer": 1,
+     "explanation": "FACT: lift must exceed weight, and thrust must exceed drag."
+    }
+   ]
+  },
+  "act5": {
+   "title": "Act 5 — Historical Verification: The Whole Timeline",
+   "questions": [
+    {
+     "q": "Which came first: the Library Company (1731) or the power loom patent (1785)?",
+     "options": [
+      "The power loom patent",
+      "The Library Company",
+      "They happened in the same year",
+      "Neither happened"
+     ],
+     "answer": 1,
+     "explanation": "FACT: the Library Company (1731) came more than fifty years before Cartwright's power loom (1785)."
+    },
+    {
+     "q": "Which of these discoveries came last?",
+     "options": [
+      "Harvey's circulation, 1628",
+      "Newton's Principia, 1687",
+      "Germ theory, 1860s",
+      "They all came in the same century"
+     ],
+     "answer": 2,
+     "explanation": "FACT: germ theory (1860s) came nearly two centuries after Newton."
+    },
+    {
+     "q": "In what year did Franklin's kite experiment take place?",
+     "options": [
+      "1731",
+      "1752",
+      "1764",
+      "1784"
+     ],
+     "answer": 1,
+     "explanation": "FACT: the kite experiment was in 1752."
+    },
+    {
+     "q": "Which of these is a fictional character in this game?",
+     "options": [
+      "Benjamin Franklin",
+      "Isaac Newton",
+      "The Chronarch",
+      "Edmund Cartwright"
+     ],
+     "answer": 2,
+     "explanation": "The Chronarch is fictional. Franklin, Newton and Cartwright were real historical figures."
+    },
+    {
+     "q": "What is the correct chronological order of the four eras you visited?",
+     "options": [
+      "1764, 1690s, 1912, 1830s",
+      "1690s, 1764, 1830s, 1912",
+      "1830s, 1912, 1764, 1690s",
+      "1912, 1830s, 1764, 1690s"
+     ],
+     "answer": 1,
+     "explanation": "FACT: the scholars (1690s), then Philadelphia (1764), then the mills (1830s), then the airfield (1912)."
+    }
+   ]
+  },
+  "final": {
+   "title": "Final Verification — The Timeline Restored",
+   "questions": [
+    {
+     "q": "Put these in chronological order: Principia (1687), kite experiment (1752), germ theory (1860s), first powered flight (1903).",
+     "options": [
+      "Kite, Principia, flight, germ theory",
+      "Principia, kite, germ theory, flight",
+      "Germ theory, Principia, kite, flight",
+      "Flight, germ theory, kite, Principia"
+     ],
+     "answer": 1,
+     "explanation": "FACT: 1687, 1752, 1860s, 1903 — the true order of the chain."
+    },
+    {
+     "q": "Which of these appeared first in history?",
+     "options": [
+      "Power loom, 1785",
+      "Franklin's printing business, 1728",
+      "Radio broadcasting, 1920s",
+      "Jet turbine, 1940s"
+     ],
+     "answer": 1,
+     "explanation": "FACT: Franklin's printing business (1728) predates the power loom (1785) by more than fifty years."
+    },
+    {
+     "q": "What did the pedlar sell in every act?",
+     "options": [
+      "Books",
+      "Horses",
+      "Objects from the future",
+      "Nothing — he was only a rumour"
+     ],
+     "answer": 2,
+     "explanation": "In every act, the same pedlar sold tomorrow to yesterday: a song, a voice, a cure, a blade."
+    },
+    {
+     "q": "Which statement is TRUE about this game?",
+     "options": [
+      "Everything in the game is historical fact",
+      "The pedlar is a real historical figure",
+      "The Chronarch and the pedlar are fictional; Franklin, Newton and the Wrights are real",
+      "Franklin invented the telephone"
+     ],
+     "answer": 2,
+     "explanation": "The Chronarch, the pedlar and the other townsfolk are fictional. Franklin, Newton, Cartwright, Harvey, Boyle, Leeuwenhoek and the Wright brothers were real."
+    },
+    {
+     "q": "What seals the Temporal Core?",
+     "options": [
+      "A single magic word",
+      "The Chronarch's permission alone",
+      "Four key digits, one from each act",
+      "Destroying all the artifacts"
+     ],
+     "answer": 2,
+     "explanation": "The Kite Digit (7), the Loom Digit (3), the Lens Digit (1) and the Wing Digit (9) — one from each act you repaired."
+    }
+   ]
+  }
+ },
+ "timelineEvents": [
+  {
+   "id": "ev_a1",
+   "act": 1,
+   "flag": "a1_repaired",
+   "text": "1764 — The music player is silenced. Philadelphia's timeline steadies."
+  },
+  {
+   "id": "ev_a1_future",
+   "act": 1,
+   "flag": "franklin_knows_future",
+   "text": "RIPPLE: Franklin was told of the future. In later eras, technology arrives slightly early — the Chronarch notes it."
+  },
+  {
+   "id": "ev_a1_light",
+   "act": 1,
+   "flag": "franklin_knows_light",
+   "text": "RIPPLE: Franklin was told of electric light. The lamp in the library glows of its own accord — a warning."
+  },
+  {
+   "id": "ev_a2",
+   "act": 2,
+   "flag": "a2_repaired",
+   "text": "1830s — The radio is grounded. The mill's timeline steadies."
+  },
+  {
+   "id": "ev_a3",
+   "act": 3,
+   "flag": "a3_repaired",
+   "text": "1690s — The false chart is corrected and sealed. The chain of discovery is restored."
+  },
+  {
+   "id": "ev_a4",
+   "act": 4,
+   "flag": "a4_repaired",
+   "text": "1912 — The turbine blade is removed. The biplane flies as it was meant to."
+  },
+  {
+   "id": "ev_a5",
+   "act": 5,
+   "flag": "a5_core_sealed",
+   "text": "Outside time — The Core is sealed with four digits. The pedlar's work unravels."
+  }
+ ],
+ "repairReqs": {
+  "1": "Solve “What Does Not Belong?” in the workshop, then combine a magnifying glass with a historical document to reveal the hidden-ink clue, build the resonator (copper wire + lodestone + glass tube), and USE the resonator on the music player.",
+  "2": "Solve the loom sequence and the testimony puzzle, then craft the grounding wrench (wrench + copper wire) and USE it on the radio.",
+  "3": "Solve the discovery sequence and decode the cipher letter, then prepare the sealed correction (draft correction + sealing wax) and USE it on the germ chart.",
+  "4": "Solve the parts pick and the assembly sequence, then USE the wrench on the turbine blade.",
+  "5": "The Core is sealed with the four-key code (Kite, Loom, Lens, Wing) and the memory of your journey. INTERACT with the fractured Core."
+ }
+}

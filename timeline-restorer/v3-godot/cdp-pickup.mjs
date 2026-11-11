@@ -1,0 +1,18 @@
+import { writeFileSync } from "node:fs";
+const port = "9224";
+const list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+const target = list.find((t) => t.type === "page");
+const ws = new WebSocket(target.webSocketDebuggerUrl);
+await new Promise((r) => { ws.onopen = r; });
+let id = 0; const pending = new Map();
+ws.onmessage = (ev) => { const m = JSON.parse(ev.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
+const send = (method, params = {}) => new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
+await send("Page.enable");
+await send("Input.dispatchMouseEvent", { type: "mousePressed", x: 300, y: 562, button: "left", clickCount: 1 });
+await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: 300, y: 562, button: "left", clickCount: 1 });
+console.log("clicked Pick up at (300, 562)");
+await new Promise((r) => setTimeout(r, 2000));
+const s = await send("Page.captureScreenshot", { format: "png" });
+if (s.result?.data) writeFileSync("shot-inventory.png", Buffer.from(s.result.data, "base64"));
+console.log("wrote shot-inventory.png");
+process.exit(0);
