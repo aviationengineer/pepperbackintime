@@ -1,0 +1,2346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeline Restorer: Back in Time</title>
+<style>
+/* ============================================================
+   TIMELINE RESTORER — visual identity
+   Parchment + dark navy + gold + cyan temporal effects.
+   No external images or fonts; everything is CSS / SVG / text.
+   ============================================================ */
+:root{
+  --navy:#0b1226; --navy2:#111a36; --ink:#1d2433; --parchment:#f2e7c9;
+  --parchment2:#e8d9ae; --gold:#c9a227; --gold2:#e8c766; --cyan:#39d5e8;
+  --cyan-dim:#1d7f8f; --red:#d64545; --green:#4caf6d; --panel:#f7efdb;
+  --radius:10px; --focus:#ffcf3d;
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{
+  margin:0; background:var(--navy); color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif; line-height:1.45;
+  min-height:100vh;
+}
+button{font-family:inherit; cursor:pointer}
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible{
+  outline:3px solid var(--focus); outline-offset:2px;
+}
+h1,h2,h3{margin:.2em 0 .4em}
+#app{max-width:1060px; margin:0 auto; padding:0 10px 30px}
+
+/* ---------- header ---------- */
+header#topbar{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  padding:10px 4px; color:var(--parchment);
+}
+#topbar .brand{font-size:1.35rem; letter-spacing:.06em; color:var(--gold2)}
+#topbar .brand small{display:block; font-size:.7rem; letter-spacing:.28em; color:var(--cyan)}
+#topbar .act-label{margin-left:auto; font-weight:bold; color:var(--cyan)}
+.meters{display:flex; flex-direction:column; gap:4px; min-width:220px; flex:1}
+.meter-row{display:flex; align-items:center; gap:8px; font-size:.8rem}
+.meter-row span{width:150px; text-align:right; color:var(--parchment)}
+.meter{flex:1; height:12px; background:#1c2747; border:1px solid #3a4a7d; border-radius:6px; overflow:hidden}
+.meter > i{display:block; height:100%; transition:width .5s ease}
+#stability-fill{background:linear-gradient(90deg,#2e8b57,#7be3a2)}
+#paradox-fill{background:linear-gradient(90deg,#8b2e2e,#ff7a5c)}
+.meter-row b{width:44px; color:var(--parchment)}
+.topbtns{display:flex; gap:6px; flex-wrap:wrap}
+.btn{
+  background:var(--gold); color:#241a00; border:1px solid #8a6d1a;
+  border-radius:8px; padding:8px 14px; font-weight:bold; font-size:.95rem;
+}
+.btn:hover{background:var(--gold2)}
+.btn.secondary{background:#233056; color:var(--parchment); border-color:#3a4a7d}
+.btn.secondary:hover{background:#2e3f6d}
+.btn.danger{background:#5c1d1d; color:#ffd9d9; border-color:#8b2e2e}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.btn.small{padding:5px 9px; font-size:.85rem}
+
+/* ---------- screens ---------- */
+.screen{background:var(--panel); border:2px solid var(--gold); border-radius:var(--radius);
+  padding:18px; margin-top:8px; box-shadow:0 6px 30px rgba(0,0,0,.45)}
+.hidden{display:none !important}
+#screen-title{text-align:center; background:
+  radial-gradient(circle at 50% 20%, #3a2f14 0%, #141b31 55%, #0b1226 100%);
+  color:var(--parchment)}
+#screen-title h1{font-size:2.1rem; color:var(--gold2); letter-spacing:.04em}
+#screen-title .tag{color:var(--cyan); letter-spacing:.3em; font-size:.8rem}
+#screen-title .intro{max-width:640px; margin:12px auto; text-align:left; font-size:1rem}
+#screen-title .fact-tag{display:inline-block; border:1px solid var(--gold); color:var(--gold2);
+  border-radius:20px; padding:2px 10px; font-size:.75rem; margin:2px}
+.title-btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px}
+.howto{max-width:640px; margin:18px auto 0; text-align:left; font-size:.92rem;
+  border-top:1px solid #4a3f1c; padding-top:12px}
+.howto h3{color:var(--gold2)}
+
+/* ---------- scene ---------- */
+#scene-wrap{position:relative}
+#scene{
+  position:relative; width:100%; aspect-ratio:16/9; border-radius:var(--radius);
+  border:2px solid var(--gold); overflow:hidden; color:#fff;
+  display:flex; align-items:flex-end; justify-content:center;
+  transition:filter .6s ease;
+}
+#scene .emblem{font-size:5.2rem; line-height:1; text-shadow:0 4px 18px rgba(0,0,0,.6); margin-bottom:34px}
+#scene .scene-caption{
+  position:absolute; left:0; right:0; bottom:0; padding:8px 12px;
+  background:linear-gradient(transparent, rgba(0,0,0,.72)); font-size:1rem;
+  text-align:center;
+}
+#scene .scene-name{
+  position:absolute; top:8px; left:10px; background:rgba(0,0,0,.55);
+  border:1px solid var(--gold); border-radius:6px; padding:3px 10px; font-size:.9rem;
+}
+/* scene backdrops — pure CSS gradients */
+.bg-workshop{background:linear-gradient(160deg,#4a3220 0%,#6b4a2a 45%,#2c1f12 100%)}
+.bg-printshop{background:linear-gradient(160deg,#3a2c1e 0%,#5c4630 50%,#241a10 100%)}
+.bg-marketplace{background:linear-gradient(160deg,#274156 0%,#4a6b46 55%,#1d2b1a 100%)}
+.bg-library{background:linear-gradient(160deg,#3a2c14 0%,#6b4d1f 50%,#241a08 100%)}
+.bg-street{background:linear-gradient(160deg,#2c3e50 0%,#5a6b7a 55%,#1a2430 100%)}
+.bg-meeting{background:linear-gradient(160deg,#402020 0%,#6b3a24 50%,#241010 100%)}
+.bg-mill{background:linear-gradient(160deg,#33302a 0%,#6b5a44 50%,#1d1a14 100%)}
+.bg-cottage{background:linear-gradient(160deg,#3d4a2c 0%,#6b7a44 50%,#20261a 100%)}
+.bg-warehouse{background:linear-gradient(160deg,#24303e 0%,#46586a 50%,#121a24 100%)}
+.bg-observatory{background:linear-gradient(160deg,#101736 0%,#2c3a6b 50%,#0a0e24 100%)}
+.bg-apothecary{background:linear-gradient(160deg,#2c4030 0%,#4a6b4a 50%,#16241a 100%)}
+.bg-university{background:linear-gradient(160deg,#3a2c44 0%,#6b4a6b 50%,#1d1224 100%)}
+.bg-airfield{background:linear-gradient(160deg,#3e5a70 0%,#7a9ab0 55%,#22303e 100%)}
+.bg-hangar{background:linear-gradient(160deg,#3a3a3a 0%,#6b6b5a 50%,#1d1d1a 100%)}
+.bg-office{background:linear-gradient(160deg,#4a3a24 0%,#7a6a44 50%,#241c10 100%)}
+.bg-core{background:radial-gradient(circle at 50% 45%, #2c6b7a 0%, #12303e 45%, #050a14 100%)}
+.bg-gallery{background:radial-gradient(circle at 50% 40%, #5a4a7a 0%, #2c2340 55%, #0d0a18 100%)}
+.bg-dais{background:radial-gradient(circle at 50% 60%, #7a2c4a 0%, #30142a 55%, #0d0510 100%)}
+/* paradox bands — visual distortion grows with the paradox level */
+body.px-minor #scene{filter:saturate(1.15) hue-rotate(8deg)}
+body.px-unstable #scene{filter:saturate(1.4) hue-rotate(22deg) contrast(1.08)}
+body.px-severe #scene{filter:saturate(1.7) hue-rotate(45deg) contrast(1.15)}
+body.px-severe #scene .emblem{animation:jitter .35s infinite}
+body.px-critical #scene{filter:saturate(2) hue-rotate(80deg) contrast(1.25)}
+body.px-critical #scene .emblem{animation:jitter .18s infinite}
+body.px-critical #app{animation:flicker 2.4s infinite}
+@keyframes jitter{0%{transform:translate(0,0)}25%{transform:translate(2px,-2px)}50%{transform:translate(-2px,2px)}75%{transform:translate(1px,2px)}100%{transform:translate(0,0)}}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.82}94%{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important}
+}
+
+/* ---------- hotspots ---------- */
+.hotspot{
+  position:absolute; transform:translate(-50%,-50%);
+  background:rgba(11,18,38,.72); border:2px solid var(--cyan); color:#fff;
+  border-radius:10px; padding:6px 8px; font-size:.85rem; line-height:1.15;
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  min-width:64px; transition:transform .15s ease, box-shadow .15s ease;
+}
+.hotspot .hs-icon{font-size:1.5rem}
+.hotspot:hover, .hotspot:focus-visible{transform:translate(-50%,-50%) scale(1.1);
+  box-shadow:0 0 0 3px var(--gold), 0 0 18px var(--cyan); z-index:5}
+.hotspot.selected{border-color:var(--gold); box-shadow:0 0 0 3px var(--gold), 0 0 22px var(--gold2)}
+.hotspot.exit-hs{border-color:var(--gold2); background:rgba(58,47,20,.85)}
+.hotspot.anomaly-hs{border-color:#ff7a5c; animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,122,92,.55)}50%{box-shadow:0 0 0 8px rgba(255,122,92,0)}}
+.hotspot:disabled{opacity:.4; cursor:not-allowed}
+
+/* ---------- exits / panel / actions ---------- */
+#exits{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0}
+#panel{
+  margin-top:10px; background:#fffdf4; border:1px solid #cbb96a; border-radius:var(--radius);
+  padding:12px 14px; min-height:86px; font-size:1.02rem;
+}
+#panel .speaker{font-weight:bold; color:#6b4d1f}
+#panel .fact{color:#1d5c2e}
+#panel .distort{color:#8b2e2e; font-weight:bold}
+#panel .clue{color:#1d5c7a; font-weight:bold}
+#actionbar{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px}
+#actionbar .btn{min-width:104px}
+#inventory-strip{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; align-items:center}
+#inventory-strip .inv-label{font-weight:bold; margin-right:4px}
+.inv-chip{
+  background:#fffdf4; border:1px solid var(--gold); border-radius:20px;
+  padding:5px 10px; font-size:.9rem; display:flex; gap:5px; align-items:center;
+}
+.inv-chip:hover{background:var(--gold2)}
+.inv-chip.selected{outline:3px solid var(--focus); background:var(--gold2)}
+#use-hint{font-size:.88rem; color:#6b4d1f; margin-top:6px}
+
+/* ---------- modal ---------- */
+#modal-backdrop{
+  position:fixed; inset:0; background:rgba(5,8,18,.72); display:flex;
+  align-items:flex-start; justify-content:center; padding:24px 10px; z-index:50;
+  overflow-y:auto;
+}
+#modal{
+  background:var(--panel); border:2px solid var(--gold); border-radius:var(--radius);
+  max-width:640px; width:100%; padding:18px; box-shadow:0 10px 40px rgba(0,0,0,.6);
+}
+#modal h2{margin-top:0}
+#modal .modal-body{margin:10px 0}
+#modal .modal-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+.choice-btn{display:block; width:100%; text-align:left; margin:6px 0;
+  background:#fffdf4; border:1px solid var(--gold); border-radius:8px; padding:10px 12px; font-size:1rem}
+.choice-btn:hover{background:var(--gold2)}
+.choice-btn.selected{outline:3px solid var(--focus); background:var(--gold2)}
+.verdict-auth{border-left:6px solid var(--green); padding-left:10px}
+.verdict-anach{border-left:6px solid var(--red); padding-left:10px}
+.kbd-hint{font-size:.82rem; color:#5a4a22}
+.quiz-opt{display:block; width:100%; text-align:left; margin:6px 0; padding:10px 12px;
+  background:#fffdf4; border:1px solid #8a6d1a; border-radius:8px; font-size:1rem}
+.quiz-opt:hover{background:var(--gold2)}
+.quiz-opt.correct{background:#cdeed6; border-color:var(--green)}
+.quiz-opt.wrong{background:#f6d2d2; border-color:var(--red)}
+.seq-item{display:block; width:100%; text-align:left; margin:5px 0; padding:9px 11px;
+  background:#fffdf4; border:1px solid var(--gold); border-radius:8px; font-size:1rem}
+.seq-item.picked{background:#d9ecf7; border-color:var(--cyan)}
+.anach-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0}
+.anach-card{background:#fffdf4; border:2px solid var(--gold); border-radius:8px; padding:10px;
+  text-align:center; font-size:.92rem}
+.anach-card .a-icon{font-size:1.8rem; display:block}
+.anach-card.selected{outline:3px solid var(--focus); background:#ffe9a8}
+input.code-input, input.text-input{
+  font-size:1.1rem; padding:8px 10px; border:2px solid var(--gold); border-radius:8px;
+  width:100%; margin:8px 0; font-family:inherit;
+}
+.score-table{width:100%; border-collapse:collapse; margin:8px 0}
+.score-table td, .score-table th{border:1px solid #cbb96a; padding:6px 9px; text-align:left}
+.debug-line{font-family:ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre-wrap}
+#debug-panel{
+  position:fixed; right:10px; bottom:10px; z-index:60; width:min(420px,94vw);
+  background:#0d1428; color:#cfe8ff; border:2px solid var(--cyan); border-radius:10px;
+  padding:12px; font-size:.85rem; max-height:70vh; overflow:auto;
+}
+#debug-panel h3{color:var(--cyan); margin:0 0 6px}
+#debug-panel .dbg-btns{display:flex; flex-wrap:wrap; gap:5px; margin:8px 0}
+#debug-panel pre{white-space:pre-wrap; margin:4px 0}
+#debug-log{max-height:150px; overflow:auto; border-top:1px solid #2c4a6b; padding-top:6px}
+#toast{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  background:#0d1428; color:var(--gold2); border:2px solid var(--gold);
+  border-radius:20px; padding:8px 18px; z-index:70; display:none; font-size:.95rem;
+}
+.flash{animation:flash .8s ease}
+@keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
+@media (max-width:640px){
+  #scene .emblem{font-size:3.4rem}
+  .hotspot{font-size:.75rem; min-width:52px; padding:4px 5px}
+  .hotspot .hs-icon{font-size:1.15rem}
+  #actionbar .btn{min-width:0; flex:1 1 30%}
+  .anach-grid{grid-template-columns:repeat(2,1fr)}
+  .meter-row span{width:110px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar" aria-label="Game status">
+    <div class="brand">TIMELINE RESTORER<small>BACK IN TIME</small></div>
+    <div class="meters" role="status" aria-label="Timeline meters">
+      <div class="meter-row"><span>Timeline Stability</span><div class="meter"><i id="stability-fill" style="width:85%"></i></div><b id="stability-num">85%</b></div>
+      <div class="meter-row"><span>Paradox Level</span><div class="meter"><i id="paradox-fill" style="width:15%"></i></div><b id="paradox-num">15%</b></div>
+    </div>
+    <div class="act-label" id="act-label">ACT 1</div>
+    <div class="topbtns">
+      <button class="btn secondary small" id="btn-sound" aria-label="Toggle sound">🔊 Sound On</button>
+      <button class="btn secondary small" id="btn-save" aria-label="Save game">💾 Save</button>
+      <button class="btn secondary small" id="btn-menu" aria-label="Back to title">☰ Menu</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- TITLE SCREEN -->
+    <section id="screen-title" class="screen" aria-label="Title screen">
+      <p class="tag">A TIME-TRAVEL INVESTIGATION</p>
+      <h1>⏳ TIMELINE RESTORER<br>BACK IN TIME</h1>
+      <p>
+        <span class="fact-tag">HISTORICAL FACT</span>
+        <span class="fact-tag">ALTERNATE TIMELINE</span>
+        <span class="fact-tag">ORIGINAL STORY</span>
+      </p>
+      <div class="intro">
+        <p>You are a <strong>Timeline Restorer</strong>, an investigator who travels through
+        history to repair what has been broken. A temporal disturbance has corrupted five
+        eras. Objects from the future have appeared where they do not belong, discoveries
+        have arrived before their time, and history itself is coming undone.</p>
+        <p>Investigate each scene. Use the <strong>Truth Check</strong> to tell real history
+        from distortion. Collect artifacts, solve puzzles, repair the anomalies — and keep
+        the Paradox Level down, or the timeline may collapse.</p>
+        <p>All characters, dialogue and puzzles in this game are original. Historical facts
+        are labelled <strong>FACT</strong>; distortions are labelled
+        <strong>ALTERNATE TIMELINE</strong> and are never presented as real history.</p>
+      </div>
+      <div class="title-btns">
+        <button class="btn" id="btn-new-game">▶ New Game</button>
+        <button class="btn secondary" id="btn-continue">↻ Continue</button>
+        <button class="btn secondary" id="btn-archive">📚 Historical Archive</button>
+      </div>
+      <div class="howto">
+        <h3>How to play</h3>
+        <p>🖱️ <strong>Click</strong> glowing objects and people to select them, then use the
+        action bar: <strong>LOOK</strong>, <strong>TALK</strong>, <strong>INTERACT</strong>,
+        <strong>USE</strong>, <strong>TRUTH CHECK</strong>, <strong>INVENTORY</strong>,
+        <strong>TIMELINE</strong>.</p>
+        <p>⌨️ <strong>Keyboard:</strong> Tab to move, Enter to choose, Escape to close panels,
+        keys <strong>1–4</strong> pick dialogue choices. <strong>Ctrl+Shift+D</strong> opens the
+        developer console.</p>
+        <p>💾 Your game saves to this browser. Continue works after a refresh.</p>
+      </div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section id="screen-game" class="screen hidden" aria-label="Game screen">
+      <div id="scene-wrap">
+        <div id="scene" role="img" aria-label="Current scene">
+          <div class="scene-name" id="scene-name">Workshop</div>
+          <div class="emblem" id="scene-emblem" aria-hidden="true">🕯️</div>
+          <div class="scene-caption" id="scene-caption"></div>
+        </div>
+      </div>
+      <div id="exits" aria-label="Scene exits"></div>
+      <div id="panel" aria-live="polite"></div>
+      <div id="actionbar" role="toolbar" aria-label="Actions">
+        <button class="btn" data-action="look" id="act-look">👁️ LOOK</button>
+        <button class="btn" data-action="talk" id="act-talk">💬 TALK</button>
+        <button class="btn" data-action="interact" id="act-interact">✋ INTERACT</button>
+        <button class="btn" data-action="use" id="act-use">🧰 USE</button>
+        <button class="btn" data-action="truth" id="act-truth">🔎 TRUTH CHECK</button>
+        <button class="btn" data-action="inventory" id="act-inventory">🎒 INVENTORY</button>
+        <button class="btn" data-action="timeline" id="act-timeline">⏳ TIMELINE</button>
+      </div>
+      <div id="inventory-strip" aria-label="Inventory"></div>
+      <div id="use-hint" aria-live="polite"></div>
+    </section>
+
+    <!-- ENDING SCREEN -->
+    <section id="screen-ending" class="screen hidden" aria-label="Ending screen">
+      <h2 id="ending-title">Timeline Restored</h2>
+      <div id="ending-body"></div>
+      <div class="title-btns">
+        <button class="btn" id="btn-replay-act">↻ Replay Act 5</button>
+        <button class="btn secondary" id="btn-new-timeline">⏳ New Timeline</button>
+        <button class="btn secondary" id="btn-ending-archive">📚 Historical Archive</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal-backdrop" class="hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div id="modal">
+    <h2 id="modal-title">Panel</h2>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<div id="debug-panel" class="hidden" aria-label="Developer console">
+  <h3>🛠️ Developer Console <span style="float:right"><button class="btn secondary small" id="btn-debug-close">✕</button></span></h3>
+  <pre id="debug-state">—</pre>
+  <div class="dbg-btns">
+    <button class="btn secondary small" data-dbg="score">+10 Score</button>
+    <button class="btn secondary small" data-dbg="paradox+">+10 Paradox</button>
+    <button class="btn secondary small" data-dbg="paradox-">−10 Paradox</button>
+    <button class="btn secondary small" data-dbg="item">Add Item</button>
+    <button class="btn secondary small" data-dbg="puzzle">Complete Puzzle</button>
+    <button class="btn secondary small" data-dbg="flag">Set Timeline Flag</button>
+    <button class="btn secondary small" data-dbg="nextact">Next Act</button>
+    <button class="btn secondary small" data-dbg="resetact">Reset Act</button>
+  </div>
+  <div id="debug-log" aria-label="Developer log"></div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+/* ================================================================
+   TIMELINE RESTORER: BACK IN TIME
+   A single-file, data-driven point-and-click time-travel adventure.
+   Engine classes: GameEngine, GameState, SceneManager,
+   TimelineManager, InventoryManager, DialogueManager, PuzzleManager,
+   TruthEngine, QuizEngine, ScoreManager, SaveManager, UIManager,
+   AudioManager. Content lives in GAME_DATA; the engine consumes it.
+   ================================================================ */
+
+/* ---------------- GAME DATA ---------------- */
+const GAME_DATA = {
+  acts: {
+    1: { id: 1, title: "Act 1 — Philadelphia, 1764", subtitle: "The Founding Mind That Shouldn't Be",
+      intro: "Philadelphia, 1764. The city smells of ink, river water and woodsmoke. Something is wrong here: Benjamin Franklin — printer, thinker, experimenter — has begun speaking of devices no one in this century could know. Find what changed, prove it, and repair it before the distortion spreads.",
+      anomaly: "A portable music player hums on Franklin's workbench — an object from the late 20th century, two hundred years too early.",
+      keyDigit: 7, keyName: "the Kite Digit",
+      scenes: ["workshop", "printshop", "marketplace", "library", "street", "meeting"] },
+    2: { id: 2, title: "Act 2 — Manchester, 1830s", subtitle: "The Machine That Arrived Too Early",
+      intro: "Manchester, England, in the 1830s. The mills never sleep. But inside Grimshaw's textile mill, a machine hums that should not exist for another seventy years — and the workers' stories do not agree about when it arrived.",
+      anomaly: "A small radio receiver crackles in the mill — a device from the 20th century, decades too early.",
+      keyDigit: 3, keyName: "the Loom Digit",
+      scenes: ["mill", "cottage", "warehouse"] },
+    3: { id: 3, title: "Act 3 — Europe, 1690s", subtitle: "The Discovery Out of Time",
+      intro: "Europe, in the last years of the 17th century. Scholars argue by candlelight over the new philosophy. But a chart on the apothecary's wall shows a theory of disease that no one alive could have proven — the chain of discovery has been broken.",
+      anomaly: "A germ-theory chart hangs in the apothecary — correct, and two centuries too early.",
+      keyDigit: 1, keyName: "the Lens Digit",
+      scenes: ["observatory", "apothecary", "university"] },
+    4: { id: 4, title: "Act 4 — An Airfield, 1912", subtitle: "The Aircraft That Changed History",
+      intro: "An airfield in the early years of powered flight. Canvas, wood, wire and courage. But in the hangar, a turbine blade gleams — metal from the jet age, fitted to a machine of wood and linen.",
+      anomaly: "A jet turbine blade is bolted to a 1912 biplane — technology from the 1940s, thirty years too early.",
+      keyDigit: 9, keyName: "the Wing Digit",
+      scenes: ["airfield", "hangar", "office"] },
+    5: { id: 5, title: "Act 5 — The Temporal Core", subtitle: "Who Changed History?",
+      intro: "Outside normal time, the Temporal Core turns. Every anomaly you repaired left a trace here. The Chronarch — custodian of the timelines — has been waiting for you. The cause of the disturbances is finally within reach.",
+      anomaly: "The Core itself is fractured: four key digits, one from each act you repaired, will seal it.",
+      keyDigit: 0, keyName: "the Core Digit",
+      scenes: ["core", "gallery", "dais"] }
+  },
+
+  scenes: {
+    workshop: { id: "workshop", act: 1, name: "Franklin's Workshop", emblem: "🕯️", backdrop: "bg-workshop",
+      caption: "A workbench crowded with tools, jars and papers — and something that does not belong.",
+      desc: "Franklin's workshop. Glass jars, copper wire, a Leyden jar and scattered notes cover the bench. A small black device hums softly where no device should hum.",
+      hotspots: [
+        { id: "music_player", name: "Humming Device", icon: "📻", x: 50, y: 38, desc: "A small black rectangle with a glowing screen. It plays music no instrument in 1764 could make. It is the anomaly — handle it with care.", actions: ["look", "truth", "interact"], truth: "music_player", anomaly: true, useTarget: "music_player" },
+        { id: "bench_puzzle", name: "The Cluttered Workbench", icon: "🧩", x: 60, y: 80, desc: "A clutter of tools and devices. Somewhere here are objects that do not belong in 1764.", actions: ["look", "interact"], puzzle: "anachronism_workshop" },
+        { id: "magnifier_ws", name: "Magnifying Glass", icon: "🔍", x: 20, y: 62, desc: "A brass magnifying glass, left beside a stack of letters.", actions: ["look", "interact"], item: "magnifier" },
+        { id: "leyden_jar", name: "Leyden Jar", icon: "⚗️", x: 72, y: 60, desc: "A glass jar lined with metal foil — Franklin's electrical storage jar. FACT: the Leyden jar was invented in 1745–46 and Franklin used it in his electrical experiments.", actions: ["look", "truth"], truth: "leyden_jar" },
+        { id: "franklin_ws", name: "Benjamin Franklin", icon: "👴", x: 86, y: 42, desc: "Benjamin Franklin, printer and natural philosopher, frowning at the humming device.", actions: ["look", "talk", "truth"], npc: "franklin", truth: "franklin_man" },
+        { id: "workbench_notes", name: "Workbench Notes", icon: "📝", x: 34, y: 30, desc: "Notes in Franklin's hand about electricity — and a sketch of the humming device, drawn as if he had seen it in a dream.", actions: ["look", "interact"], item: "journal" }
+      ],
+      exits: [ { to: "printshop", label: "🚶 Printing Shop" }, { to: "street", label: "🚶 Street" } ] },
+    printshop: { id: "printshop", act: 1, name: "Printing Shop", emblem: "📰", backdrop: "bg-printshop",
+      caption: "The press groans, the type is set, and the smell of fresh ink fills the air.",
+      desc: "Franklin's printing shop. The great press dominates the room. Trays of movable type, ink balls and paper stacks surround it.",
+      hotspots: [
+        { id: "press", name: "Printing Press", icon: "🖨️", x: 42, y: 45, desc: "A wooden screw press. FACT: Franklin ran a successful printing business in Philadelphia from 1728, publishing the Pennsylvania Gazette from 1729.", actions: ["look", "truth", "interact"], truth: "press", item: "printing_type" },
+        { id: "printer_npc", name: "Abel Crowe, Master Printer", icon: "🧔", x: 78, y: 48, desc: "Abel Crowe, the master printer, wiping ink from his hands. He has worked this press for twenty years.", actions: ["look", "talk", "truth"], npc: "printer", truth: "printer_man" },
+        { id: "copper_wire", name: "Spool of Copper Wire", icon: "🧵", x: 18, y: 66, desc: "A spool of fine copper wire, used for electrical experiments.", actions: ["look", "interact"], item: "copper_wire" },
+        { id: "ink_pot", name: "Ink Pot", icon: "🫙", x: 62, y: 70, desc: "A pot of thick black printing ink.", actions: ["look", "interact"], item: "ink_pot" }
+      ],
+      exits: [ { to: "workshop", label: "🚶 Workshop" }, { to: "marketplace", label: "🚶 Marketplace" } ] },
+    marketplace: { id: "marketplace", act: 1, name: "Marketplace", emblem: "🧺", backdrop: "bg-marketplace",
+      caption: "Stalls of bread, cloth and iron — and one stall selling something impossible.",
+      desc: "The Philadelphia marketplace. Vendors call out their wares. One stall displays a strange, clear bottle that catches the light oddly.",
+      hotspots: [
+        { id: "vendor_npc", name: "Silas Green, Vendor", icon: "🧑‍🌾", x: 30, y: 48, desc: "Silas Green sells iron goods and oddities. He is cheerful, talkative, and knows more than he lets on.", actions: ["look", "talk", "truth"], npc: "vendor", truth: "vendor_man" },
+        { id: "lodestone_stall", name: "Lodestone", icon: "🧲", x: 58, y: 62, desc: "A dark, heavy stone that pulls iron to itself. FACT: lodestones — naturally magnetic rock — have been known for thousands of years.", actions: ["look", "interact"], item: "lodestone" },
+        { id: "plastic_bottle", name: "Clear Bottle", icon: "🧴", x: 76, y: 36, desc: "A perfectly clear, feather-light bottle. No glassblower in 1764 could make this. It is a distortion.", actions: ["look", "truth"], truth: "plastic_bottle" },
+        { id: "apprentice_npc", name: "Tom Beck, Apprentice", icon: "🧑", x: 88, y: 62, desc: "Tom Beck, Franklin's young apprentice, carrying a bundle of freshly printed sheets.", actions: ["look", "talk", "truth"], npc: "apprentice", truth: "apprentice_man" }
+      ],
+      exits: [ { to: "printshop", label: "🚶 Printing Shop" }, { to: "library", label: "🚶 Library" }, { to: "street", label: "🚶 Street" } ] },
+    library: { id: "library", act: 1, name: "Library Company", emblem: "📚", backdrop: "bg-library",
+      caption: "Shelves of books, the smell of old paper, and a librarian who misses nothing.",
+      desc: "The Library Company of Philadelphia. FACT: founded by Franklin in 1731, it was America's first lending library. The librarian guards its collection fiercely.",
+      hotspots: [
+        { id: "librarian_npc", name: "Prudence Hale, Librarian", icon: "👩‍🏫", x: 26, y: 46, desc: "Prudence Hale, librarian of the Library Company. She notices every book out of place — and every fact out of time.", actions: ["look", "talk", "truth"], npc: "librarian", truth: "librarian_woman" },
+        { id: "glass_tube", name: "Glass Tube", icon: "🧪", x: 60, y: 60, desc: "A slender glass tube from the instrument cabinet, used in electrical demonstrations.", actions: ["look", "interact"], item: "glass_tube" },
+        { id: "electric_lamp", name: "Glowing Lamp", icon: "💡", x: 82, y: 34, desc: "A glass bulb glowing without flame or oil. FACT: practical electric lamps did not exist until Edison's work in 1879 — more than a century from now.", actions: ["look", "truth"], truth: "electric_lamp" },
+        { id: "shelf_books", name: "Book Shelves", icon: "📖", x: 44, y: 30, desc: "Rows of bound volumes: philosophy, natural history, law. The library's catalogue is meticulous.", actions: ["look", "truth"], truth: "library_company" },
+        { id: "franklin_timeline", name: "A Timeline of Franklin's Life", icon: "📜", x: 84, y: 66, desc: "A chart of Franklin's milestones on the wall. Some of them are out of order.", actions: ["look", "interact"], puzzle: "sequence_franklin" },
+      ],
+      exits: [ { to: "marketplace", label: "🚶 Marketplace" }, { to: "meeting", label: "🚶 Meeting Room" } ] },
+    street: { id: "street", act: 1, name: "Philadelphia Street", emblem: "🏛️", backdrop: "bg-street",
+      caption: "Cobblestones, carriages and townsfolk — the city going about its day.",
+      desc: "A Philadelphia street in 1764. Carriages rattle over cobblestones. A notice board carries the day's proclamations.",
+      hotspots: [
+        { id: "notice_board", name: "Notice Board", icon: "📋", x: 40, y: 42, desc: "Posted notices: a lost dog, a meeting of the Philosophical Society, and a warning about a 'strange humming' heard near the workshop.", actions: ["look", "interact"], item: "brass_key" },
+        { id: "candle_stall", name: "Candle Stall", icon: "🕯️", x: 68, y: 62, desc: "A stall selling tallow candles — the honest light of 1764.", actions: ["look", "interact"], item: "candle" },
+        { id: "kite_sketch", name: "Kite Sketch", icon: "🪁", x: 84, y: 30, desc: "A child's kite, painted with a key. FACT: Franklin's famous kite experiment of 1752 showed lightning is electricity — but he did not fly the kite alone in a storm to 'discover' electricity, and he was not struck by lightning.", actions: ["look", "truth"], truth: "kite_experiment" }
+      ],
+      exits: [ { to: "workshop", label: "🚶 Workshop" }, { to: "marketplace", label: "🚶 Marketplace" }, { to: "meeting", label: "🚶 Meeting Room" } ] },
+    meeting: { id: "meeting", act: 1, name: "Meeting Room", emblem: "🏛️", backdrop: "bg-meeting",
+      caption: "A quiet room where the city's thinkers gather to argue — politely, mostly.",
+      desc: "The meeting room of the Philosophical Society. A long table, chairs, a globe, and a locked document box.",
+      hotspots: [
+        { id: "document_box", name: "Document Box", icon: "🗄️", x: 46, y: 46, desc: "A locked box of society papers. It opens with a brass key.", actions: ["look", "interact"], item: "document", requirement: { item: "brass_key" }, lockedMsg: "The box is locked. It needs a brass key — the notice board in the street mentioned one lost near the market." },
+        { id: "sealing_wax", name: "Sealing Wax", icon: "🕯️", x: 70, y: 64, desc: "Sticks of red sealing wax for letters and documents.", actions: ["look", "interact"], item: "sealing_wax" },
+        { id: "compass", name: "Brass Compass", icon: "🧭", x: 22, y: 62, desc: "A brass compass, its needle steady and true.", actions: ["look", "interact"], item: "compass" },
+        { id: "globe", name: "Terrestrial Globe", icon: "🌍", x: 86, y: 32, desc: "A globe showing the known world of 1764 — the Americas, Europe, Africa and Asia, with vast blank spaces still unmapped.", actions: ["look", "truth"], truth: "globe_1764" }
+      ],
+      exits: [ { to: "library", label: "🚶 Library" }, { to: "street", label: "🚶 Street" } ] },
+    /* ---------- ACT 2 : Manchester, 1830s ---------- */
+    mill: { id: "mill", act: 2, name: "Grimshaw's Textile Mill", emblem: "🏭", backdrop: "bg-mill",
+      caption: "Looms thunder, belts spin, and a small radio crackles where no radio should be.",
+      desc: "The mill floor. Power looms clatter in rows. In the corner, behind a loom, a small wooden box crackles with voices from nowhere.",
+      hotspots: [
+        { id: "radio_set", name: "Crackling Box", icon: "📻", x: 62, y: 38, desc: "A wooden box with a glowing dial, speaking in voices. FACT: radio broadcasting did not exist until the early 20th century — this is a distortion.", actions: ["look", "truth", "interact"], truth: "radio_set", anomaly: true, useTarget: "radio_set" },
+        { id: "mill_owner", name: "Josiah Grimshaw, Mill Owner", icon: "🎩", x: 26, y: 46, desc: "Josiah Grimshaw, owner of the mill. Proud of his machines, nervous about the strange box.", actions: ["look", "talk", "truth"], npc: "mill_owner", truth: "mill_owner_man" },
+        { id: "wrench_mill", name: "Wrench", icon: "🔧", x: 82, y: 64, desc: "A heavy iron wrench, used on the looms.", actions: ["look", "interact"], item: "wrench" },
+        { id: "power_loom", name: "Power Loom", icon: "🧵", x: 44, y: 62, desc: "A power loom. FACT: Edmund Cartwright patented the power loom in 1785; by the 1830s, steam-driven looms filled Manchester's mills.", actions: ["look", "truth"], truth: "power_loom" },
+        { id: "loom_sequence", name: "The Mill's Work Chart", icon: "🧵", x: 12, y: 34, desc: "A chart shows the stages of cloth-making — but the order has been scrambled.", actions: ["look", "interact"], puzzle: "sequence_loom" },
+      ],
+      exits: [ { to: "cottage", label: "🚶 Worker's Cottage" }, { to: "warehouse", label: "🚶 Canal Warehouse" } ] },
+    cottage: { id: "cottage", act: 2, name: "Worker's Cottage", emblem: "🏠", backdrop: "bg-cottage",
+      caption: "A small cottage, a tired family, and three different stories about the box.",
+      desc: "The Fletcher cottage. Tommy Fletcher, a mill worker, sits by the fire with his family. Three people here will tell you three different stories about the crackling box.",
+      hotspots: [
+        { id: "worker_npc", name: "Tommy Fletcher, Mill Worker", icon: "🧑‍🏭", x: 34, y: 48, desc: "Tommy Fletcher, who has worked the looms since he was a boy. He was there the night the box arrived.", actions: ["look", "talk", "truth"], npc: "worker", truth: "worker_man" },
+        { id: "three_stories", name: "The Workers' Accounts", icon: "🗣️", x: 12, y: 66, desc: "Three workers describe the same night. Their stories do not agree.", actions: ["look", "interact"], puzzle: "testimony" },
+        { id: "oil_can", name: "Oil Can", icon: "🛢️", x: 64, y: 62, desc: "A can of machine oil.", actions: ["look", "interact"], item: "oil_can" },
+        { id: "cotton_bale", name: "Cotton Bale", icon: "📦", x: 82, y: 40, desc: "A bale of raw cotton from across the Atlantic. FACT: Manchester's mills ran on cotton grown largely by enslaved labour in the Americas — the industry's wealth had a human cost.", actions: ["look", "truth"], truth: "cotton_trade" }
+      ],
+      exits: [ { to: "mill", label: "🚶 Mill" }, { to: "warehouse", label: "🚶 Canal Warehouse" } ] },
+    warehouse: { id: "warehouse", act: 2, name: "Canal Warehouse", emblem: "🚢", backdrop: "bg-warehouse",
+      caption: "Barges, bales and ledgers — the paperwork of an empire of cloth.",
+      desc: "The canal warehouse. Barges unload cotton; ledgers record every bale. The engineer Eliza Hart is checking a delivery.",
+      hotspots: [
+        { id: "engineer_npc", name: "Eliza Hart, Mill Engineer", icon: "👩‍🔧", x: 30, y: 46, desc: "Eliza Hart, the mill's engineer. She understands machines better than anyone in Manchester — and she knows the box is impossible.", actions: ["look", "talk", "truth"], npc: "engineer", truth: "engineer_woman" },
+        { id: "loom_shuttle", name: "Loom Shuttle", icon: "🛶", x: 58, y: 62, desc: "A wooden shuttle, worn smooth by years of weaving.", actions: ["look", "interact"], item: "loom_shuttle" },
+        { id: "ledger_book", name: "Delivery Ledger", icon: "📒", x: 78, y: 38, desc: "A ledger of deliveries. The entries stop making sense the week the box appeared.", actions: ["look", "interact"], item: "ledger" },
+        { id: "wire_warehouse", name: "Copper Wire", icon: "🧵", x: 88, y: 64, desc: "A coil of copper wire among the spare parts.", actions: ["look", "interact"], item: "copper_wire" }
+      ],
+      exits: [ { to: "mill", label: "🚶 Mill" }, { to: "cottage", label: "🚶 Worker's Cottage" } ] },
+
+    /* ---------- ACT 3 : Europe, 1690s ---------- */
+    observatory: { id: "observatory", act: 3, name: "Observatory Tower", emblem: "🔭", backdrop: "bg-observatory",
+      caption: "Brass, glass and starlight — the new science of the heavens.",
+      desc: "The observatory tower. A great brass telescope points at the night sky. Master Corvin charts the planets by candlelight.",
+      hotspots: [
+        { id: "astronomer_npc", name: "Master Corvin, Astronomer", icon: "🧙", x: 30, y: 46, desc: "Master Corvin, astronomer. He has read Newton and argues about comets with anyone who will listen.", actions: ["look", "talk", "truth"], npc: "astronomer", truth: "astronomer_man" },
+        { id: "telescope", name: "Brass Telescope", icon: "🔭", x: 62, y: 40, desc: "A long brass telescope. FACT: telescopes transformed astronomy in the 1600s; Newton's reflecting telescope dates to 1668.", actions: ["look", "truth"], truth: "telescope" },
+        { id: "star_chart", name: "Star Chart", icon: "🗺️", x: 82, y: 62, desc: "A hand-drawn chart of the planets, carefully inked.", actions: ["look", "interact"], item: "star_chart" },
+        { id: "wax_observatory", name: "Sealing Wax", icon: "🕯️", x: 52, y: 68, desc: "Sealing wax for letters to fellow scholars.", actions: ["look", "interact"], item: "sealing_wax" }
+      ],
+      exits: [ { to: "apothecary", label: "🚶 Apothecary" }, { to: "university", label: "🚶 University Hall" } ] },
+    apothecary: { id: "apothecary", act: 3, name: "The Apothecary", emblem: "⚗️", backdrop: "bg-apothecary",
+      caption: "Herbs, jars and a chart that knows too much.",
+      desc: "The apothecary's shop. Jars of herbs line the walls. On the wall hangs a chart describing tiny creatures causing disease — drawn with impossible precision.",
+      hotspots: [
+        { id: "germ_chart", name: "Germ-Theory Chart", icon: "🦠", x: 58, y: 36, desc: "A chart showing tiny creatures causing disease, with cures listed beside them. FACT: germ theory was not proven until the 1860s — this chart is two centuries too early.", actions: ["look", "truth", "interact"], truth: "germ_chart", anomaly: true, useTarget: "germ_chart" },
+        { id: "apothecary_npc", name: "Sister Agnes, Apothecary", icon: "👩‍⚕️", x: 26, y: 48, desc: "Sister Agnes, apothecary and healer. She hung the chart herself — she swears she copied it from a book that no longer exists.", actions: ["look", "talk", "truth"], npc: "apothecary", truth: "apothecary_woman" },
+        { id: "ink_pot_apoth", name: "Ink Pot", icon: "🫙", x: 80, y: 62, desc: "A pot of iron-gall ink.", actions: ["look", "interact"], item: "ink_pot" },
+        { id: "microscope", name: "Simple Microscope", icon: "🔬", x: 42, y: 64, desc: "A simple microscope. FACT: Leeuwenhoek's microscopes of the 1670s revealed tiny living things — but no one then connected them to disease.", actions: ["look", "truth"], truth: "microscope" },
+        { id: "traveller_note", name: "The Traveller's Letter", icon: "✉️", x: 12, y: 30, desc: "A coded letter left by the pedlar. The code looks simple — a letter shift.", actions: ["look", "interact"], puzzle: "cipher_letter" },
+      ],
+      exits: [ { to: "observatory", label: "🚶 Observatory" }, { to: "university", label: "🚶 University Hall" } ] },
+    university: { id: "university", act: 3, name: "University Hall", emblem: "🎓", backdrop: "bg-university",
+      caption: "Scholars debate the new philosophy — and one student asks the right question.",
+      desc: "The university hall. Candlelit desks, disputed theses, and Pieter, a student who has noticed that the discoveries are arriving in the wrong order.",
+      hotspots: [
+        { id: "student_npc", name: "Pieter, Student", icon: "🧑‍🎓", x: 32, y: 48, desc: "Pieter, a student of natural philosophy. He has listed the great discoveries on a slate — and the order troubles him.", actions: ["look", "talk", "truth"], npc: "student", truth: "student_man" },
+        { id: "manuscript", name: "Bound Manuscript", icon: "📜", x: 62, y: 60, desc: "A bound manuscript of lecture notes, ready for correction.", actions: ["look", "interact"], item: "manuscript" },
+        { id: "quill", name: "Quill Pen", icon: "🪶", x: 80, y: 38, desc: "A goose-quill pen, freshly cut.", actions: ["look", "interact"], item: "quill" },
+        { id: "principia", name: "Principia Volume", icon: "📕", x: 50, y: 30, desc: "A copy of Newton's Principia. FACT: published in 1687, it set out the laws of motion and universal gravitation.", actions: ["look", "truth"], truth: "principia" },
+        { id: "scholar_slate", name: "The Scholar's Slate", icon: "📐", x: 14, y: 68, desc: "Four great discoveries are chalked on a slate — in the wrong order.", actions: ["look", "interact"], puzzle: "sequence_discovery" },
+      ],
+      exits: [ { to: "observatory", label: "🚶 Observatory" }, { to: "apothecary", label: "🚶 Apothecary" } ] },
+    /* ---------- ACT 4 : An airfield, 1912 ---------- */
+    airfield: { id: "airfield", act: 4, name: "The Airfield", emblem: "✈️", backdrop: "bg-airfield",
+      caption: "Wind, canvas and the smell of castor oil — flight is barely nine years old.",
+      desc: "The airfield. A biplane stands on the grass, its propeller turning lazily in the wind. Captain Mallory is preparing for a test flight.",
+      hotspots: [
+        { id: "pilot_npc", name: "Captain Rose Mallory, Pilot", icon: "👩‍✈️", x: 30, y: 46, desc: "Captain Rose Mallory, pilot. She has flown in wind, rain and fog — and she refuses to fly a machine she does not trust.", actions: ["look", "talk", "truth"], npc: "pilot", truth: "pilot_woman" },
+        { id: "biplane", name: "Biplane", icon: "🛩️", x: 62, y: 42, desc: "A wood-and-linen biplane. FACT: the Wright brothers first flew a powered aeroplane in 1903; by 1912, biplanes were crossing channels and carrying mail.", actions: ["look", "truth"], truth: "biplane" },
+        { id: "flight_log", name: "Flight Log", icon: "📓", x: 82, y: 62, desc: "The airfield's flight log, recording every takeoff and landing.", actions: ["look", "interact"], item: "flight_log" },
+        { id: "spark_plug", name: "Spark Plug", icon: "🔌", x: 52, y: 68, desc: "A spare spark plug for the rotary engine.", actions: ["look", "interact"], item: "spark_plug" },
+        { id: "assembly_notes", name: "The Assembly Notes", icon: "📋", x: 12, y: 66, desc: "A fitter's notes on building an aeroplane — the steps are jumbled.", actions: ["look", "interact"], puzzle: "sequence_assembly" },
+      ],
+      exits: [ { to: "hangar", label: "🚶 Hangar" }, { to: "office", label: "🚶 Hangar Office" } ] },
+    hangar: { id: "hangar", act: 4, name: "The Hangar", emblem: "🔧", backdrop: "bg-hangar",
+      caption: "Tools, oil and canvas — and a blade that belongs to another age.",
+      desc: "The hangar. Workbenches, engine parts and a half-built wing. Bolted to the biplane's nose is a blade of strange, gleaming metal.",
+      hotspots: [
+        { id: "turbine_blade", name: "Turbine Blade", icon: "⚙️", x: 58, y: 38, desc: "A curved metal blade, light and impossibly strong. FACT: jet turbine engines were developed in the late 1930s and 1940s — this blade is thirty years too early.", actions: ["look", "truth", "interact"], truth: "turbine_blade", anomaly: true, useTarget: "turbine_blade" },
+        { id: "mechanic_npc", name: "Gus Berger, Mechanic", icon: "🧑‍🔧", x: 26, y: 48, desc: "Gus Berger, mechanic. He fitted the blade himself — he swears it arrived in a crate with no sender.", actions: ["look", "talk", "truth"], npc: "mechanic", truth: "mechanic_man" },
+        { id: "wrench_hangar", name: "Wrench", icon: "🔧", x: 80, y: 62, desc: "A heavy wrench, sized for engine bolts.", actions: ["look", "interact"], item: "wrench" },
+        { id: "fabric_roll", name: "Linen Fabric Roll", icon: "🧵", x: 42, y: 66, desc: "A roll of linen fabric for covering wings.", actions: ["look", "interact"], item: "fabric_roll" },
+        { id: "parts_bench", name: "The Parts Bench", icon: "🔩", x: 12, y: 32, desc: "A jumble of aircraft parts. Some are authentic 1912 parts; some are impostors.", actions: ["look", "interact"], puzzle: "parts_pick" },
+      ],
+      exits: [ { to: "airfield", label: "🚶 Airfield" }, { to: "office", label: "🚶 Hangar Office" } ] },
+    office: { id: "office", act: 4, name: "Hangar Office", emblem: "🗄️", backdrop: "bg-office",
+      caption: "Blueprints, telegrams and a crate with no sender.",
+      desc: "The hangar office. Blueprints cover the desk. A crate stands in the corner — its label is blank where a sender's name should be.",
+      hotspots: [
+        { id: "engineer4_npc", name: "Clara Webb, Engineer", icon: "👩‍💼", x: 30, y: 46, desc: "Clara Webb, aeronautical engineer. She has done the sums: the blade cannot work on this airframe, and yet the machine flew.", actions: ["look", "talk", "truth"], npc: "engineer4", truth: "engineer4_woman" },
+        { id: "blueprint", name: "Biplane Blueprint", icon: "📐", x: 60, y: 40, desc: "The biplane's blueprint. Every part is accounted for — except the blade.", actions: ["look", "truth"], truth: "blueprint" },
+        { id: "rivet_box", name: "Box of Rivets", icon: "🔩", x: 80, y: 62, desc: "A box of steel rivets.", actions: ["look", "interact"], item: "rivet" },
+        { id: "propeller_blade", name: "Spare Propeller Blade", icon: "🪶", x: 50, y: 66, desc: "A wooden propeller blade, carved and balanced by hand.", actions: ["look", "interact"], item: "propeller_blade" }
+      ],
+      exits: [ { to: "airfield", label: "🚶 Airfield" }, { to: "hangar", label: "🚶 Hangar" } ] },
+
+    /* ---------- ACT 5 : The Temporal Core ---------- */
+    core: { id: "core", act: 5, name: "The Temporal Core", emblem: "🌀", backdrop: "bg-core",
+      caption: "A chamber outside time, where the repaired past glows like stars.",
+      desc: "The Temporal Core. Streams of light — each one a timeline you repaired — flow into a great fractured ring. The fracture pulses with the last of the distortion.",
+      hotspots: [
+        { id: "core_fracture", name: "The Fracture", icon: "💠", x: 50, y: 38, desc: "The fracture in the Core. Four key digits — one from each act you repaired — will seal it.", actions: ["look", "truth", "interact"], truth: "core_fracture", anomaly: true, puzzle: "final_code" },
+        { id: "chronarch_npc", name: "The Chronarch", icon: "🧝", x: 28, y: 50, desc: "The Chronarch, custodian of the timelines. Neither young nor old, neither kind nor cruel — only patient.", actions: ["look", "talk", "truth"], npc: "chronarch", truth: "chronarch_being" },
+        { id: "timeline_stream1", name: "Stream of 1764", icon: "✨", x: 74, y: 60, desc: "A stream of light: Philadelphia, 1764, steady and bright since your repair.", actions: ["look", "truth"], truth: "stream_1764" }
+      ],
+      exits: [ { to: "gallery", label: "🚶 Memory Gallery" }, { to: "dais", label: "🚶 The Dais" } ] },
+    gallery: { id: "gallery", act: 5, name: "Memory Gallery", emblem: "🏛️", backdrop: "bg-gallery",
+      caption: "Every choice you made, kept as light.",
+      desc: "The Memory Gallery. The Core shows you your own journey: the moments you chose well, and the moments you did not.",
+      hotspots: [
+        { id: "memory_franklin", name: "Memory: Franklin", icon: "🕯️", x: 32, y: 44, desc: "A memory of Philadelphia. What you told Franklin echoes here.", actions: ["look", "interact"], puzzle: "memory_recall" },
+        { id: "memory_mill", name: "Memory: The Mill", icon: "🏭", x: 60, y: 42, desc: "A memory of Manchester. The workers' voices still argue.", actions: ["look", "truth"], truth: "stream_mill" },
+        { id: "chronarch_sigil", name: "Chronarch's Sigil", icon: "🔮", x: 80, y: 64, desc: "A small sigil left by the Chronarch. Take it — you will need proof of your deeds.", actions: ["look", "interact"], item: "chronarch_sigil" }
+      ],
+      exits: [ { to: "core", label: "🚶 The Core" }, { to: "dais", label: "🚶 The Dais" } ] },
+    dais: { id: "dais", act: 5, name: "The Dais", emblem: "👑", backdrop: "bg-dais",
+      caption: "The Chronarch's dais. The final reckoning waits here.",
+      desc: "The Dais. The Chronarch stands ready to hear your final report. When the Core is sealed, the timeline will be judged.",
+      hotspots: [
+        { id: "chronarch2_npc", name: "The Chronarch", icon: "🧝", x: 40, y: 46, desc: "The Chronarch, waiting. 'Speak, Restorer. What did you learn?'", actions: ["look", "talk"], npc: "chronarch_final" },
+        { id: "final_seal", name: "The Final Seal", icon: "🔏", x: 68, y: 50, desc: "The seal that will close the Core — once the fracture is repaired and the final quiz is passed.", actions: ["look", "interact"], requirement: { flag: "a5_core_sealed" }, lockedMsg: "The seal is inert. The Core's fracture must be repaired first." }
+      ],
+      exits: [ { to: "core", label: "🚶 The Core" }, { to: "gallery", label: "🚶 Memory Gallery" } ] }
+  },
+  characters: {
+    franklin: { id: "franklin", name: "Benjamin Franklin", role: "Printer and natural philosopher", scene: "workshop", icon: "👴", dialogue: "franklin_intro" },
+    printer: { id: "printer", name: "Abel Crowe", role: "Master Printer", scene: "printshop", icon: "🧔", dialogue: "printer_intro" },
+    vendor: { id: "vendor", name: "Silas Green", role: "Market Vendor", scene: "marketplace", icon: "🧑‍🌾", dialogue: "vendor_intro" },
+    apprentice: { id: "apprentice", name: "Tom Beck", role: "Printer's Apprentice", scene: "marketplace", icon: "🧑", dialogue: "apprentice_intro" },
+    librarian: { id: "librarian", name: "Prudence Hale", role: "Librarian", scene: "library", icon: "👩‍🏫", dialogue: "librarian_intro" },
+    mill_owner: { id: "mill_owner", name: "Josiah Grimshaw", role: "Mill Owner", scene: "mill", icon: "🎩", dialogue: "mill_owner_intro" },
+    worker: { id: "worker", name: "Tommy Fletcher", role: "Mill Worker", scene: "cottage", icon: "🧑‍🏭", dialogue: "worker_intro" },
+    engineer: { id: "engineer", name: "Eliza Hart", role: "Mill Engineer", scene: "warehouse", icon: "👩‍🔧", dialogue: "engineer_intro" },
+    astronomer: { id: "astronomer", name: "Master Corvin", role: "Astronomer", scene: "observatory", icon: "🧙", dialogue: "astronomer_intro" },
+    apothecary: { id: "apothecary", name: "Sister Agnes", role: "Apothecary", scene: "apothecary", icon: "👩‍⚕️", dialogue: "apothecary_intro" },
+    student: { id: "student", name: "Pieter", role: "Student of Natural Philosophy", scene: "university", icon: "🧑‍🎓", dialogue: "student_intro" },
+    pilot: { id: "pilot", name: "Captain Rose Mallory", role: "Pilot", scene: "airfield", icon: "👩‍✈️", dialogue: "pilot_intro" },
+    mechanic: { id: "mechanic", name: "Gus Berger", role: "Mechanic", scene: "hangar", icon: "🧑‍🔧", dialogue: "mechanic_intro" },
+    engineer4: { id: "engineer4", name: "Clara Webb", role: "Aeronautical Engineer", scene: "office", icon: "👩‍💼", dialogue: "engineer4_intro" },
+    chronarch: { id: "chronarch", name: "The Chronarch", role: "Custodian of the Timelines", scene: "core", icon: "🧝", dialogue: "chronarch_intro" },
+    chronarch_final: { id: "chronarch_final", name: "The Chronarch", role: "Custodian of the Timelines", scene: "dais", icon: "🧝", dialogue: "chronarch_final_intro" }
+  },
+
+  dialogues: {
+    franklin_intro: { npc: "franklin", start: "n1", nodes: {
+      n1: { text: "Franklin looks up from the humming device. “You carry yourself like a person out of their century, friend. That box sings, and I cannot say how. Tell me — what do you make of it?”",
+        choices: [
+          { text: "“It is a scientific instrument. Best left alone.”", response: "Franklin nods slowly. “A cautious answer. Caution is a virtue I have come to respect.” He sets the device down and steps back from it.", effects: { paradox: -2, score: 20, flag: "franklin_warned" }, next: "n2" },
+          { text: "“It is from the future. Two hundred years from now.”", response: "Franklin's eyes widen — and then, dangerously, they gleam. “The future! Then tell me everything. What wonders come? What machines? What knowledge?” The device hums louder, as if pleased.", effects: { paradox: 8, score: 0, flag: "franklin_knows_future" }, next: "n3" },
+          { text: "“I found it in the marketplace.”", response: "“The marketplace?” Franklin frowns. “Then someone in this city is selling tomorrow. That is a trade I would like to understand — and stop.”", effects: { paradox: 0, score: 10, flag: "franklin_suspects_market" }, next: "n2" },
+          { text: "[Truth Check] Examine Franklin first", response: "You study him carefully. He is a man of his time — ink on his fingers, curiosity in his eyes. The distortion is the device, not the man.", effects: { paradox: 0, score: 10, truth: "franklin_man" }, next: "n1" }
+        ] },
+      n2: { text: "“The device is not of this age, I am certain of that much,” Franklin says. “I have spent my life studying electricity, and this box holds lightning in a way I do not understand. If you can silence it without harming my workshop, I will help you however I can.”",
+        choices: [
+          { text: "“I need to build a resonator — wire, lodestone and glass.”", response: "“Wire I have. Lodestone you will find in the market. Glass tubing, in the library's instrument cabinet. Build it, and I will hold the door against interruption.”", effects: { score: 30, flag: "franklin_helping" }, next: null },
+          { text: "“Tell me about your kite experiment.”", response: "“Ah — the kite. In 1752 I showed that lightning is electricity. Some say I flew it in a storm alone; I did not. My son William stood with me, and we were careful. History will embroider the rest.”", effects: { score: 25, truth: "kite_experiment" }, next: null }
+        ] },
+      n3: { text: "“The future!” Franklin laughs, delighted. “Do they fly? Do they speak across oceans without wires? Tell me one thing — only one — and I shall keep it safe.”",
+        choices: [
+          { text: "Refuse. “Some knowledge must wait for its own time.”", response: "Franklin studies you for a long moment, then nods. “You are right, of course. A seed planted in winter rots. I shall forget what I have guessed.” The device dims slightly.", effects: { paradox: -5, score: 40, flag: "franklin_warned" }, next: "n2" },
+          { text: "Tell him about electric light.", response: "“Light without flame!” Franklin breathes. “I shall think of nothing else for a month.” The distortion in the room deepens — the lamp in the library begins to glow of its own accord.", effects: { paradox: 10, score: 0, flag: "franklin_knows_light" }, next: null }
+        ] }
+    } },
+    printer_intro: { npc: "printer", start: "n1", nodes: {
+      n1: { text: "Abel Crowe wipes his hands on his apron. “Thirty years at this press, friend. I know every squeak of it. But this week the press has started printing words I never set — words about machines that fly and voices in boxes.”",
+        choices: [
+          { text: "“Show me the strange print.”", response: "He shows you a proof sheet: the words are English, but they speak of a world of 'broadcasts' and 'batteries'. “I never set this type,” he says, pale. “I would swear it on the press itself.”", effects: { score: 25, flag: "printer_proof_seen" }, next: "n2" },
+          { text: "“Has anyone new visited the shop?”", response: "“A pedlar, last Tuesday. Sold Franklin a box that hums. I told him not to buy it. Printers know: some bargains cost more than coin.”", effects: { score: 25, flag: "pedlar_clue" }, next: "n2" }
+        ] },
+      n2: { text: "“If you can put this right, do it quietly,” Crowe says. “A printer's reputation is his livelihood. And take this — spare type, in case your work needs letters set.”",
+        choices: [
+          { text: "Take the printing type.", response: "You take a small tray of movable type. It may prove useful.", effects: { score: 10, item: "printing_type" }, next: null },
+          { text: "“Thank you. I will be discreet.”", response: "“Discretion,” Crowe says approvingly, “is the better part of printing.”", effects: { score: 20 }, next: null }
+        ] }
+    } },
+    vendor_intro: { npc: "vendor", start: "n1", nodes: {
+      n1: { text: "Silas Green spreads his hands wide. “Iron goods! Honest iron! And — for a discerning customer — curiosities from far away. A pedlar brought me that clear bottle. Pretty thing, is it not?”",
+        choices: [
+          { text: "“Where is the pedlar now?”", response: "“Gone west, two days past. He sold the bottle, a humming box to Franklin, and a lamp to the library — then vanished like smoke. Odd fellow. Paid in coins I had never seen.”", effects: { score: 30, flag: "pedlar_clue", truth: "plastic_bottle" }, next: "n2" },
+          { text: "“That bottle is not glass. It is not of this century.”", response: "Green laughs, then stops when he sees your face. “Not glass? Then what is it? …You know, it never did feel right in the hand. Too light. Too perfect.”", effects: { score: 20, truth: "plastic_bottle" }, next: "n2" }
+        ] },
+      n2: { text: "“Take the lodestone, friend,” Green says, pressing the dark stone into your hand. “If you are chasing a pedlar who sells tomorrow, you will want something that points true.”",
+        choices: [
+          { text: "Take the lodestone.", response: "The lodestone is heavy and cool. It tugs gently at your compass.", effects: { score: 10, item: "lodestone" }, next: null },
+          { text: "“Keep your eyes open for the pedlar.”", response: "“Always,” Green says. “A vendor remembers every face. If he comes back, I will send word.”", effects: { score: 15, flag: "vendor_watch" }, next: null }
+        ] }
+    } },
+    apprentice_intro: { npc: "apprentice", start: "n1", nodes: {
+      n1: { text: "Tom Beck shifts his bundle of printed sheets. “Mr. Franklin has been strange all week, sir. He hums tunes nobody taught him. And he asked me if I knew what a 'recording' was. I did not know what to say.”",
+        choices: [
+          { text: "“You did well to notice. Keep watching him.”", response: "Tom stands a little straighter. “I will, sir. Someone should.”", effects: { score: 20, flag: "apprentice_watch" }, next: null },
+          { text: "“What tunes does he hum?”", response: "Tom hums a few bars — a melody that will not be written for two hundred years. It raises the hairs on your neck.", effects: { score: 25, truth: "music_player" }, next: null }
+        ] }
+    } },
+    librarian_intro: { npc: "librarian", start: "n1", nodes: {
+      n1: { text: "Prudence Hale does not look up from her catalogue. “The lamp appeared on Tuesday. No one brought it. No one shelved it. It simply was there, glowing. I have catalogued it under 'Impossibilities'.”",
+        choices: [
+          { text: "“May I examine the instrument cabinet?”", response: "“You may — if you promise to return everything to its place. A library is a machine for finding things, young person, and it only works when everything is where it belongs.”", effects: { score: 20, flag: "librarian_permission" }, next: "n2" },
+          { text: "“What do you know about the pedlar?”", response: "“He asked for books about the future. I told him the future has not been written yet. He laughed and said, 'Not in this library.'”", effects: { score: 25, flag: "pedlar_clue" }, next: "n2" }
+        ] },
+      n2: { text: "“The Library Company was founded in 1731,” she says, “so that knowledge might be shared. What you are hunting is knowledge in the wrong place at the wrong time. That is the worst kind of mis-shelving.”",
+        choices: [
+          { text: "“I will put it right.”", response: "“See that you do,” she says, and slides a glass tube across the desk. “You will need this. Do not break it.”", effects: { score: 15, item: "glass_tube" }, next: null }
+        ] }
+    } },
+    mill_owner_intro: { npc: "mill_owner", start: "n1", nodes: {
+      n1: { text: "Grimshaw puffs out his chest. “My mill is the most modern in Manchester, sir. Steam power, power looms, two hundred hands. And now — this box. It speaks, sir. It speaks in voices from London, or so it claims, with no wires at all.”",
+        choices: [
+          { text: "“When did the box arrive?”", response: "“Tuesday last. A pedlar sold it to my foreman — said it was a 'wireless'. I had it put behind the looms so the hands would not be distracted. The hands are distracted anyway.”", effects: { score: 25, flag: "pedlar_clue2" }, next: "n2" },
+          { text: "“The box is impossible. It must be removed.”", response: "“Impossible or not, it cost me five pounds,” Grimshaw grumbles. “But if it frightens my workers, it goes. You may take it once it is silenced — I want no more of it.”", effects: { score: 15, flag: "owner_permission" }, next: "n2" }
+        ] },
+      n2: { text: "“Eliza Hart, my engineer, has examined it,” Grimshaw says. “She says it cannot work, and yet it works. Talk to her — she is at the warehouse. And mind the belts.”",
+        choices: [
+          { text: "“I will speak with Miss Hart.”", response: "“Do. She is the cleverest person in this mill, myself included.”", effects: { score: 15 }, next: null }
+        ] }
+    } },
+    worker_intro: { npc: "worker", start: "n1", nodes: {
+      n1: { text: "Tommy Fletcher stares into the fire. “I was there the night it came, sir. Three of us saw it. But ask us separately and you will hear three different nights.”",
+        choices: [
+          { text: "“Tell me exactly what you saw.”", response: "“A man with a cart, after midnight. He carried the box into the mill himself. I asked where he was from and he said — 'from later'. I thought he meant later that night.”", effects: { score: 25, flag: "worker_true_account" }, next: "n2" },
+          { text: "“Did the others see the same man?”", response: "“Martha says she saw a woman. Old Jeb says he saw no one at all, only the box, already there in the morning. One of us is wrong — or the night itself was.”", effects: { score: 20, flag: "testimony_puzzle_hint" }, next: "n2" }
+        ] },
+      n2: { text: "“The box talks of a world where the mills are silent,” Tommy says quietly. “I do not know if that frightens me or gives me hope.”",
+        choices: [
+          { text: "“The mills will change — but not like this, not yet.”", response: "Tommy nods. “Then put it right, sir. For all our sakes.”", effects: { score: 20, paradox: -2 }, next: null }
+        ] }
+    } },
+    engineer_intro: { npc: "engineer", start: "n1", nodes: {
+      n1: { text: "Eliza Hart does not look up from her drawings. “The box receives voices through the air. I have tested it. There is no wire, no tube, no trick I can find. By every law of natural philosophy I know, it cannot exist.”",
+        choices: [
+          { text: "“What would silence it safely?”", response: "“Its heart is a coil of some kind. Ground it — drain its charge into the earth through copper — and it should go quiet. I have copper wire in the warehouse, and a wrench in the mill.”", effects: { score: 30, flag: "engineer_plan" }, next: "n2" },
+          { text: "“Could it be a trick — ventriloquism, a hidden wire?”", response: "“I checked for wires myself, in the dark, with a candle. There are none. I dislike mysteries, sir. I dislike them very much.”", effects: { score: 20 }, next: "n2" }
+        ] },
+      n2: { text: "“One more thing,” Hart says. “The loom sequence matters. Raw cotton, carding, spinning, weaving — in that order, always. Whoever built this mill's future forgot that machines obey order. Remember it.”",
+        choices: [
+          { text: "“Cotton, carding, spinning, weaving. Understood.”", response: "“Good. Now go and put the future back where it belongs.”", effects: { score: 20, truth: "power_loom" }, next: null }
+        ] }
+    } },
+    astronomer_intro: { npc: "astronomer", start: "n1", nodes: {
+      n1: { text: "Master Corvin gestures at the stars. “Newton showed us the laws in 1687 — the Principia, the greatest book of our age. And yet a chart in the apothecary claims knowledge of creatures no eye has truly seen. Order, friend. Discovery has an order, and someone has broken it.”",
+        choices: [
+          { text: "“What is the correct order of the great discoveries?”", response: "“Harvey showed the blood's circulation in 1628. Boyle his law of airs in 1662. Leeuwenhoek his tiny creatures in the 1670s. Newton his Principia in 1687. Each stands on the last. Remove one stone and the arch falls.”", effects: { score: 30, flag: "discovery_order_hint", truth: "principia" }, next: "n2" },
+          { text: "“Tell me about the telescope.”", response: "“Newton's reflecting telescope, 1668 — a mirror instead of a lens, and the heavens opened. Without it, we would still be squinting through coloured glass.”", effects: { score: 20, truth: "telescope" }, next: "n2" }
+        ] },
+      n2: { text: "“The apothecary's chart must be corrected, not burned,” Corvin says. “Knowledge is not the enemy — timing is. Write the correction, seal it, and place it where the false chart hangs.”",
+        choices: [
+          { text: "“I will write the correction.”", response: "“Then you will need ink, a manuscript and wax. The apothecary has ink; the university has paper; I have wax. Go.”", effects: { score: 20 }, next: null }
+        ] }
+    } },
+    apothecary_intro: { npc: "apothecary", start: "n1", nodes: {
+      n1: { text: "Sister Agnes wrings her hands. “I copied the chart from a book, I swear it. A traveller left the book here — it described tiny creatures and their cures in perfect detail. When I went to show my sisters, the book was gone. Only my copy remains.”",
+        choices: [
+          { text: "“The book described germs — a theory two centuries early.”", response: "“Two centuries?” She pales. “Then I have hung a lie on my wall, even if the lie is true. Take it down, I beg you — but write the truth in its place, so the next healer is not misled.”", effects: { score: 25, flag: "apothecary_remorse" }, next: "n2" },
+          { text: "“Describe the traveller.”", response: "“A pedlar, with a cart of oddities. He paid for his herbs in coins no mint I know has struck.”", effects: { score: 20, flag: "pedlar_clue3" }, next: "n2" }
+        ] },
+      n2: { text: "“The chart is written in a cipher, did you notice?” Agnes says. “The traveller's note at the bottom — letters shifted, like a child's puzzle. I could never read it.”",
+        choices: [
+          { text: "“I will decode it.”", response: "“Then you are cleverer than I. The letters march three places forward, I think — a Caesar's trick, if my Latin serves.”", effects: { score: 25, flag: "cipher_hint" }, next: null }
+        ] }
+    } },
+    student_intro: { npc: "student", start: "n1", nodes: {
+      n1: { text: "Pieter shows you his slate. Four discoveries, written in a row — but the order is wrong, and he knows it. “Harvey, Boyle, Leeuwenhoek, Newton,” he says. “Or is it Newton first? My master says the order matters more than the dates.”",
+        choices: [
+          { text: "“The order is: Harvey, Boyle, Leeuwenhoek, Newton.”", response: "Pieter beams. “Yes! Each discovery rests on the one before. Harvey's blood, Boyle's air, Leeuwenhoek's tiny creatures, Newton's laws. You understand!”", effects: { score: 30, flag: "student_order_correct" }, next: "n2" },
+          { text: "“Let me look at your slate more closely.”", response: "The slate lists the discoveries with dates: Harvey 1628, Boyle 1662, Leeuwenhoek 1670s, Newton 1687. The chain is clear once you see the years.", effects: { score: 20, flag: "discovery_order_hint" }, next: "n2" }
+        ] },
+      n2: { text: "“If you fix the chart,” Pieter says, “promise me you will also fix the slate. I want to learn the true order — not the broken one.”",
+        choices: [
+          { text: "“I promise.”", response: "“Then here — take my quill. You will need a steady hand for the correction.”", effects: { score: 15, item: "quill" }, next: null }
+        ] }
+    } },
+    pilot_intro: { npc: "pilot", start: "n1", nodes: {
+      n1: { text: "Captain Mallory folds her arms. “Nine years since the Wrights flew, and already people want miracles. That blade on my machine — it is no propeller I know. It is too light, too strong, and it hums at a pitch that sets my teeth on edge.”",
+        choices: [
+          { text: "“What does the blade do to the machine?”", response: "“It makes her fly too fast and too far, and the wings were never built for it. Gus fitted it. Clara did the sums. We all agree: it does not belong.”", effects: { score: 25, flag: "blade_assessment" }, next: "n2" },
+          { text: "“Have you flown with the blade fitted?”", response: "“Once. Never again. The machine shuddered like a living thing, and the airspeed needle went where no needle should go. I landed and walked away, and I do not walk away from much.”", effects: { score: 25, flag: "blade_flight" }, next: "n2" }
+        ] },
+      n2: { text: "“Remove it properly,” Mallory says. “Wrench, patience, and the right order: frame, wings, engine, propeller. Machines are built in order, and they are unbuilt in order.”",
+        choices: [
+          { text: "“Frame, wings, engine, propeller. Understood.”", response: "“Good. And when it is done, I will fly her properly — the way she was meant to fly.”", effects: { score: 20 }, next: null }
+        ] }
+    } },
+    mechanic_intro: { npc: "mechanic", start: "n1", nodes: {
+      n1: { text: "Gus Berger wipes grease from his hands. “The blade came in a crate, no sender, no papers. It fitted the hub like it was made for it — which is the strangest part, because no one here made it.”",
+        choices: [
+          { text: "“Could you remove it?”", response: "“With the right wrench, yes. But the bolts are strange — they need patience, not force. And the blade must come off before the propeller goes back on, or the balance will be wrong.”", effects: { score: 25, flag: "mechanic_plan" }, next: "n2" },
+          { text: "“Who delivered the crate?”", response: "“A pedlar, of all people. A cart, a smile, and coins from no country I know. He said the blade was 'from later'. I thought he meant later that week.”", effects: { score: 25, flag: "pedlar_clue4" }, next: "n2" }
+        ] },
+      n2: { text: "“Here,” Gus says, handing you a wrench. “It is the one I use for engine bolts. Bring me the blade when it is off, and I will see it melted down myself.”",
+        choices: [
+          { text: "Take the wrench.", response: "The wrench is heavy and honest.", effects: { score: 10, item: "wrench" }, next: null }
+        ] }
+    } },
+    engineer4_intro: { npc: "engineer4", start: "n1", nodes: {
+      n1: { text: "Clara Webb spreads her calculations across the desk. “Lift must exceed weight. Thrust must exceed drag. The blade gives thrust the airframe cannot bear — the numbers do not lie, even when the machine flies.”",
+        choices: [
+          { text: "“Which parts belong on a 1912 biplane?”", response: "“Wood, linen, wire and a rotary engine. The propeller is carved wood. The wings are fabric over spruce. Anything of gleaming alloy and impossible lightness does not belong.”", effects: { score: 30, flag: "parts_hint" }, next: "n2" },
+          { text: "“What happens if the blade stays?”", response: "“The wings will fail in flight, or the machine will outrun its own design and tear itself apart. Either way, someone dies — and history remembers a disaster instead of a triumph.”", effects: { score: 25, paradox: -2 }, next: "n2" }
+        ] },
+      n2: { text: "“The blueprint is on the desk,” Clara says. “Study it. When you know what belongs, you will know what does not.”",
+        choices: [
+          { text: "“I will study it.”", response: "“Good. Knowledge first, tools second. That is the whole of engineering.”", effects: { score: 15, truth: "blueprint" }, next: null }
+        ] }
+    } },
+    chronarch_intro: { npc: "chronarch", start: "n1", nodes: {
+      n1: { text: "The Chronarch regards you with eyes like distant stars. “You repaired four timelines, Restorer. Each time, the same hand: a pedlar with a cart of impossibilities, selling tomorrow to yesterday. I did not send him. I have been trying to catch him.”",
+        choices: [
+          { text: "“Who is the pedlar?”", response: "“A collector. He trades in futures — small ones, at first: a song, a voice, a cure, a blade. Each sale bends a timeline a little. Enough small bends, and the whole river changes course.”", effects: { score: 40, flag: "pedlar_revealed" }, next: "n2" },
+          { text: "“Why did you not stop him yourself?”", response: "“I am the custodian, not the repairer. I keep the Core; you walk the timelines. That is the division of our labours — and it has held for a very long time.”", effects: { score: 20 }, next: "n2" }
+        ] },
+      n2: { text: "“The Core is fractured,” the Chronarch says. “Four digits will seal it — one from each act you repaired. The Kite, the Loom, the Lens and the Wing. Speak them in order, and the pedlar's work unravels.”",
+        choices: [
+          { text: "“I have the digits. I will seal the Core.”", response: "“Then go to the fracture. And Restorer — whatever you told Franklin in 1764, the Core remembers. Choose your final words with care.”", effects: { score: 30 }, next: null }
+        ] }
+    } },
+    chronarch_final_intro: { npc: "chronarch_final", start: "n1", nodes: {
+      n1: { text: "The Chronarch stands at the dais. “The Core is sealed. Now, Restorer — the reckoning. What did you learn, walking through the centuries?”",
+        choices: [
+          { text: "“That history is fragile — and worth protecting.”", response: "“Well said. The timeline is not a river to be dammed, nor a toy to be bent. It is a trust. You have kept it.”", effects: { score: 50, paradox: -5, flag: "final_wisdom" }, next: null },
+          { text: "“That the future should stay in the future.”", response: "“Mostly,” the Chronarch says, with the faintest smile. “Though the future arrives soon enough on its own. Your work was to keep it from arriving early.”", effects: { score: 40, paradox: -3, flag: "final_wisdom" }, next: null }
+        ] }
+    } }
+  },
+  items: {
+    magnifier: { id: "magnifier", name: "Magnifying Glass", desc: "A brass magnifying glass. It reveals what the naked eye misses — including hidden ink.", icon: "🔍", era: "1764", category: "tool", usableWith: [], combineWith: ["document"], paradoxValue: 0 },
+    document: { id: "document", name: "Historical Document", desc: "A society letter, written in ordinary ink — and, you suspect, something more.", icon: "📜", era: "1764", category: "document", usableWith: [], combineWith: ["magnifier"], paradoxValue: 0 },
+    copper_wire: { id: "copper_wire", name: "Copper Wire", desc: "A spool of fine copper wire. It carries a charge well.", icon: "🧵", era: "1764", category: "material", usableWith: [], combineWith: ["lodestone", "wrench"], paradoxValue: 0 },
+    lodestone: { id: "lodestone", name: "Lodestone", desc: "A naturally magnetic stone. It pulls iron to itself and points, roughly, north.", icon: "🧲", era: "1764", category: "material", usableWith: [], combineWith: ["copper_wire"], paradoxValue: 0 },
+    glass_tube: { id: "glass_tube", name: "Glass Tube", desc: "A slender glass tube from the instrument cabinet.", icon: "🧪", era: "1764", category: "material", usableWith: [], combineWith: ["resonator_coil"], paradoxValue: 0 },
+    printing_type: { id: "printing_type", name: "Printing Type", desc: "A tray of movable metal type, ready to be set.", icon: "🔤", era: "1764", category: "material", usableWith: [], combineWith: [], paradoxValue: 0 },
+    candle: { id: "candle", name: "Tallow Candle", desc: "A plain tallow candle — the honest light of 1764.", icon: "🕯️", era: "1764", category: "tool", usableWith: [], combineWith: [], paradoxValue: 0 },
+    journal: { id: "journal", name: "Franklin's Journal Notes", desc: "Notes on electricity, in Franklin's hand, with a sketch of the humming device.", icon: "📝", era: "1764", category: "document", usableWith: [], combineWith: [], paradoxValue: 0 },
+    brass_key: { id: "brass_key", name: "Brass Key", desc: "A small brass key, found near the notice board.", icon: "🗝️", era: "1764", category: "tool", usableWith: [], combineWith: [], paradoxValue: 0 },
+    ink_pot: { id: "ink_pot", name: "Ink Pot", desc: "A pot of thick black ink.", icon: "🫙", era: "1764", category: "material", usableWith: [], combineWith: ["manuscript"], paradoxValue: 0 },
+    sealing_wax: { id: "sealing_wax", name: "Sealing Wax", desc: "Sticks of red sealing wax for letters and documents.", icon: "🕯️", era: "1764", category: "material", usableWith: [], combineWith: ["draft_correction"], paradoxValue: 0 },
+    compass: { id: "compass", name: "Brass Compass", desc: "A brass compass. Its needle is steady and true.", icon: "🧭", era: "1764", category: "tool", usableWith: [], combineWith: [], paradoxValue: 0 },
+    hidden_ink_clue: { id: "hidden_ink_clue", name: "Hidden-Ink Clue", desc: "Revealed under the magnifier: 'THE KITE DRAWS THE SPARK. DISCHARGE THE DEVICE WITH THE RESONATOR, AND THE TIMELINE WILL HEAL.' Also, a number: 7.", icon: "✨", era: "1764", category: "clue", usableWith: [], combineWith: [], paradoxValue: 0 },
+    resonator_coil: { id: "resonator_coil", name: "Resonator Coil", desc: "Copper wire wound tight around the lodestone. It hums faintly when near the device.", icon: "🌀", era: "1764", category: "device", usableWith: [], combineWith: ["glass_tube"], paradoxValue: 0 },
+    resonator: { id: "resonator", name: "Aetheric Resonator", desc: "A coil of wire and lodestone sealed in a glass tube — a device of this century's materials, built to discharge the future device safely.", icon: "⚡", era: "1764", category: "device", usableWith: ["music_player"], combineWith: [], paradoxValue: 0 },
+    wrench: { id: "wrench", name: "Iron Wrench", desc: "A heavy iron wrench, sized for engine bolts.", icon: "🔧", era: "1830s", category: "tool", usableWith: ["turbine_blade"], combineWith: ["copper_wire"], paradoxValue: 0 },
+    oil_can: { id: "oil_can", name: "Oil Can", desc: "A can of machine oil.", icon: "🛢️", era: "1830s", category: "material", usableWith: [], combineWith: [], paradoxValue: 0 },
+    cotton_bale: { id: "cotton_bale", name: "Cotton Bale", desc: "A bale of raw cotton.", icon: "📦", era: "1830s", category: "material", usableWith: [], combineWith: [], paradoxValue: 0 },
+    loom_shuttle: { id: "loom_shuttle", name: "Loom Shuttle", desc: "A wooden shuttle, worn smooth by years of weaving.", icon: "🛶", era: "1830s", category: "tool", usableWith: [], combineWith: [], paradoxValue: 0 },
+    ledger: { id: "ledger", name: "Delivery Ledger", desc: "A ledger of mill deliveries. The entries stop making sense the week the box appeared.", icon: "📒", era: "1830s", category: "document", usableWith: [], combineWith: [], paradoxValue: 0 },
+    grounding_wrench: { id: "grounding_wrench", name: "Grounding Wrench", desc: "A wrench wrapped in copper wire — a tool for draining a strange charge safely into the earth.", icon: "🔧", era: "1830s", category: "device", usableWith: ["radio_set"], combineWith: [], paradoxValue: 0 },
+    star_chart: { id: "star_chart", name: "Star Chart", desc: "A hand-drawn chart of the planets.", icon: "🗺️", era: "1690s", category: "document", usableWith: [], combineWith: [], paradoxValue: 0 },
+    manuscript: { id: "manuscript", name: "Bound Manuscript", desc: "A bound manuscript of lecture notes, ready for correction.", icon: "📜", era: "1690s", category: "document", usableWith: [], combineWith: ["ink_pot"], paradoxValue: 0 },
+    quill: { id: "quill", name: "Quill Pen", desc: "A goose-quill pen, freshly cut.", icon: "🪶", era: "1690s", category: "tool", usableWith: [], combineWith: [], paradoxValue: 0 },
+    draft_correction: { id: "draft_correction", name: "Draft Correction", desc: "The germ chart, corrected in fresh ink: the tiny creatures are real, but their role in disease is not yet proven.", icon: "📝", era: "1690s", category: "document", usableWith: [], combineWith: ["sealing_wax"], paradoxValue: 0 },
+    sealed_correction: { id: "sealed_correction", name: "Sealed Correction", desc: "The corrected chart, sealed with red wax. It can replace the false chart.", icon: "🔏", era: "1690s", category: "document", usableWith: ["germ_chart"], combineWith: [], paradoxValue: 0 },
+    flight_log: { id: "flight_log", name: "Flight Log", desc: "The airfield's flight log, recording every takeoff and landing.", icon: "📓", era: "1912", category: "document", usableWith: [], combineWith: [], paradoxValue: 0 },
+    spark_plug: { id: "spark_plug", name: "Spark Plug", desc: "A spare spark plug for the rotary engine.", icon: "🔌", era: "1912", category: "material", usableWith: [], combineWith: [], paradoxValue: 0 },
+    fabric_roll: { id: "fabric_roll", name: "Linen Fabric Roll", desc: "A roll of linen fabric for covering wings.", icon: "🧵", era: "1912", category: "material", usableWith: [], combineWith: [], paradoxValue: 0 },
+    rivet: { id: "rivet", name: "Box of Rivets", desc: "A box of steel rivets.", icon: "🔩", era: "1912", category: "material", usableWith: [], combineWith: [], paradoxValue: 0 },
+    propeller_blade: { id: "propeller_blade", name: "Wooden Propeller Blade", desc: "A wooden propeller blade, carved and balanced by hand.", icon: "🪶", era: "1912", category: "material", usableWith: [], combineWith: [], paradoxValue: 0 },
+    chronarch_sigil: { id: "chronarch_sigil", name: "Chronarch's Sigil", desc: "A small sigil of the Core. Proof of your deeds.", icon: "🔮", era: "outside time", category: "artifact", usableWith: [], combineWith: [], paradoxValue: 0 },
+    temporal_key_1: { id: "temporal_key_1", name: "Temporal Key — Kite Digit (7)", desc: "A fragment of sealed time. The number 7 — the Kite Digit, earned in Philadelphia, 1764.", icon: "🗝️", era: "outside time", category: "key", usableWith: [], combineWith: [], paradoxValue: 0 },
+    temporal_key_2: { id: "temporal_key_2", name: "Temporal Key — Loom Digit (3)", desc: "A fragment of sealed time. The number 3 — the Loom Digit, earned in Manchester.", icon: "🗝️", era: "outside time", category: "key", usableWith: [], combineWith: [], paradoxValue: 0 },
+    temporal_key_3: { id: "temporal_key_3", name: "Temporal Key — Lens Digit (1)", desc: "A fragment of sealed time. The number 1 — the Lens Digit, earned in Europe, 1690s.", icon: "🗝️", era: "outside time", category: "key", usableWith: [], combineWith: [], paradoxValue: 0 },
+    temporal_key_4: { id: "temporal_key_4", name: "Temporal Key — Wing Digit (9)", desc: "A fragment of sealed time. The number 9 — the Wing Digit, earned at the airfield, 1912.", icon: "🗝️", era: "outside time", category: "key", usableWith: [], combineWith: [], paradoxValue: 0 }
+  },
+
+  recipes: [
+    { inputs: ["magnifier", "document"], output: "hidden_ink_clue", message: "Under the magnifier, hidden ink blooms across the letter: 'THE KITE DRAWS THE SPARK. DISCHARGE THE DEVICE WITH THE RESONATOR.' And a number: 7." },
+    { inputs: ["copper_wire", "lodestone"], output: "resonator_coil", message: "You wind the copper wire tight around the lodestone. The coil hums faintly." },
+    { inputs: ["resonator_coil", "glass_tube"], output: "resonator", message: "You seal the coil inside the glass tube. The Aetheric Resonator is complete — a device of this century's materials, built to discharge the future device." },
+    { inputs: ["wrench", "copper_wire"], output: "grounding_wrench", message: "You wrap the wrench in copper wire. A grounding wrench — a tool for draining a strange charge safely into the earth." },
+    { inputs: ["ink_pot", "manuscript"], output: "draft_correction", message: "You write the correction in fresh ink: the tiny creatures are real, but their role in disease is not yet proven. The manuscript now tells the truth of its time." },
+    { inputs: ["draft_correction", "sealing_wax"], output: "sealed_correction", message: "You seal the corrected manuscript with red wax. It is ready to replace the false chart." }
+  ],
+
+  truths: {
+    press: { id: "press", object: "Franklin's Printing Press", status: "authentic", fact: "FACT: Benjamin Franklin ran a successful printing business in Philadelphia from 1728, and published the Pennsylvania Gazette from 1729. Printing was his trade and his fortune.", confidence: 98, paradox: 0, clue: "The press is genuine. The distortion is elsewhere." },
+    leyden_jar: { id: "leyden_jar", object: "Leyden Jar", status: "authentic", fact: "FACT: the Leyden jar — a glass jar lined with metal foil that stores static electricity — was invented in 1745–46. Franklin used it in his electrical experiments in the 1750s.", confidence: 97, paradox: 0, clue: "Period materials, correctly used." },
+    kite_experiment: { id: "kite_experiment", object: "Kite Sketch", status: "authentic", fact: "FACT: Franklin's kite experiment of 1752 demonstrated that lightning is electricity. He did not fly the kite alone in a storm, and he was not struck by lightning — his son William assisted, and they were careful.", confidence: 96, paradox: 0, clue: "A real experiment — but remember, the kite is not the anomaly." },
+    library_company: { id: "library_company", object: "Library Company", status: "authentic", fact: "FACT: Franklin founded the Library Company of Philadelphia in 1731 — America's first lending library. Members pooled money to buy books they could not afford alone.", confidence: 99, paradox: 0, clue: "The library belongs here. The lamp inside it does not." },
+    globe_1764: { id: "globe_1764", object: "Terrestrial Globe", status: "authentic", fact: "FACT: globes of 1764 showed the Americas, Europe, Africa and Asia — with vast blank spaces where the Pacific and the interior of continents were still unmapped.", confidence: 95, paradox: 0, clue: "An honest map of an honestly incomplete world." },
+    franklin_man: { id: "franklin_man", object: "Benjamin Franklin", status: "authentic", fact: "FACT: Benjamin Franklin (1706–1790) was a printer, scientist, inventor and statesman. In 1764 he was in Philadelphia, already famous for his electrical work.", confidence: 99, paradox: 0, clue: "The man is real. The device has changed him — not the other way around." },
+    printer_man: { id: "printer_man", object: "Abel Crowe", status: "authentic", fact: "A fictional character — a master printer of the period. Master printers ran the presses, trained apprentices, and set type by hand.", confidence: 90, paradox: 0, clue: "A man of his trade, in his time." },
+    vendor_man: { id: "vendor_man", object: "Silas Green", status: "authentic", fact: "A fictional character — a market vendor of the period. Philadelphia's markets sold iron, cloth, bread and goods from across the Atlantic.", confidence: 90, paradox: 0, clue: "He sold the pedlar's goods without knowing what they were." },
+    apprentice_man: { id: "apprentice_man", object: "Tom Beck", status: "authentic", fact: "A fictional character — a printer's apprentice. Apprentices lived with their masters, learned the trade over years, and did the heavy work of the shop.", confidence: 90, paradox: 0, clue: "He noticed the tunes first. Children always notice first." },
+    librarian_woman: { id: "librarian_woman", object: "Prudence Hale", status: "authentic", fact: "A fictional character — a librarian of the Library Company. Lending libraries kept careful catalogues; every book had its place.", confidence: 90, paradox: 0, clue: "She catalogued the lamp under 'Impossibilities'." },
+    music_player: { id: "music_player", object: "Portable Music Player", status: "anachronistic", fact: "ALTERNATE TIMELINE: portable digital music players appeared in the late 20th century. In 1764 there were no batteries, no transistors, no recorded sound. This object is the anchor of the Act 1 anomaly.", confidence: 99, expectedEra: "Late 20th century", currentEra: "1764", paradox: 12, clue: "It hums with stored lightning. It needs a counter-frequency to discharge safely — a resonator built from this century's materials." },
+    plastic_bottle: { id: "plastic_bottle", object: "Clear Bottle", status: "anachronistic", fact: "ALTERNATE TIMELINE: plastics as we know them are a 20th-century invention. A feather-light, perfectly clear bottle could not exist in 1764.", confidence: 99, expectedEra: "20th century", currentEra: "1764", paradox: 8, clue: "One of the pedlar's goods. The pedlar sold tomorrow in three places." },
+    electric_lamp: { id: "electric_lamp", object: "Glowing Lamp", status: "anachronistic", fact: "ALTERNATE TIMELINE: practical electric lamps did not exist until Edison's work in 1879 — more than a century from now. In 1764, light meant flame, candle or oil.", confidence: 99, expectedEra: "1879 and later", currentEra: "1764", paradox: 8, clue: "The lamp appeared the same Tuesday as the music player. Same pedlar, same hand." },
+    power_loom: { id: "power_loom", object: "Power Loom", status: "authentic", fact: "FACT: Edmund Cartwright patented the power loom in 1785. By the 1830s, steam-driven looms filled Manchester's mills — and the city's population had exploded around them.", confidence: 97, paradox: 0, clue: "The looms belong here. The box behind them does not." },
+    cotton_trade: { id: "cotton_trade", object: "Cotton Bale", status: "authentic", fact: "FACT: Manchester's mills ran on cotton grown largely by enslaved labour in the Americas. The industry's wealth, and its human cost, were bound together.", confidence: 98, paradox: 0, clue: "Remember the cost, not only the machines." },
+    radio_set: { id: "radio_set", object: "Crackling Box (Radio)", status: "anachronistic", fact: "ALTERNATE TIMELINE: radio broadcasting began in the early 20th century. In the 1830s there were no radio waves carrying voices — only wires, and not even those for speech.", confidence: 99, expectedEra: "Early 20th century", currentEra: "1830s", paradox: 12, clue: "Its heart is a coil. Ground it — drain its charge into the earth through copper — and it will go quiet." },
+    mill_owner_man: { id: "mill_owner_man", object: "Josiah Grimshaw", status: "authentic", fact: "A fictional character — a Manchester mill owner of the 1830s. Mill owners built fortunes on steam, cotton and the labour of hundreds.", confidence: 90, paradox: 0, clue: "Proud of his machines, frightened of the box." },
+    worker_man: { id: "worker_man", object: "Tommy Fletcher", status: "authentic", fact: "A fictional character — a mill worker. In the 1830s, mill hands worked long hours in dangerous conditions; children worked beside adults until the Factory Act of 1833 began to limit it.", confidence: 92, paradox: 0, clue: "Three witnesses, three stories. Only one saw the pedlar clearly." },
+    engineer_woman: { id: "engineer_woman", object: "Eliza Hart", status: "authentic", fact: "A fictional character — a mill engineer. Women engineers were rare in the 1830s, but women worked throughout the mills as spinners, weavers and mechanics.", confidence: 90, paradox: 0, clue: "She knows machines — and she knows the box is impossible." },
+    telescope: { id: "telescope", object: "Brass Telescope", status: "authentic", fact: "FACT: Newton's reflecting telescope of 1668 used a mirror instead of a lens and opened the heavens. Telescopes transformed astronomy in the 1600s.", confidence: 97, paradox: 0, clue: "The sky is honest. The chart on the apothecary's wall is not." },
+    microscope: { id: "microscope", object: "Simple Microscope", status: "authentic", fact: "FACT: Antonie van Leeuwenhoek's microscopes of the 1670s revealed tiny living things — 'animalcules' — in water and plaque. But no one then connected them to disease.", confidence: 97, paradox: 0, clue: "Seeing is not understanding. Leeuwenhoek saw the creatures; he did not know what they did." },
+    principia: { id: "principia", object: "Principia Volume", status: "authentic", fact: "FACT: Isaac Newton's Principia Mathematica, published in 1687, set out the laws of motion and universal gravitation — the foundation of classical physics.", confidence: 99, paradox: 0, clue: "1687: the last stone of the arch. The chain is Harvey, Boyle, Leeuwenhoek, Newton." },
+    germ_chart: { id: "germ_chart", object: "Germ-Theory Chart", status: "anachronistic", fact: "ALTERNATE TIMELINE: germ theory — the idea that specific microbes cause specific diseases — was not proven until the 1860s, with Pasteur and Lister. A correct germ chart in the 1690s is two centuries too early.", confidence: 99, expectedEra: "1860s", currentEra: "1690s", paradox: 12, clue: "Correct, and impossible. It must be corrected, not burned — write the truth of its time and seal it." },
+    astronomer_man: { id: "astronomer_man", object: "Master Corvin", status: "authentic", fact: "A fictional character — an astronomer of the late 1600s, working in the new science of Newton and the Royal Society's tradition.", confidence: 90, paradox: 0, clue: "He knows the order of discovery. Ask him about it." },
+    apothecary_woman: { id: "apothecary_woman", object: "Sister Agnes", status: "authentic", fact: "A fictional character — an apothecary and healer. Apothecaries mixed medicines from herbs, minerals and tradition, and were often the first healers the sick would see.", confidence: 90, paradox: 0, clue: "She copied the chart in good faith. The fault is the pedlar's, not hers." },
+    student_man: { id: "student_man", object: "Pieter", status: "authentic", fact: "A fictional character — a student of natural philosophy. Universities of the late 1600s taught the new philosophy alongside the old — and argued fiercely about both.", confidence: 90, paradox: 0, clue: "He has the order right. Listen to him." },
+    biplane: { id: "biplane", object: "Biplane", status: "authentic", fact: "FACT: the Wright brothers first flew a powered aeroplane in 1903. By 1912, biplanes of wood, linen and wire were crossing the English Channel (Blériot, 1909) and carrying mail.", confidence: 98, paradox: 0, clue: "Wood, linen, wire and a rotary engine. That is a 1912 aeroplane." },
+    blueprint: { id: "blueprint", object: "Biplane Blueprint", status: "authentic", fact: "FACT: early aircraft were designed on paper first — wood frames, linen covering, wire bracing, rotary engines. Every part was accounted for on the blueprint.", confidence: 96, paradox: 0, clue: "Every part is accounted for — except the blade." },
+    turbine_blade: { id: "turbine_blade", object: "Turbine Blade", status: "anachronistic", fact: "ALTERNATE TIMELINE: jet turbine engines were developed in the late 1930s and 1940s (Whittle, von Ohain). A turbine blade bolted to a 1912 biplane is thirty years too early.", confidence: 99, expectedEra: "Late 1930s–1940s", currentEra: "1912", paradox: 12, clue: "It must be removed with a wrench, in the right order — and the wooden propeller restored." },
+    pilot_woman: { id: "pilot_woman", object: "Captain Rose Mallory", status: "authentic", fact: "A fictional character — a pilot of 1912. Women flew from the earliest days of aviation: Raymonde de Laroche earned the first pilot's licence in 1910.", confidence: 92, paradox: 0, clue: "She flew with the blade once. Never again." },
+    mechanic_man: { id: "mechanic_man", object: "Gus Berger", status: "authentic", fact: "A fictional character — an airfield mechanic. Early mechanics built, repaired and flew the machines they maintained, often with little more than hand tools.", confidence: 90, paradox: 0, clue: "He fitted the blade. He wants it melted down." },
+    engineer4_woman: { id: "engineer4_woman", object: "Clara Webb", status: "authentic", fact: "A fictional character — an aeronautical engineer. Early aviation engineering was done with slide rules and wind tunnels; lift had to exceed weight, thrust had to exceed drag.", confidence: 90, paradox: 0, clue: "She did the sums. The blade cannot work on this airframe." },
+    core_fracture: { id: "core_fracture", object: "The Fracture", status: "anachronistic", fact: "ALTERNATE TIMELINE: the Core is fractured by four acts of interference — one pedlar, four sales, four timelines bent. The fracture is the sum of every anomaly you repaired.", confidence: 100, expectedEra: "Outside time", currentEra: "Outside time", paradox: 0, clue: "Four key digits seal it: Kite 7, Loom 3, Lens 1, Wing 9." },
+    chronarch_being: { id: "chronarch_being", object: "The Chronarch", status: "authentic", fact: "A fictional being — custodian of the timelines. Neither young nor old, neither kind nor cruel — only patient.", confidence: 100, paradox: 0, clue: "The Chronarch keeps the Core. You walk the timelines. That is the division of labours." },
+    stream_1764: { id: "stream_1764", object: "Stream of 1764", status: "authentic", fact: "FACT: Philadelphia in 1764 was a thriving colonial port — printing, trade, philosophy and the first stirrings of the ideas that would become a revolution.", confidence: 95, paradox: 0, clue: "Steady and bright, since your repair." },
+    stream_mill: { id: "stream_mill", object: "Memory: The Mill", status: "authentic", fact: "FACT: Manchester's mills transformed Britain — and the world — in the 19th century, for good and for ill.", confidence: 95, paradox: 0, clue: "The workers' voices still argue. You chose the true account." }
+  },
+  puzzles: {
+    anachronism_workshop: { id: "anachronism_workshop", type: "anachronism", title: "What Does Not Belong?",
+      instructions: "Look at the objects on the workbench. Three of them do not belong in 1764. Select all three, then confirm.",
+      hint: "Ask yourself: could this be made, powered or understood in 1764? Music from a box, light without flame, a bottle lighter than glass — none of these belong.",
+      score: 150, paradoxReward: -5,
+      options: [
+        { id: "o_press", label: "Printing Press", icon: "🖨️", anachronistic: false },
+        { id: "o_music", label: "Portable Music Player", icon: "📻", anachronistic: true },
+        { id: "o_leyden", label: "Leyden Jar", icon: "⚗️", anachronistic: false },
+        { id: "o_lamp", label: "Electric Lamp", icon: "💡", anachronistic: true },
+        { id: "o_candle", label: "Tallow Candle", icon: "🕯️", anachronistic: false },
+        { id: "o_bottle", label: "Plastic Bottle", icon: "🧴", anachronistic: true }
+      ] },
+    sequence_franklin: { id: "sequence_franklin", type: "sequence", title: "Franklin's Milestones",
+      instructions: "Put Franklin's real milestones in chronological order. Click them in order, from earliest to latest, then confirm.",
+      hint: "Printing came first — his trade. Then the library. The kite and the lightning rod both belong to the early 1750s, the kite first.",
+      score: 150, paradoxReward: -5,
+      correct: ["s_print", "s_lib", "s_kite", "s_rod"],
+      steps: [
+        { id: "s_lib", label: "Library Company founded", detail: "1731" },
+        { id: "s_kite", label: "Kite experiment", detail: "1752" },
+        { id: "s_print", label: "Printing business begins", detail: "1728" },
+        { id: "s_rod", label: "Lightning rod devised", detail: "1752–53" }
+      ] },
+    cipher_letter: { id: "cipher_letter", type: "cipher", title: "The Traveller's Note",
+      instructions: "The apothecary found this note at the bottom of the false chart. The letters are shifted — decode it to learn the name at the heart of the discovery chain.",
+      hint: "A Caesar shift: each letter marches three places forward in the alphabet. Shift each letter back by three to read it. (Q → N, H → E…)",
+      score: 150, paradoxReward: -5,
+      encoded: "Q H Z W R Q", shift: 3, answer: "NEWTON" },
+    sequence_loom: { id: "sequence_loom", type: "sequence", title: "The Loom's Order",
+      instructions: "Cloth is made in order — always. Put the four stages of making cloth in their correct order, from first to last.",
+      hint: "Raw cotton first. Then carding — combing the fibres straight. Then spinning into thread. Then weaving into cloth.",
+      score: 150, paradoxReward: -5,
+      correct: ["s_cotton", "s_card", "s_spin", "s_weave"],
+      steps: [
+        { id: "s_weave", label: "Weaving", detail: "thread becomes cloth" },
+        { id: "s_cotton", label: "Raw cotton", detail: "from the bale" },
+        { id: "s_spin", label: "Spinning", detail: "fibre becomes thread" },
+        { id: "s_card", label: "Carding", detail: "fibres combed straight" }
+      ] },
+    testimony: { id: "testimony", type: "testimony", title: "Three Stories, One Night",
+      instructions: "Three people saw the night the box arrived — and they tell three different stories. Only one account fits all the facts. Choose it.",
+      hint: "Tommy was there at midnight and saw the cart. Martha's 'woman' and Old Jeb's 'no one' do not match the footprints by the mill door — or the coins the pedlar paid with.",
+      score: 150, paradoxReward: -5,
+      statements: [
+        { id: "t_martha", text: "“A woman brought the box, in daylight, and left it by the door.” — Martha, neighbour", correct: false, why: "Martha was not at the mill that day, and the box arrived at night." },
+        { id: "t_tommy", text: "“A man with a cart, after midnight. He carried the box in himself and said he was 'from later'.” — Tommy Fletcher", correct: true, why: "Tommy was there. The cart tracks, the midnight hour and the pedlar's own words all agree." },
+        { id: "t_jeb", text: "“No one brought it. It was simply there in the morning, like dew.” — Old Jeb", correct: false, why: "Jeb sleeps through the night shift. The box did not appear by itself." }
+      ] },
+    sequence_discovery: { id: "sequence_discovery", type: "sequence", title: "The Chain of Discovery",
+      instructions: "Discovery has an order — each great finding stands on the one before. Put the four discoveries in chronological order.",
+      hint: "Harvey's blood (1628) first. Then Boyle's air (1662). Then Leeuwenhoek's tiny creatures (1670s). Then Newton's laws (1687).",
+      score: 150, paradoxReward: -5,
+      correct: ["s_harvey", "s_boyle", "s_leeuw", "s_newton"],
+      steps: [
+        { id: "s_newton", label: "Newton's Principia", detail: "laws of motion, 1687" },
+        { id: "s_leeuw", label: "Leeuwenhoek's microbes", detail: "tiny creatures, 1670s" },
+        { id: "s_harvey", label: "Harvey's circulation", detail: "blood circulates, 1628" },
+        { id: "s_boyle", label: "Boyle's law", detail: "pressure and volume, 1662" }
+      ] },
+    parts_pick: { id: "parts_pick", type: "anachronism", mode: "authentic", title: "What Belongs on a 1912 Biplane?",
+      instructions: "Six parts lie on the bench. Three belong on a 1912 biplane. Three do not. Select the three that belong, then confirm.",
+      hint: "A 1912 aeroplane is wood, linen, wire and a rotary engine. Anything of gleaming alloy, jet fuel or radar does not belong.",
+      score: 150, paradoxReward: -5,
+      options: [
+        { id: "o_prop", label: "Wooden Propeller", icon: "🪶", anachronistic: false },
+        { id: "o_turbine", label: "Turbine Blade", icon: "⚙️", anachronistic: true },
+        { id: "o_linen", label: "Linen Wing Fabric", icon: "🧵", anachronistic: false },
+        { id: "o_radar", label: "Radar Dish", icon: "📡", anachronistic: true },
+        { id: "o_rotary", label: "Rotary Engine", icon: "⚙️", anachronistic: false },
+        { id: "o_jetfuel", label: "Jet Fuel Canister", icon: "🛢️", anachronistic: true }
+      ] },
+    sequence_assembly: { id: "sequence_assembly", type: "sequence", title: "Build Her in Order",
+      instructions: "A machine is built in order — and unbuilt in order. Put the four stages of assembling the biplane in their correct order.",
+      hint: "Frame first — the skeleton. Then the wings. Then the engine. Last, the propeller.",
+      score: 150, paradoxReward: -5,
+      correct: ["s_frame", "s_wings", "s_engine", "s_prop"],
+      steps: [
+        { id: "s_engine", label: "Fit the engine", detail: "rotary engine" },
+        { id: "s_frame", label: "Build the frame", detail: "wood skeleton" },
+        { id: "s_prop", label: "Mount the propeller", detail: "carved wood" },
+        { id: "s_wings", label: "Attach the wings", detail: "linen over spruce" }
+      ] },
+    memory_recall: { id: "memory_recall", type: "sequence", title: "The Order of Ages",
+      instructions: "The Core asks you to remember. Put the four eras you visited in chronological order, from earliest to latest.",
+      hint: "The scholars of the 1690s came first. Then Franklin's Philadelphia. Then the mills. Last, the airfield.",
+      score: 150, paradoxReward: -5,
+      correct: ["s_europe", "s_phila", "s_mill", "s_air"],
+      steps: [
+        { id: "s_mill", label: "Manchester, the Mills", detail: "1830s" },
+        { id: "s_phila", label: "Philadelphia", detail: "1764" },
+        { id: "s_air", label: "The Airfield", detail: "1912" },
+        { id: "s_europe", label: "Europe, the Scholars", detail: "1690s" }
+      ] },
+    final_code: { id: "final_code", type: "code", title: "Seal the Core",
+      instructions: "Four key digits — one from each act you repaired. Enter them in order: Kite, Loom, Lens, Wing.",
+      hint: "The Kite Digit is 7 (the hidden-ink clue in Philadelphia). The Loom Digit is 3. The Lens Digit is 1. The Wing Digit is 9. Together: 7319.",
+      score: 300, paradoxReward: -10,
+      answer: "7319" }
+  },
+
+  quizzes: {
+    act1: { title: "Act 1 — Historical Verification: Philadelphia, 1764", questions: [
+      { q: "What was Benjamin Franklin's main trade in Philadelphia?", options: ["Printing", "Automobile manufacturing", "Television broadcasting", "Computer programming"], answer: 0, explanation: "FACT: Franklin ran a successful printing business in Philadelphia from 1728, publishing the Pennsylvania Gazette from 1729." },
+      { q: "In which year did Franklin help found the Library Company of Philadelphia?", options: ["1690", "1731", "1752", "1800"], answer: 1, explanation: "FACT: the Library Company was founded in 1731 — America's first lending library." },
+      { q: "What did Franklin's kite experiment of 1752 demonstrate?", options: ["That kites can fly in rain", "That lightning is caused by the moon", "That lightning is electricity", "That electricity comes from the sun"], answer: 2, explanation: "FACT: the 1752 kite experiment showed that lightning is electricity." },
+      { q: "What did Franklin devise to protect buildings from lightning?", options: ["A lightning net", "A lightning bell", "A lightning rod", "A lightning mirror"], answer: 2, explanation: "FACT: Franklin devised the lightning rod in 1752–53." },
+      { q: "Which of these did NOT exist in 1764?", options: ["Printing press", "Tallow candle", "Horse-drawn carriage", "Plastic bottle"], answer: 3, explanation: "ALTERNATE TIMELINE: plastics are a 20th-century invention. The other three were everyday objects in 1764." }
+    ] },
+    act2: { title: "Act 2 — Historical Verification: Manchester, 1830s", questions: [
+      { q: "In which year did the Liverpool and Manchester Railway open?", options: ["1800", "1830", "1850", "1900"], answer: 1, explanation: "FACT: the Liverpool and Manchester Railway opened in 1830 — the world's first inter-city railway." },
+      { q: "Who patented the power loom, and when?", options: ["James Watt, 1776", "Edmund Cartwright, 1785", "Richard Arkwright, 1769", "George Stephenson, 1814"], answer: 1, explanation: "FACT: Edmund Cartwright patented the power loom in 1785." },
+      { q: "What did the Factory Act of 1833 begin to limit?", options: ["Steam power", "Cotton imports", "Child labour", "Railway building"], answer: 2, explanation: "FACT: the Factory Act of 1833 began to limit child labour in textile mills." },
+      { q: "What powered Manchester's mills in the 1830s?", options: ["Electricity", "Steam engines", "Diesel engines", "Wind turbines"], answer: 1, explanation: "FACT: steam engines — Watt's improved engine from 1776 — powered the mills." },
+      { q: "What is the correct order of making cloth?", options: ["Weaving, spinning, carding, cotton", "Cotton, carding, spinning, weaving", "Spinning, cotton, weaving, carding", "Carding, weaving, cotton, spinning"], answer: 1, explanation: "FACT: raw cotton, then carding, then spinning into thread, then weaving into cloth." }
+    ] },
+    act3: { title: "Act 3 — Historical Verification: Europe, 1690s", questions: [
+      { q: "In which year was Newton's Principia published?", options: ["1628", "1662", "1687", "1752"], answer: 2, explanation: "FACT: the Principia Mathematica was published in 1687." },
+      { q: "Who first described the circulation of the blood?", options: ["Isaac Newton", "Robert Boyle", "William Harvey, 1628", "Galileo Galilei"], answer: 2, explanation: "FACT: William Harvey described the circulation of the blood in 1628." },
+      { q: "What did Leeuwenhoek's microscopes reveal in the 1670s?", options: ["Germs causing disease", "Atoms", "Tiny living creatures", "Cells dividing"], answer: 2, explanation: "FACT: Leeuwenhoek saw tiny living creatures — 'animalcules' — but did not connect them to disease." },
+      { q: "What did Boyle's law of 1662 describe?", options: ["The laws of motion", "The circulation of blood", "The relationship between the pressure and volume of a gas", "The speed of light"], answer: 2, explanation: "FACT: Boyle's law relates the pressure and volume of a gas at fixed temperature." },
+      { q: "When was germ theory proven?", options: ["1690s", "1750s", "1830s", "1860s"], answer: 3, explanation: "FACT: germ theory was proven in the 1860s, with Pasteur and Lister — two centuries after the chart in the apothecary." }
+    ] },
+    act4: { title: "Act 4 — Historical Verification: Aviation, 1912", questions: [
+      { q: "In what year did the Wright brothers first fly a powered aeroplane?", options: ["1890", "1903", "1912", "1927"], answer: 1, explanation: "FACT: the Wright brothers first flew at Kitty Hawk in 1903." },
+      { q: "Who was first to fly across the English Channel?", options: ["The Wright brothers", "Louis Blériot, 1909", "Charles Lindbergh", "Amelia Earhart"], answer: 1, explanation: "FACT: Louis Blériot crossed the Channel in 1909." },
+      { q: "What were early aeroplanes mostly made of?", options: ["Steel and aluminium", "Wood, linen and wire", "Carbon fibre", "Titanium"], answer: 1, explanation: "FACT: early aeroplanes were wood frames covered in linen, braced with wire." },
+      { q: "The turbine blade in the hangar belonged to which era?", options: ["Steam engines", "Rotary engines", "Jet engines of the late 1930s–1940s", "Gliders"], answer: 2, explanation: "ALTERNATE TIMELINE: jet turbine engines were developed in the late 1930s and 1940s — thirty years after 1912." },
+      { q: "What must lift exceed for an aeroplane to fly?", options: ["Drag", "Weight", "Speed", "Fuel"], answer: 1, explanation: "FACT: lift must exceed weight, and thrust must exceed drag." }
+    ] },
+    act5: { title: "Act 5 — Historical Verification: The Whole Timeline", questions: [
+      { q: "Which came first: the Library Company (1731) or the power loom patent (1785)?", options: ["The power loom patent", "The Library Company", "They happened in the same year", "Neither happened"], answer: 1, explanation: "FACT: the Library Company (1731) came more than fifty years before Cartwright's power loom (1785)." },
+      { q: "Which of these discoveries came last?", options: ["Harvey's circulation, 1628", "Newton's Principia, 1687", "Germ theory, 1860s", "They all came in the same century"], answer: 2, explanation: "FACT: germ theory (1860s) came nearly two centuries after Newton." },
+      { q: "In what year did Franklin's kite experiment take place?", options: ["1731", "1752", "1764", "1784"], answer: 1, explanation: "FACT: the kite experiment was in 1752." },
+      { q: "Which of these is a fictional character in this game?", options: ["Benjamin Franklin", "Isaac Newton", "The Chronarch", "Edmund Cartwright"], answer: 2, explanation: "The Chronarch is fictional. Franklin, Newton and Cartwright were real historical figures." },
+      { q: "What is the correct chronological order of the four eras you visited?", options: ["1764, 1690s, 1912, 1830s", "1690s, 1764, 1830s, 1912", "1830s, 1912, 1764, 1690s", "1912, 1830s, 1764, 1690s"], answer: 1, explanation: "FACT: the scholars (1690s), then Philadelphia (1764), then the mills (1830s), then the airfield (1912)." }
+    ] },
+    final: { title: "Final Verification — The Timeline Restored", questions: [
+      { q: "Put these in chronological order: Principia (1687), kite experiment (1752), germ theory (1860s), first powered flight (1903).", options: ["Kite, Principia, flight, germ theory", "Principia, kite, germ theory, flight", "Germ theory, Principia, kite, flight", "Flight, germ theory, kite, Principia"], answer: 1, explanation: "FACT: 1687, 1752, 1860s, 1903 — the true order of the chain." },
+      { q: "Which of these appeared first in history?", options: ["Power loom, 1785", "Franklin's printing business, 1728", "Radio broadcasting, 1920s", "Jet turbine, 1940s"], answer: 1, explanation: "FACT: Franklin's printing business (1728) predates the power loom (1785) by more than fifty years." },
+      { q: "What did the pedlar sell in every act?", options: ["Books", "Horses", "Objects from the future", "Nothing — he was only a rumour"], answer: 2, explanation: "In every act, the same pedlar sold tomorrow to yesterday: a song, a voice, a cure, a blade." },
+      { q: "Which statement is TRUE about this game?", options: ["Everything in the game is historical fact", "The pedlar is a real historical figure", "The Chronarch and the pedlar are fictional; Franklin, Newton and the Wrights are real", "Franklin invented the telephone"], answer: 2, explanation: "The Chronarch, the pedlar and the other townsfolk are fictional. Franklin, Newton, Cartwright, Harvey, Boyle, Leeuwenhoek and the Wright brothers were real." },
+      { q: "What seals the Temporal Core?", options: ["A single magic word", "The Chronarch's permission alone", "Four key digits, one from each act", "Destroying all the artifacts"], answer: 2, explanation: "The Kite Digit (7), the Loom Digit (3), the Lens Digit (1) and the Wing Digit (9) — one from each act you repaired." }
+    ] }
+  },
+
+  timelineEvents: [
+    { id: "ev_a1", act: 1, flag: "a1_repaired", text: "1764 — The music player is silenced. Philadelphia's timeline steadies." },
+    { id: "ev_a1_future", act: 1, flag: "franklin_knows_future", text: "RIPPLE: Franklin was told of the future. In later eras, technology arrives slightly early — the Chronarch notes it." },
+    { id: "ev_a1_light", act: 1, flag: "franklin_knows_light", text: "RIPPLE: Franklin was told of electric light. The lamp in the library glows of its own accord — a warning." },
+    { id: "ev_a2", act: 2, flag: "a2_repaired", text: "1830s — The radio is grounded. The mill's timeline steadies." },
+    { id: "ev_a3", act: 3, flag: "a3_repaired", text: "1690s — The false chart is corrected and sealed. The chain of discovery is restored." },
+    { id: "ev_a4", act: 4, flag: "a4_repaired", text: "1912 — The turbine blade is removed. The biplane flies as it was meant to." },
+    { id: "ev_a5", act: 5, flag: "a5_core_sealed", text: "Outside time — The Core is sealed with four digits. The pedlar's work unravels." }
+  ]
+};
+
+/* ---------------- small utilities ---------------- */
+function $(id) { return document.getElementById(id); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function makeEl(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined && text !== null) e.textContent = text;
+  return e;
+}
+
+/* ---------------- logging ---------------- */
+const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARNING: 2, ERROR: 3 };
+let logLevel = 1;
+const eventLog = [];
+function logEvent(level, message, data) {
+  const entry = { ts: new Date().toISOString(), level, message, data: data || null };
+  eventLog.push(entry);
+  if (eventLog.length > 300) eventLog.shift();
+  try {
+    const stored = JSON.parse(localStorage.getItem("timeline-restorer-log") || "[]");
+    stored.push(entry);
+    localStorage.setItem("timeline-restorer-log", JSON.stringify(stored.slice(-100)));
+  } catch (e) { /* storage unavailable — keep in-memory log only */ }
+  if (LOG_LEVELS[level] >= logLevel) {
+    const line = "[" + level + "] " + message;
+    const dbg = $("debug-log");
+    if (dbg && !$("debug-panel").classList.contains("hidden")) {
+      const div = makeEl("div", "debug-line", line);
+      dbg.appendChild(div);
+      while (dbg.children.length > 40) dbg.removeChild(dbg.firstChild);
+    }
+  }
+}
+
+/* ---------------- GameState ---------------- */
+class GameState {
+  constructor() { this.reset(); }
+  reset() {
+    this.data = {
+      currentAct: 1, currentScene: "workshop", score: 0,
+      paradoxLevel: 15, timelineStability: 85,
+      inventory: [], discoveredTruths: [], solvedPuzzles: [],
+      timelineFlags: {}, dialogueFlags: {}, visitedScenes: [],
+      quizResults: {}, playerChoices: [], gameCompleted: false,
+      keyDigits: {},
+      categories: { knowledge: 0, puzzles: 0, truths: 0, artifacts: 0, restoration: 0, exploration: 0 }
+    };
+  }
+  get(key) { return this.data[key]; }
+  set(key, value) { this.data[key] = value; }
+  toJSON() { return JSON.parse(JSON.stringify(this.data)); }
+  fromJSON(data) {
+    if (!data || typeof data !== "object") return false;
+    this.reset();
+    for (const key of Object.keys(this.data)) {
+      if (data[key] !== undefined) this.data[key] = data[key];
+    }
+    return true;
+  }
+}
+
+/* ---------------- ScoreManager ---------------- */
+class ScoreManager {
+  constructor(state) { this.state = state; }
+  add(points, category) {
+    if (!points) return;
+    this.state.data.score += points;
+    if (category && this.state.data.categories[category] !== undefined) {
+      this.state.data.categories[category] += points;
+    }
+    logEvent("INFO", "Score +" + points + " (" + (category || "general") + ") total=" + this.state.data.score);
+  }
+  total() { return this.state.data.score; }
+  breakdown() { return Object.assign({}, this.state.data.categories); }
+}
+
+/* ---------------- TimelineManager ---------------- */
+class TimelineManager {
+  constructor(state) { this.state = state; }
+  addParadox(n) {
+    const d = this.state.data;
+    d.paradoxLevel = clamp(d.paradoxLevel + n, 0, 100);
+    d.timelineStability = clamp(d.timelineStability - Math.round(n / 2), 0, 100);
+    logEvent("INFO", "Paradox " + (n >= 0 ? "+" : "") + n + " -> " + d.paradoxLevel + "%; stability " + d.timelineStability + "%");
+    return d.paradoxLevel;
+  }
+  addStability(n) {
+    const d = this.state.data;
+    d.timelineStability = clamp(d.timelineStability + n, 0, 100);
+    d.paradoxLevel = clamp(d.paradoxLevel - Math.round(n / 2), 0, 100);
+    logEvent("INFO", "Stability +" + n + " -> " + d.timelineStability + "%; paradox " + d.paradoxLevel + "%");
+    return d.timelineStability;
+  }
+  setFlag(name, value) {
+    this.state.data.timelineFlags[name] = value === undefined ? true : value;
+    logEvent("INFO", "Timeline flag set: " + name + " = " + JSON.stringify(this.state.data.timelineFlags[name]));
+  }
+  hasFlag(name) { return !!this.state.data.timelineFlags[name]; }
+  band() {
+    const p = this.state.data.paradoxLevel;
+    if (p <= 20) return "stable";
+    if (p <= 40) return "minor";
+    if (p <= 60) return "unstable";
+    if (p <= 80) return "severe";
+    return "critical";
+  }
+  bandLabel() {
+    const labels = { stable: "Stable", minor: "Minor distortion", unstable: "Timeline unstable", severe: "Severe distortion", critical: "Critical paradox" };
+    return labels[this.band()];
+  }
+  /* Apply a generic effects object: {paradox, stability, score, flag, item, truth} */
+  applyEffects(effects, engine) {
+    if (!effects) return;
+    if (effects.paradox) this.addParadox(effects.paradox);
+    if (effects.stability) this.addStability(effects.stability);
+    if (effects.score && engine) engine.scores.add(effects.score, "knowledge");
+    if (effects.flag) this.setFlag(effects.flag);
+    if (effects.item && engine) engine.inventory.addItem(effects.item);
+    if (effects.truth && engine) engine.truths.discover(effects.truth, true);
+  }
+}
+
+/* ---------------- SaveManager ---------------- */
+class SaveManager {
+  constructor() {
+    this.saveKey = "timeline-restorer-save-v1";
+    this.archiveKey = "timeline-restorer-archive-v1";
+  }
+  save(state) {
+    try {
+      localStorage.setItem(this.saveKey, JSON.stringify(state.toJSON()));
+      logEvent("INFO", "Game saved.");
+      return true;
+    } catch (e) {
+      logEvent("ERROR", "Save failed: " + e.message);
+      return false;
+    }
+  }
+  load() {
+    try {
+      const raw = localStorage.getItem(this.saveKey);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      logEvent("ERROR", "Load failed: " + e.message);
+      return null;
+    }
+  }
+  hasSave() {
+    try { return !!localStorage.getItem(this.saveKey); } catch (e) { return false; }
+  }
+  clear() {
+    try { localStorage.removeItem(this.saveKey); } catch (e) { /* ignore */ }
+  }
+  archiveAdd(truthId) {
+    try {
+      const list = this.archiveGet();
+      if (list.indexOf(truthId) === -1) list.push(truthId);
+      localStorage.setItem(this.archiveKey, JSON.stringify(list));
+    } catch (e) { /* ignore */ }
+  }
+  archiveGet() {
+    try { return JSON.parse(localStorage.getItem(this.archiveKey) || "[]"); }
+    catch (e) { return []; }
+  }
+  archiveClear() {
+    try { localStorage.removeItem(this.archiveKey); } catch (e) { /* ignore */ }
+  }
+}
+
+/* ---------------- AudioManager ---------------- */
+class AudioManager {
+  constructor() {
+    this.ctx = null; this.muted = false;
+    try { this.muted = localStorage.getItem("timeline-restorer-muted") === "1"; } catch (e) { /* ignore */ }
+  }
+  init() {
+    if (this.ctx) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) this.ctx = new AC();
+    } catch (e) { logEvent("WARNING", "Web Audio unavailable: " + e.message); }
+  }
+  setMuted(m) {
+    this.muted = m;
+    try { localStorage.setItem("timeline-restorer-muted", m ? "1" : "0"); } catch (e) { /* ignore */ }
+  }
+  beep(freq, dur, type, vol) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type || "sine";
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(vol || 0.08, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(t); osc.stop(t + dur);
+    } catch (e) { /* audio is best-effort */ }
+  }
+  click() { this.beep(660, 0.06, "square", 0.04); }
+  truth() { this.beep(880, 0.12, "sine", 0.07); setTimeout(() => this.beep(1174, 0.14, "sine", 0.06), 90); }
+  distortion() { this.beep(160, 0.3, "sawtooth", 0.06); }
+  solved() { this.beep(523, 0.1, "sine", 0.07); setTimeout(() => this.beep(659, 0.1, "sine", 0.07), 100); setTimeout(() => this.beep(784, 0.18, "sine", 0.07), 200); }
+  artifact() { this.beep(1046, 0.1, "triangle", 0.06); setTimeout(() => this.beep(1318, 0.16, "triangle", 0.05), 90); }
+  actComplete() { const seq = [523, 659, 784, 1046]; seq.forEach((f, i) => setTimeout(() => this.beep(f, 0.16, "sine", 0.07), i * 130)); }
+  error() { this.beep(220, 0.15, "square", 0.05); }
+}
+
+/* ---------------- UIManager ---------------- */
+class UIManager {
+  showScreen(name) {
+    ["screen-title", "screen-game", "screen-ending"].forEach((id) => {
+      $(id).classList.toggle("hidden", id !== "screen-" + name);
+    });
+  }
+  toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => { t.style.display = "none"; }, 2600);
+  }
+  openModal(title, bodyNode, actions) {
+    $("modal-title").textContent = title;
+    const body = $("modal-body");
+    body.innerHTML = "";
+    if (typeof bodyNode === "string") body.innerHTML = bodyNode;
+    else if (bodyNode) body.appendChild(bodyNode);
+    const act = $("modal-actions");
+    act.innerHTML = "";
+    (actions || []).forEach((a) => {
+      const b = makeEl("button", "btn" + (a.secondary ? " secondary" : ""), a.label);
+      b.addEventListener("click", () => { if (a.onClick) a.onClick(); });
+      act.appendChild(b);
+    });
+    $("modal-backdrop").classList.remove("hidden");
+    const first = act.querySelector("button") || body.querySelector("button, input");
+    if (first) first.focus();
+  }
+  closeModal() { $("modal-backdrop").classList.add("hidden"); }
+  modalOpen() { return !$("modal-backdrop").classList.contains("hidden"); }
+  setPanel(html) {
+    const p = $("panel");
+    p.innerHTML = html;
+    p.classList.remove("flash");
+    void p.offsetWidth;
+    p.classList.add("flash");
+  }
+  updateMeters(state, timeline) {
+    const d = state.data;
+    $("stability-fill").style.width = d.timelineStability + "%";
+    $("stability-num").textContent = d.timelineStability + "%";
+    $("paradox-fill").style.width = d.paradoxLevel + "%";
+    $("paradox-num").textContent = d.paradoxLevel + "%";
+    const act = GAME_DATA.acts[d.currentAct];
+    $("act-label").textContent = act ? act.title.split("—")[0].trim().toUpperCase() : "ACT " + d.currentAct;
+    document.body.classList.remove("px-minor", "px-unstable", "px-severe", "px-critical");
+    const band = timeline.band();
+    if (band === "minor") document.body.classList.add("px-minor");
+    if (band === "unstable") document.body.classList.add("px-unstable");
+    if (band === "severe") document.body.classList.add("px-severe");
+    if (band === "critical") document.body.classList.add("px-critical");
+  }
+  renderInventory(state, selectedId, onSelect) {
+    const strip = $("inventory-strip");
+    strip.innerHTML = "";
+    strip.appendChild(makeEl("span", "inv-label", "🎒 Inventory:"));
+    if (state.data.inventory.length === 0) {
+      strip.appendChild(makeEl("span", null, " (empty — click objects in the scene to collect items)"));
+      return;
+    }
+    state.data.inventory.forEach((itemId) => {
+      const def = GAME_DATA.items[itemId];
+      if (!def) return;
+      const chip = makeEl("button", "inv-chip" + (selectedId === itemId ? " selected" : ""),
+        def.icon + " " + def.name);
+      chip.setAttribute("aria-label", "Inventory item: " + def.name + ". " + def.desc);
+      chip.title = def.desc;
+      chip.addEventListener("click", () => onSelect(itemId));
+      strip.appendChild(chip);
+    });
+  }
+}
+
+/* ---------------- InventoryManager ---------------- */
+class InventoryManager {
+  constructor(state, engine) { this.state = state; this.engine = engine; }
+  hasItem(id) { return this.state.data.inventory.indexOf(id) !== -1; }
+  addItem(id) {
+    const def = GAME_DATA.items[id];
+    if (!def) { logEvent("WARNING", "Tried to add unknown item: " + id); return false; }
+    if (this.hasItem(id)) return false;
+    this.state.data.inventory.push(id);
+    this.engine.scores.add(20, "artifacts");
+    this.engine.audio.artifact();
+    logEvent("INFO", "Item collected: " + def.name);
+    this.engine.ui.toast("🎒 Collected: " + def.name);
+    this.engine.refreshUI();
+    return true;
+  }
+  removeItem(id) {
+    const idx = this.state.data.inventory.indexOf(id);
+    if (idx !== -1) this.state.data.inventory.splice(idx, 1);
+  }
+  list() {
+    return this.state.data.inventory
+      .map((id) => GAME_DATA.items[id])
+      .filter(Boolean);
+  }
+  findRecipe(a, b) {
+    return (GAME_DATA.recipes || []).find((r) => {
+      const has = (x) => r.inputs.indexOf(x) !== -1;
+      return r.inputs.length === 2 && has(a) && has(b) && a !== b;
+    }) || null;
+  }
+  combine(a, b) {
+    const recipe = this.findRecipe(a, b);
+    if (!recipe) {
+      this.engine.ui.setPanel("<p>Those two items do not combine. Try other pairings — the game will tell you when a combination works.</p>");
+      this.engine.audio.error();
+      return null;
+    }
+    this.removeItem(a);
+    this.removeItem(b);
+    this.addItem(recipe.output);
+    const out = GAME_DATA.items[recipe.output];
+    this.engine.scores.add(50, "puzzles");
+    logEvent("INFO", "Items combined: " + a + " + " + b + " = " + recipe.output);
+    this.engine.ui.setPanel("<p class='clue'>✨ " + esc(recipe.message) + "</p><p>You made: <strong>" + esc(out.name) + "</strong> " + out.icon + "</p>");
+    this.engine.refreshUI();
+    return recipe.output;
+  }
+}
+
+/* ---------------- TruthEngine ---------------- */
+class TruthEngine {
+  constructor(state, engine) { this.state = state; this.engine = engine; }
+  discover(truthId, silent) {
+    const truth = GAME_DATA.truths[truthId];
+    if (!truth) { logEvent("WARNING", "Truth not found: " + truthId); return null; }
+    const already = this.state.data.discoveredTruths.indexOf(truthId) !== -1;
+    if (!already) {
+      this.state.data.discoveredTruths.push(truthId);
+      this.engine.saves.archiveAdd(truthId);
+      if (!silent) {
+        this.engine.scores.add(50, "truths");
+        this.engine.timeline.addStability(2);
+      }
+      logEvent("INFO", "Truth discovered: " + truth.object);
+    }
+    return truth;
+  }
+  check(truthId) {
+    const truth = GAME_DATA.truths[truthId];
+    if (!truth) {
+      this.engine.ui.openModal("Truth Check", "<p>No verification record exists for this. The Truth Engine has no data — try examining it with LOOK first.</p>", [{ label: "Close", onClick: () => this.engine.ui.closeModal() }]);
+      logEvent("WARNING", "Truth check with no record: " + truthId);
+      return;
+    }
+    const firstTime = this.state.data.discoveredTruths.indexOf(truthId) === -1;
+    this.discover(truthId, false);
+    this.engine.audio.truth();
+    logEvent("INFO", "Truth checked: " + truth.object + " (" + truth.status + ")");
+    const isAnach = truth.status === "anachronistic";
+    const body = document.createElement("div");
+    body.innerHTML =
+      "<div class='" + (isAnach ? "verdict-anach" : "verdict-auth") + "'>" +
+      "<h3>" + (isAnach ? "⚠ TIMELINE DISTORTION" : "✓ AUTHENTIC") + "</h3>" +
+      "<p><strong>Object:</strong> " + esc(truth.object) + "</p>" +
+      "<p><strong>Historical Status:</strong> " + (isAnach ? "✕ ANACHRONISTIC" : "✓ AUTHENTIC") + "</p>" +
+      (isAnach ? "<p><strong>Expected Era:</strong> " + esc(truth.expectedEra) + "</p><p><strong>Current Era:</strong> " + esc(truth.currentEra) + "</p><p><strong>Paradox Contribution:</strong> +" + truth.paradox + "%</p>" : "") +
+      "<p><strong>Historical Fact:</strong> " + esc(truth.fact) + "</p>" +
+      "<p><strong>Truth Confidence:</strong> " + truth.confidence + "%</p>" +
+      (truth.clue ? "<p class='clue'>🔎 Clue: " + esc(truth.clue) + "</p>" : "") +
+      (firstTime ? "<p>⭐ First discovery! +50 points, Timeline Stability +2%.</p>" : "<p>Already discovered — no additional points.</p>") +
+      "</div>";
+    this.engine.ui.openModal("🔎 TRUTH VERIFICATION", body, [
+      { label: "Close", onClick: () => this.engine.ui.closeModal() }
+    ]);
+    this.engine.refreshUI();
+  }
+}
+
+/* ---------------- DialogueManager ---------------- */
+class DialogueManager {
+  constructor(state, engine) { this.state = state; this.engine = engine; this.current = null; }
+  start(dialogueId) {
+    const dlg = GAME_DATA.dialogues[dialogueId];
+    if (!dlg) {
+      logEvent("ERROR", "Dialogue not found: " + dialogueId);
+      this.engine.ui.setPanel("<p>The person has nothing to say right now.</p>");
+      return;
+    }
+    this.current = { id: dialogueId, node: dlg.start };
+    logEvent("INFO", "Dialogue started: " + dialogueId);
+    this.render();
+  }
+  render() {
+    if (!this.current) return;
+    const dlg = GAME_DATA.dialogues[this.current.id];
+    const node = dlg.nodes[this.current.node];
+    if (!node) { this.end(); return; }
+    const npc = GAME_DATA.characters[dlg.npc];
+    const body = document.createElement("div");
+    const who = makeEl("p", "speaker", (npc ? npc.name : "Someone") + ":");
+    body.appendChild(who);
+    const text = makeEl("p", null, node.text);
+    body.appendChild(text);
+    const keys = makeEl("p", "kbd-hint", "Press 1–" + node.choices.length + " to choose, or click.");
+    body.appendChild(keys);
+    const actions = [];
+    node.choices.forEach((choice, i) => {
+      const b = makeEl("button", "choice-btn", (i + 1) + ". " + choice.text);
+      b.addEventListener("click", () => this.choose(i));
+      body.appendChild(b);
+    });
+    actions.push({ label: "End conversation", secondary: true, onClick: () => { this.end(); this.engine.ui.closeModal(); } });
+    this.engine.ui.openModal("💬 " + (npc ? npc.name : "Conversation"), body, actions);
+    this._choiceCount = node.choices.length;
+  }
+  choose(index) {
+    if (!this.current) return;
+    const dlg = GAME_DATA.dialogues[this.current.id];
+    const node = dlg.nodes[this.current.node];
+    const choice = node.choices[index];
+    if (!choice) return;
+    this.engine.audio.click();
+    this.state.data.playerChoices.push({ dialogue: this.current.id, node: this.current.node, choice: choice.text });
+    this.state.data.dialogueFlags[this.current.id + ":" + this.current.node + ":" + index] = true;
+    logEvent("INFO", "Dialogue choice: " + choice.text);
+    if (choice.effects) this.engine.timeline.applyEffects(choice.effects, this.engine);
+    const npc = GAME_DATA.characters[dlg.npc];
+    this.engine.ui.setPanel("<p><span class='speaker'>" + esc(npc ? npc.name : "Someone") + ":</span> " + esc(choice.response || "") + "</p>");
+    this.engine.refreshUI();
+    if (choice.next) {
+      this.current.node = choice.next;
+      this.render();
+    } else {
+      this.end();
+      this.engine.ui.closeModal();
+    }
+  }
+  end() { this.current = null; this._choiceCount = 0; }
+}
+
+/* ---------------- PuzzleManager ---------------- */
+class PuzzleManager {
+  constructor(state, engine) { this.state = state; this.engine = engine; this.attempts = {}; }
+  isSolved(id) { return this.state.data.solvedPuzzles.indexOf(id) !== -1; }
+  open(puzzleId) {
+    const puzzle = GAME_DATA.puzzles[puzzleId];
+    if (!puzzle) {
+      logEvent("ERROR", "Puzzle definition not found: " + puzzleId);
+      this.engine.ui.openModal("Puzzle", "<p>This puzzle could not be loaded. Please continue exploring.</p>", [{ label: "Close", onClick: () => this.engine.ui.closeModal() }]);
+      return;
+    }
+    if (this.isSolved(puzzleId)) {
+      this.engine.ui.openModal(puzzle.title, "<p>You have already solved this puzzle. Well done — the solution stands.</p>", [{ label: "Close", onClick: () => this.engine.ui.closeModal() }]);
+      return;
+    }
+    this.attempts[puzzleId] = (this.attempts[puzzleId] || 0) + 1;
+    logEvent("INFO", "Puzzle started: " + puzzleId + " (attempt " + this.attempts[puzzleId] + ")");
+    this.engine.audio.click();
+    if (puzzle.type === "anachronism") this.renderAnachronism(puzzle);
+    else if (puzzle.type === "sequence") this.renderSequence(puzzle);
+    else if (puzzle.type === "cipher") this.renderCipher(puzzle);
+    else if (puzzle.type === "testimony") this.renderTestimony(puzzle);
+    else if (puzzle.type === "code") this.renderCode(puzzle);
+    else {
+      logEvent("ERROR", "Unknown puzzle type: " + puzzle.type);
+      this.engine.ui.openModal("Puzzle", "<p>This puzzle type is not supported in this build.</p>", [{ label: "Close", onClick: () => this.engine.ui.closeModal() }]);
+    }
+  }
+  solve(puzzle) {
+    this.state.data.solvedPuzzles.push(puzzle.id);
+    this.engine.scores.add(puzzle.score, "puzzles");
+    if (puzzle.paradoxReward) this.engine.timeline.addParadox(puzzle.paradoxReward);
+    this.engine.audio.solved();
+    logEvent("INFO", "Puzzle completed: " + puzzle.id);
+    this.engine.ui.openModal("✅ Puzzle Solved: " + puzzle.title,
+      "<p>Excellent work. <strong>+" + puzzle.score + " points.</strong> Timeline Stability improved.</p>",
+      [{ label: "Continue", onClick: () => { this.engine.ui.closeModal(); this.engine.onPuzzleSolved(puzzle.id); } }]);
+    this.engine.refreshUI();
+  }
+  fail(puzzle, message) {
+    this.engine.timeline.addParadox(2);
+    this.engine.audio.error();
+    logEvent("INFO", "Puzzle attempt failed: " + puzzle.id);
+    this.engine.ui.openModal("Not quite — " + puzzle.title,
+      "<p>" + esc(message) + "</p><p class='clue'>💡 Hint: " + esc(puzzle.hint) + "</p><p>Paradox +2%. Try again — there is no penalty for thinking.</p>",
+      [{ label: "Try again", onClick: () => { this.engine.ui.closeModal(); this.open(puzzle.id); } },
+       { label: "Leave for now", secondary: true, onClick: () => this.engine.ui.closeModal() }]);
+    this.engine.refreshUI();
+  }
+  renderAnachronism(puzzle) {
+    const body = document.createElement("div");
+    body.appendChild(makeEl("p", null, puzzle.instructions));
+    const wantAnach = puzzle.mode !== "authentic";
+    const targetCount = puzzle.options.filter((o) => o.anachronistic === wantAnach).length;
+    body.appendChild(makeEl("p", "kbd-hint", "Select " + targetCount + " object" + (targetCount > 1 ? "s" : "") + (wantAnach ? " that do NOT belong in this era." : " that belong in this era.")));
+    const grid = makeEl("div", "anach-grid");
+    const selected = new Set();
+    puzzle.options.forEach((opt) => {
+      const card = makeEl("button", "anach-card", "");
+      card.innerHTML = "<span class='a-icon'>" + opt.icon + "</span>" + esc(opt.label);
+      card.setAttribute("aria-pressed", "false");
+      card.addEventListener("click", () => {
+        if (selected.has(opt.id)) { selected.delete(opt.id); card.classList.remove("selected"); card.setAttribute("aria-pressed", "false"); }
+        else { selected.add(opt.id); card.classList.add("selected"); card.setAttribute("aria-pressed", "true"); }
+        this.engine.audio.click();
+      });
+      grid.appendChild(card);
+    });
+    body.appendChild(grid);
+    this.engine.ui.openModal("🧩 " + puzzle.title, body, [
+      { label: "Confirm selection", onClick: () => {
+        const correctSet = puzzle.options.filter((o) => o.anachronistic === wantAnach).map((o) => o.id).sort();
+        const picked = Array.from(selected).sort();
+        const ok = JSON.stringify(correctSet) === JSON.stringify(picked);
+        if (ok) this.solve(puzzle);
+        else this.fail(puzzle, "That selection is not right. Look again — which objects could not have been made, powered or understood in this era?");
+      } },
+      { label: "Hint", secondary: true, onClick: () => { this.engine.ui.openModal("Hint", "<p>" + esc(puzzle.hint) + "</p>", [{ label: "Back", onClick: () => this.open(puzzle.id) }]); } },
+      { label: "Leave", secondary: true, onClick: () => this.engine.ui.closeModal() }
+    ]);
+  }
+  renderSequence(puzzle) {
+    const body = document.createElement("div");
+    body.appendChild(makeEl("p", null, puzzle.instructions));
+    const picked = [];
+    const orderBox = makeEl("p", "clue", "Your order: (none yet)");
+    body.appendChild(orderBox);
+    const list = document.createElement("div");
+    puzzle.steps.forEach((step) => {
+      const b = makeEl("button", "seq-item", step.label + " — " + step.detail);
+      b.addEventListener("click", () => {
+        if (picked.indexOf(step.id) !== -1) return;
+        picked.push(step.id);
+        b.classList.add("picked");
+        b.disabled = true;
+        orderBox.textContent = "Your order: " + picked.map((id) => {
+          const s = puzzle.steps.find((x) => x.id === id);
+          return s ? s.label : id;
+        }).join(" → ");
+        this.engine.audio.click();
+      });
+      list.appendChild(b);
+    });
+    body.appendChild(list);
+    const resetBtn = makeEl("button", "btn secondary small", "↺ Reset order");
+    resetBtn.addEventListener("click", () => this.open(puzzle.id));
+    body.appendChild(resetBtn);
+    this.engine.ui.openModal("🧩 " + puzzle.title, body, [
+      { label: "Check order", onClick: () => {
+        const correct = puzzle.correct || [];
+        if (JSON.stringify(picked) === JSON.stringify(correct)) this.solve(puzzle);
+        else this.fail(puzzle, "That order is not the true sequence. History has a definite order — check the dates and try again.");
+      } },
+      { label: "Hint", secondary: true, onClick: () => { this.engine.ui.openModal("Hint", "<p>" + esc(puzzle.hint) + "</p>", [{ label: "Back", onClick: () => this.open(puzzle.id) }]); } },
+      { label: "Leave", secondary: true, onClick: () => this.engine.ui.closeModal() }
+    ]);
+  }
+  renderCipher(puzzle) {
+    const body = document.createElement("div");
+    body.appendChild(makeEl("p", null, puzzle.instructions));
+    body.appendChild(makeEl("p", null, "Encoded message: "));
+    const code = makeEl("p", null, "");
+    code.innerHTML = "<strong style='font-size:1.4rem; letter-spacing:.3em'>" + esc(puzzle.encoded) + "</strong>";
+    body.appendChild(code);
+    const input = makeEl("input", "text-input");
+    input.setAttribute("type", "text");
+    input.setAttribute("aria-label", "Decoded message");
+    input.setAttribute("maxlength", "20");
+    body.appendChild(input);
+    this.engine.ui.openModal("🧩 " + puzzle.title, body, [
+      { label: "Decode", onClick: () => {
+        const val = (input.value || "").trim().toUpperCase();
+        if (val === puzzle.answer) this.solve(puzzle);
+        else this.fail(puzzle, "“" + (val || "(nothing)") + "” is not the decoded message. Remember the shift.");
+      } },
+      { label: "Hint", secondary: true, onClick: () => { this.engine.ui.openModal("Hint", "<p>" + esc(puzzle.hint) + "</p>", [{ label: "Back", onClick: () => this.open(puzzle.id) }]); } },
+      { label: "Leave", secondary: true, onClick: () => this.engine.ui.closeModal() }
+    ]);
+    input.focus();
+  }
+  renderTestimony(puzzle) {
+    const body = document.createElement("div");
+    body.appendChild(makeEl("p", null, puzzle.instructions));
+    puzzle.statements.forEach((st) => {
+      const b = makeEl("button", "choice-btn", st.text);
+      b.addEventListener("click", () => {
+        if (st.correct) this.solve(puzzle);
+        else this.fail(puzzle, "That account does not fit the facts. " + st.why);
+      });
+      body.appendChild(b);
+    });
+    this.engine.ui.openModal("🧩 " + puzzle.title, body, [
+      { label: "Hint", secondary: true, onClick: () => { this.engine.ui.openModal("Hint", "<p>" + esc(puzzle.hint) + "</p>", [{ label: "Back", onClick: () => this.open(puzzle.id) }]); } },
+      { label: "Leave", secondary: true, onClick: () => this.engine.ui.closeModal() }
+    ]);
+  }
+  renderCode(puzzle) {
+    const body = document.createElement("div");
+    body.appendChild(makeEl("p", null, puzzle.instructions));
+    const input = makeEl("input", "code-input");
+    input.setAttribute("type", "text");
+    input.setAttribute("inputmode", "numeric");
+    input.setAttribute("aria-label", "Four digit code");
+    input.setAttribute("maxlength", "4");
+    body.appendChild(input);
+    const digits = makeEl("p", "kbd-hint", "Digits you have found: " + this.engine.keyDigitsText());
+    body.appendChild(digits);
+    this.engine.ui.openModal("🧩 " + puzzle.title, body, [
+      { label: "Seal the Core", onClick: () => {
+        const val = (input.value || "").trim();
+        if (val === puzzle.answer) this.solve(puzzle);
+        else this.fail(puzzle, "The Core rejects that sequence. The digits are one per act — Kite, Loom, Lens, Wing.");
+      } },
+      { label: "Hint", secondary: true, onClick: () => { this.engine.ui.openModal("Hint", "<p>" + esc(puzzle.hint) + "</p>", [{ label: "Back", onClick: () => this.open(puzzle.id) }]); } },
+      { label: "Leave", secondary: true, onClick: () => this.engine.ui.closeModal() }
+    ]);
+    input.focus();
+  }
+}
+
+/* ---------------- QuizEngine ---------------- */
+class QuizEngine {
+  constructor(state, engine) { this.state = state; this.engine = engine; }
+  scoreFor(correct) {
+    if (correct === 5) return 500;
+    if (correct === 4) return 350;
+    if (correct === 3) return 200;
+    if (correct === 2) return 100;
+    return 0;
+  }
+  start(quizId, onDone) {
+    const quiz = GAME_DATA.quizzes[quizId];
+    if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+      logEvent("ERROR", "Quiz not found or empty: " + quizId);
+      if (onDone) onDone(false);
+      return;
+    }
+    logEvent("INFO", "Quiz started: " + quizId);
+    this._run(quizId, quiz, 0, 0, onDone);
+  }
+  _run(quizId, quiz, index, correct, onDone) {
+    const q = quiz.questions[index];
+    const body = document.createElement("div");
+    body.appendChild(makeEl("p", "kbd-hint", quiz.title + " — Question " + (index + 1) + " of " + quiz.questions.length));
+    body.appendChild(makeEl("h3", null, q.q));
+    const feedback = makeEl("p", null, "");
+    body.appendChild(feedback);
+    let answered = false;
+    q.options.forEach((opt, i) => {
+      const b = makeEl("button", "quiz-opt", String.fromCharCode(65 + i) + ". " + opt);
+      b.addEventListener("click", () => {
+        if (answered) return;
+        answered = true;
+        const ok = i === q.answer;
+        b.classList.add(ok ? "correct" : "wrong");
+        if (!ok) {
+          const right = body.querySelectorAll(".quiz-opt")[q.answer];
+          if (right) right.classList.add("correct");
+          this.engine.audio.error();
+        } else {
+          this.engine.audio.solved();
+        }
+        feedback.innerHTML = (ok ? "✅ Correct! " : "❌ Not quite. ") + "<span class='fact'>" + esc(q.explanation) + "</span>";
+        logEvent("INFO", "Quiz answered: " + quizId + " Q" + (index + 1) + " " + (ok ? "correct" : "wrong"));
+        const nextBtn = makeEl("button", "btn", index + 1 < quiz.questions.length ? "Next question →" : "See results");
+        nextBtn.addEventListener("click", () => {
+          if (index + 1 < quiz.questions.length) this._run(quizId, quiz, index + 1, correct + (ok ? 1 : 0), onDone);
+          else this._finish(quizId, quiz, correct + (ok ? 1 : 0), onDone);
+        });
+        body.appendChild(nextBtn);
+        nextBtn.focus();
+      });
+      body.appendChild(b);
+    });
+    this.engine.ui.openModal("📝 " + quiz.title, body, []);
+  }
+  _finish(quizId, quiz, correct, onDone) {
+    const total = quiz.questions.length;
+    const points = this.scoreFor(correct);
+    const passed = correct >= 2;
+    this.state.data.quizResults[quizId] = { correct, total, score: passed ? points : 0, passed };
+    if (passed) this.engine.scores.add(points, "knowledge");
+    logEvent("INFO", "Quiz finished: " + quizId + " " + correct + "/" + total + " passed=" + passed);
+    const body = document.createElement("div");
+    body.innerHTML = "<h3>" + correct + " / " + total + " correct</h3>" +
+      "<p>" + (passed ? "You earned <strong>+" + points + " points</strong>." : "You need at least 2 correct answers to proceed. The timeline demands better.") + "</p>" +
+      "<p>Scoring: 5/5 = +500, 4/5 = +350, 3/5 = +200, 2/5 = +100, 0–1 = retry required.</p>";
+    const actions = [];
+    if (passed) {
+      actions.push({ label: "Continue", onClick: () => { this.engine.ui.closeModal(); if (onDone) onDone(true); } });
+    } else {
+      actions.push({ label: "↻ Retry the quiz", onClick: () => { this.engine.ui.closeModal(); this.start(quizId, onDone); } });
+      actions.push({ label: "Review the act first", secondary: true, onClick: () => { this.engine.ui.closeModal(); if (onDone) onDone(false); } });
+    }
+    this.engine.ui.openModal("📝 Quiz Results", body, actions);
+    this.engine.refreshUI();
+  }
+}
+
+/* ---------------- SceneManager ---------------- */
+class SceneManager {
+  constructor(engine) { this.engine = engine; }
+  render(sceneId) {
+    const scene = GAME_DATA.scenes[sceneId];
+    const engine = this.engine;
+    if (!scene) {
+      logEvent("ERROR", "Scene not found: " + sceneId);
+      engine.ui.setPanel("<p>This place cannot be reached. Please choose another exit.</p>");
+      return;
+    }
+    const state = engine.state.data;
+    state.currentScene = sceneId;
+    if (state.visitedScenes.indexOf(sceneId) === -1) {
+      state.visitedScenes.push(sceneId);
+      engine.scores.add(10, "exploration");
+      logEvent("INFO", "Scene entered: " + sceneId);
+    }
+    const sceneEl = $("scene");
+    sceneEl.className = scene.backdrop;
+    sceneEl.id = "scene";
+    $("scene-name").textContent = scene.name + " — " + GAME_DATA.acts[scene.act].title;
+    $("scene-emblem").textContent = scene.emblem;
+    $("scene-caption").textContent = scene.caption;
+    sceneEl.querySelectorAll(".hotspot").forEach((h) => h.remove());
+    scene.hotspots.forEach((hs) => {
+      if (hs.item && engine.inventory.hasItem(hs.item)) return; // collected items vanish
+      const btn = makeEl("button", "hotspot" + (hs.anomaly ? " anomaly-hs" : ""), "");
+      btn.style.left = hs.x + "%";
+      btn.style.top = hs.y + "%";
+      btn.innerHTML = "<span class='hs-icon'>" + hs.icon + "</span><span>" + esc(hs.name) + "</span>";
+      btn.setAttribute("aria-label", hs.name + ". " + hs.desc);
+      btn.title = hs.name;
+      btn.addEventListener("click", () => engine.selectHotspot(hs, btn));
+      sceneEl.appendChild(btn);
+    });
+    const exits = $("exits");
+    exits.innerHTML = "";
+    scene.exits.forEach((ex) => {
+      const b = makeEl("button", "btn secondary small", ex.label);
+      b.addEventListener("click", () => engine.travel(ex.to));
+      exits.appendChild(b);
+    });
+    engine.ui.setPanel("<p><strong>" + esc(scene.name) + ".</strong> " + esc(scene.desc) + "</p><p class='kbd-hint'>Click an object or person to investigate it. " + esc(scene.caption) + "</p>");
+    engine.selectedHotspot = null;
+    engine.refreshUI();
+  }
+}
+
+/* ---------------- GameEngine ---------------- */
+class GameEngine {
+  constructor() {
+    this.state = new GameState();
+    this.scores = new ScoreManager(this.state);
+    this.timeline = new TimelineManager(this.state);
+    this.saves = new SaveManager();
+    this.audio = new AudioManager();
+    this.ui = new UIManager();
+    this.inventory = new InventoryManager(this.state, this);
+    this.truths = new TruthEngine(this.state, this);
+    this.dialogues = new DialogueManager(this.state, this);
+    this.puzzles = new PuzzleManager(this.state, this);
+    this.quizzes = new QuizEngine(this.state, this);
+    this.scenes = new SceneManager(this);
+    this.selectedHotspot = null;
+    this.selectedItem = null;
+    this.useMode = false;
+    this._bound = false;
+  }
+
+  /* ---------- lifecycle ---------- */
+  init() {
+    if (this._bound) return;
+    this._bound = true;
+    $("btn-new-game").addEventListener("click", () => { this.audio.init(); this.audio.click(); this.newGame(); });
+    $("btn-continue").addEventListener("click", () => { this.audio.init(); this.audio.click(); this.continueGame(); });
+    $("btn-archive").addEventListener("click", () => { this.audio.init(); this.showArchive(); });
+    $("btn-ending-archive").addEventListener("click", () => this.showArchive());
+    $("btn-replay-act").addEventListener("click", () => this.replayAct5());
+    $("btn-new-timeline").addEventListener("click", () => this.newGame());
+    $("btn-sound").addEventListener("click", () => this.toggleSound());
+    $("btn-save").addEventListener("click", () => this.saveGame(true));
+    $("btn-menu").addEventListener("click", () => { this.saveGame(false); this.ui.showScreen("title"); this.refreshContinue(); });
+    document.querySelectorAll("#actionbar .btn").forEach((b) => {
+      b.addEventListener("click", () => { this.audio.init(); this.audio.click(); this.doAction(b.dataset.action); });
+    });
+    document.addEventListener("keydown", (e) => this.onKey(e));
+    document.addEventListener("click", () => this.audio.init(), { once: true });
+    $("btn-debug-close").addEventListener("click", () => $("debug-panel").classList.add("hidden"));
+    document.querySelectorAll("[data-dbg]").forEach((b) => {
+      b.addEventListener("click", () => this.debugAction(b.dataset.dbg));
+    });
+    this.refreshContinue();
+    this.updateSoundButton();
+    this.ui.showScreen("title");
+    logEvent("INFO", "Game initialised.");
+  }
+  refreshContinue() {
+    $("btn-continue").disabled = !this.saves.hasSave();
+  }
+  updateSoundButton() {
+    $("btn-sound").textContent = this.audio.muted ? "🔇 Sound Off" : "🔊 Sound On";
+  }
+  toggleSound() {
+    this.audio.setMuted(!this.audio.muted);
+    this.updateSoundButton();
+    this.ui.toast(this.audio.muted ? "Sound muted." : "Sound on.");
+  }
+
+  /* ---------- game flow ---------- */
+  newGame() {
+    this.state.reset();
+    this.saves.clear();
+    this.selectedHotspot = null; this.selectedItem = null; this.useMode = false;
+    logEvent("INFO", "New game started.");
+    const body = document.createElement("div");
+    body.innerHTML = "<p>You are a <strong>Timeline Restorer</strong>. A temporal disturbance has corrupted five eras. In each one, something from the future has appeared where it does not belong.</p><p>Your tools: your eyes, your questions, and the <strong>Truth Check</strong> — a device that tells real history from distortion.</p><p>Your first assignment: <strong>Philadelphia, 1764</strong>. Benjamin Franklin has begun speaking of devices no one in this century could know.</p><p class='kbd-hint'>Tip: click objects to select them, then use the action bar. Truth Check anything that looks wrong. Collect everything that looks useful.</p>";
+    this.ui.showScreen("game");
+    this.ui.openModal("📜 Your Assignment", body, [
+      { label: "Begin Act 1 — Philadelphia, 1764", onClick: () => { this.ui.closeModal(); this.startAct(1); } }
+    ]);
+  }
+  continueGame() {
+    const data = this.saves.load();
+    if (!data) { this.ui.toast("No saved game found."); return; }
+    if (!this.state.fromJSON(data)) { this.ui.toast("Save data was damaged. Starting fresh is safest."); return; }
+    logEvent("INFO", "Game loaded. Act " + this.state.data.currentAct + ", scene " + this.state.data.currentScene);
+    this.ui.showScreen("game");
+    this.scenes.render(this.state.data.currentScene);
+    this.ui.setPanel("<p>Welcome back, Restorer. You are in <strong>" + esc(GAME_DATA.scenes[this.state.data.currentScene].name) + "</strong>, Act " + this.state.data.currentAct + ". The timeline is " + this.state.data.timelineStability + "% stable; paradox stands at " + this.state.data.paradoxLevel + "%.</p>");
+    this.ui.toast("↻ Game loaded.");
+  }
+  startAct(n) {
+    const act = GAME_DATA.acts[n];
+    if (!act) { logEvent("ERROR", "Act not found: " + n); return; }
+    this.state.data.currentAct = n;
+    this.state.data.currentScene = act.scenes[0];
+    this.ui.showScreen("game");
+    this.audio.actComplete();
+    logEvent("INFO", "Act started: " + n + " — " + act.title);
+    const body = document.createElement("div");
+    body.innerHTML = "<h3>" + esc(act.title) + "</h3><p><em>" + esc(act.subtitle) + "</em></p><p>" + esc(act.intro) + "</p><p class='distort'>⚠ Anomaly: " + esc(act.anomaly) + "</p>";
+    this.ui.openModal(act.title, body, [
+      { label: "Investigate", onClick: () => { this.ui.closeModal(); this.scenes.render(act.scenes[0]); } }
+    ]);
+    this.refreshUI();
+  }
+  travel(sceneId) {
+    const scene = GAME_DATA.scenes[sceneId];
+    if (!scene) { logEvent("WARNING", "Travel to unknown scene: " + sceneId); return; }
+    if (scene.act !== this.state.data.currentAct) {
+      this.ui.setPanel("<p>That place belongs to another act. Finish this era first.</p>");
+      return;
+    }
+    this.audio.click();
+    this.scenes.render(sceneId);
+  }
+  saveGame(announce) {
+    const ok = this.saves.save(this.state);
+    if (announce) this.ui.toast(ok ? "💾 Game saved." : "Save failed — browser storage may be unavailable.");
+    return ok;
+  }
+  refreshUI() {
+    this.ui.updateMeters(this.state, this.timeline);
+    this.ui.renderInventory(this.state, this.selectedItem, (id) => this.selectInventoryItem(id));
+    this.updateActionStates();
+  }
+  updateActionStates() {
+    const hs = this.selectedHotspot;
+    const hasNpc = !!(hs && hs.npc);
+    const hasTruth = !!(hs && hs.truth);
+    const canInteract = !!(hs && (hs.item || hs.puzzle || hs.npc || hs.anomaly));
+    $("act-talk").disabled = !hasNpc;
+    $("act-truth").disabled = !hasTruth;
+    $("act-interact").disabled = !canInteract && !hs;
+    $("act-look").disabled = !hs;
+    $("act-use").disabled = false;
+  }
+  keyDigitsText() {
+    const d = this.state.data.keyDigits;
+    const names = { 1: "Kite", 2: "Loom", 3: "Lens", 4: "Wing" };
+    return [1, 2, 3, 4].map((a) => names[a] + " " + (d[a] !== undefined ? d[a] : "?")).join(", ");
+  }
+
+  /* ---------- selection & actions ---------- */
+  selectHotspot(hs, btn) {
+    if (this.useMode && this.selectedItem) { this.resolveUse(this.selectedItem, hs); return; }
+    this.selectedHotspot = hs;
+    document.querySelectorAll(".hotspot.selected").forEach((h) => h.classList.remove("selected"));
+    if (btn) btn.classList.add("selected");
+    this.audio.click();
+    logEvent("INFO", "Object inspected: " + hs.name);
+    let hint = "<p class='kbd-hint'>";
+    if (hs.npc) hint += "TALK to speak. ";
+    if (hs.truth) hint += "TRUTH CHECK to verify it. ";
+    if (hs.puzzle) hint += "INTERACT to attempt the puzzle. ";
+    if (hs.item) hint += "INTERACT to pick it up. ";
+    if (hs.anomaly) hint += "This is the anomaly — TRUTH CHECK it, then repair it with the right tool. ";
+    if (hs.useTarget) hint += "Something here can be USED ON — select an item, then press USE. ";
+    hint += "</p>";
+    this.ui.setPanel("<p><strong>" + esc(hs.name) + "</strong></p><p>" + esc(hs.desc) + "</p>" + hint);
+    this.refreshUI();
+  }
+  selectInventoryItem(id) {
+    const def = GAME_DATA.items[id];
+    if (!def) return;
+    if (this.selectedItem === id) { this.selectedItem = null; this.ui.setPanel("<p>Item deselected.</p>"); this.refreshUI(); return; }
+    this.selectedItem = id;
+    this.audio.click();
+    this.ui.setPanel("<p><strong>" + esc(def.name) + "</strong> " + def.icon + "</p><p>" + esc(def.desc) + "</p><p class='kbd-hint'>Era: " + esc(def.era) + " · Category: " + esc(def.category) + (def.combineWith && def.combineWith.length ? " · Combines with: " + def.combineWith.map((c) => GAME_DATA.items[c] ? GAME_DATA.items[c].name : c).join(", ") : "") + "</p><p>Press USE, then click a hotspot to use it on something. Or open INVENTORY to combine it.</p>");
+    if (this.useMode) this.ui.setPanel(this.uiPanelUseHint());
+    this.refreshUI();
+  }
+  uiPanelUseHint() {
+    return "<p>🛠 Use mode: an item is selected. Now click a hotspot in the scene to use it on that object — or select a different item.</p>";
+  }
+  doAction(action) {
+    const hs = this.selectedHotspot;
+    if (action === "inventory") { this.showInventory(); return; }
+    if (action === "timeline") { this.showTimeline(); return; }
+    if (!hs && action !== "use") {
+      this.ui.setPanel("<p>Select an object or person in the scene first — click one, then choose an action.</p>");
+      return;
+    }
+    if (action === "look") this.doLook(hs);
+    else if (action === "talk") this.doTalk(hs);
+    else if (action === "interact") this.doInteract(hs);
+    else if (action === "use") this.doUse();
+    else if (action === "truth") this.doTruth(hs);
+  }
+  doLook(hs) {
+    logEvent("INFO", "Object inspected (LOOK): " + hs.name);
+    let extra = "";
+    if (hs.anomaly) extra = "<p class='distort'>⚠ ANOMALY: this object does not belong in this era. It is bleeding future technology into the timeline.</p>";
+    if (hs.truth) extra += "<p class='clue'>🔎 This can be verified with TRUTH CHECK.</p>";
+    this.ui.setPanel("<p><strong>" + esc(hs.name) + "</strong></p><p>" + esc(hs.desc) + "</p>" + extra);
+  }
+  doTalk(hs) {
+    if (!hs.npc) { this.ui.setPanel("<p>There is no one here to talk to.</p>"); return; }
+    this.dialogues.start(this.dialogueIdFor(hs.npc));
+  }
+  dialogueIdFor(npcId) {
+    const char = GAME_DATA.characters[npcId];
+    if (char && char.dialogue) return char.dialogue;
+    return npcId + "_intro";
+  }
+  doInteract(hs) {
+    if (hs.exit) { this.travel(hs.exit); return; }
+    if (hs.puzzle) { this.puzzles.open(hs.puzzle); return; }
+    if (hs.requirement && hs.requirement.flag && !this.timeline.hasFlag(hs.requirement.flag)) {
+      this.ui.setPanel("<p>" + esc(hs.lockedMsg || "This is locked.") + "</p>");
+      this.audio.error();
+      return;
+    }
+    if (hs.id === "final_seal") {
+      this.quizzes.start("final", (passed) => { if (passed) this.actComplete(5); });
+      return;
+    }
+    if (hs.npc) { this.dialogues.start(this.dialogueIdFor(hs.npc)); return; }
+    if (hs.anomaly) { this.anomalyInfo(hs); return; }
+    if (hs.item) {
+      if (hs.requirement && !this.inventory.hasItem(hs.requirement.item)) {
+        this.ui.setPanel("<p>" + esc(hs.lockedMsg || "You need something to open this.") + "</p>");
+        this.audio.error();
+        return;
+      }
+      const def = GAME_DATA.items[hs.item];
+      if (this.inventory.addItem(hs.item)) {
+        this.ui.setPanel("<p>🎒 You picked up the <strong>" + esc(def.name) + "</strong>. " + esc(def.desc) + "</p>");
+        this.scenes.render(this.state.data.currentScene);
+      }
+      return;
+    }
+    if (hs.useTarget) { this.ui.setPanel("<p>" + esc(hs.desc) + "</p><p class='clue'>Try using the right tool on this. Select an item from your inventory, then press USE.</p>"); return; }
+    this.ui.setPanel("<p>" + esc(hs.desc) + "</p>");
+  }
+  doTruth(hs) {
+    if (!hs.truth) { this.ui.setPanel("<p>The Truth Check finds nothing verifiable here.</p>"); return; }
+    this.truths.check(hs.truth);
+  }
+  doUse() {
+    if (!this.selectedItem) {
+      this.useMode = true;
+      this.ui.setPanel("<p>🛠 Use mode: first select an item from your inventory strip below, then click a hotspot to use it on.</p>");
+      this.ui.toast("Select an item, then click a hotspot.");
+      return;
+    }
+    if (!this.selectedHotspot) {
+      this.useMode = true;
+      this.ui.setPanel(this.uiPanelUseHint());
+      this.ui.toast("Now click a hotspot in the scene.");
+      return;
+    }
+    this.resolveUse(this.selectedItem, this.selectedHotspot);
+  }
+  resolveUse(itemId, hs) {
+    const item = GAME_DATA.items[itemId];
+    this.useMode = false;
+    if (!item) { this.ui.setPanel("<p>Unknown item.</p>"); return; }
+    if (!hs.useTarget || !item.usableWith || item.usableWith.indexOf(hs.useTarget) === -1) {
+      this.audio.error();
+      this.ui.setPanel("<p>Using the <strong>" + esc(item.name) + "</strong> on the <strong>" + esc(hs.name) + "</strong> does nothing useful.</p><p class='kbd-hint'>The right tool matters — check TRUTH CHECK clues and puzzle hints.</p>");
+      this.selectedItem = null;
+      this.refreshUI();
+      return;
+    }
+    this.repairAnomaly(hs.useTarget, item);
+    this.selectedItem = null;
+  }
+  anomalyInfo(hs) {
+    const act = this.state.data.currentAct;
+    const reqs = {
+      1: "Solve “What Does Not Belong?” in the workshop, then combine a magnifying glass with a historical document to reveal the hidden-ink clue, build the resonator (copper wire + lodestone + glass tube), and USE the resonator on the music player.",
+      2: "Solve the loom sequence and the testimony puzzle, then craft the grounding wrench (wrench + copper wire) and USE it on the radio.",
+      3: "Solve the discovery sequence and decode the cipher letter, then prepare the sealed correction (draft correction + sealing wax) and USE it on the germ chart.",
+      4: "Solve the parts pick and the assembly sequence, then USE the wrench on the turbine blade.",
+      5: "The Core is sealed with the four-key code (Kite, Loom, Lens, Wing) and the memory of your journey. INTERACT with the fractured Core."
+    };
+    this.ui.setPanel("<p><strong>" + esc(hs.name) + "</strong> — this is the timeline anomaly.</p><p>" + esc(hs.desc) + "</p><p class='clue'>🛠 To repair it: " + esc(reqs[act] || "Find the right tool and use it here.") + "</p>");
+  }
+
+  /* ---------- repair & act progression ---------- */
+  repairAnomaly(targetId, item) {
+    const act = this.state.data.currentAct;
+    const gate = {
+      1: { item: "resonator", need: ["anachronism_workshop"], clue: "hidden_ink_clue", keyDigit: 7, keyName: "Kite" },
+      2: { item: "grounding_wrench", need: ["sequence_loom", "testimony"], keyDigit: 3, keyName: "Loom" },
+      3: { item: "sealed_correction", need: ["sequence_discovery", "cipher_letter"], keyDigit: 1, keyName: "Lens" },
+      4: { item: "wrench", need: ["parts_pick", "sequence_assembly"], keyDigit: 9, keyName: "Wing" }
+    }[act];
+    if (!gate) {
+      this.ui.setPanel("<p>The Core cannot be repaired with a tool — it needs the four-key code. INTERACT with the fractured Core.</p>");
+      return;
+    }
+    if (item.id !== gate.item) {
+      this.audio.error();
+      this.ui.setPanel("<p>The <strong>" + esc(item.name) + "</strong> is not the right tool for this anomaly.</p>");
+      return;
+    }
+    const missing = gate.need.filter((p) => !this.puzzles.isSolved(p));
+    if (missing.length) {
+      const titles = missing.map((p) => GAME_DATA.puzzles[p] ? GAME_DATA.puzzles[p].title : p).join(", ");
+      this.audio.error();
+      this.ui.setPanel("<p>Not yet — the repair is not safe. First solve: <strong>" + esc(titles) + "</strong>.</p>");
+      return;
+    }
+    if (gate.clue && !this.inventory.hasItem(gate.clue)) {
+      this.audio.error();
+      this.ui.setPanel("<p>You are missing the clue. Combine the magnifying glass with a historical document to reveal the hidden-ink clue first.</p>");
+      return;
+    }
+    const keyId = "temporal_key_" + act;
+    this.state.data.timelineFlags["a" + act + "_repaired"] = true;
+    this.state.data.keyDigits[act] = gate.keyDigit;
+    this.inventory.addItem(keyId);
+    this.scores.add(300, "restoration");
+    this.timeline.addStability(10);
+    this.audio.actComplete();
+    logEvent("INFO", "Anomaly repaired: act " + act + " (key digit " + gate.keyDigit + ")");
+    this.scenes.render(this.state.data.currentScene);
+    this.saveGame(false);
+    const body = document.createElement("div");
+    body.innerHTML = "<p>🎉 <strong>Anomaly repaired!</strong> The distortion folds away. Timeline Stability +10%, Paradox −5%.</p><p>You received a <strong>Temporal Key</strong> — digit <strong>" + gate.keyDigit + "</strong> (" + gate.keyName + "). Remember it: the Core at the end of time needs four digits.</p><p>Now prove what you have learned.</p>";
+    this.ui.openModal("✅ Act " + act + " — Anomaly Repaired", body, [
+      { label: "Take the Act Quiz", onClick: () => { this.ui.closeModal(); this.actQuiz(act); } }
+    ]);
+    this.refreshUI();
+  }
+  actQuiz(act) {
+    this.quizzes.start("act" + act, (passed) => {
+      if (passed) this.actComplete(act);
+      else this.ui.setPanel("<p>Review the act and retry the quiz when ready — the Act Quiz button is on the Timeline panel.</p>");
+    });
+  }
+  onPuzzleSolved(puzzleId) {
+    this.timeline.setFlag("puzzle_" + puzzleId, true);
+    this.saveGame(false);
+    const guidance = {
+      anachronism_workshop: "You identified all three distortions. Now build the resonator — combine the magnifying glass with a document first.",
+      final_code: null, // handled by final flow below
+      memory_recall: "The Core remembers your journey. The Chronarch is ready to speak — talk to them, then seal the Core."
+    };
+    if (puzzleId === "final_code") {
+      this.state.data.timelineFlags.a5_core_sealed = true;
+      this.scores.add(300, "restoration");
+      this.timeline.addStability(10);
+      this.saveGame(false);
+      const body = document.createElement("div");
+      body.innerHTML = "<p>🔒 <strong>THE CORE IS SEALED.</strong> The four keys turn as one: <strong>7 – 3 – 1 – 9</strong>. The fractures close. The eras stop bleeding into each other.</p><p>One last task: the final quiz — five questions from across the whole journey.</p>";
+      this.ui.openModal("✅ The Temporal Core — Sealed", body, [
+        { label: "Take the Final Quiz", onClick: () => { this.ui.closeModal(); this.quizzes.start("final", (passed) => { if (passed) this.actComplete(5); }); } }
+      ]);
+      return;
+    }
+    if (guidance[puzzleId]) this.ui.setPanel("<p>✅ Puzzle solved.</p><p class='clue'>" + guidance[puzzleId] + "</p>");
+    else this.ui.setPanel("<p>✅ Puzzle solved. Timeline Stability improved.</p>");
+    this.refreshUI();
+  }
+  actComplete(act) {
+    this.timeline.addStability(5);
+    this.audio.actComplete();
+    logEvent("INFO", "Act completed: " + act);
+    this.saveGame(false);
+    if (act < 5) {
+      const next = GAME_DATA.acts[act + 1];
+      const body = document.createElement("div");
+      body.innerHTML = "<p>🎉 <strong>Act " + act + " complete!</strong> The era is restored — for now.</p><p>Next: <strong>" + esc(next.title) + "</strong> — " + esc(next.subtitle) + "</p>";
+      this.ui.openModal("Act " + act + " Complete", body, [
+        { label: "Continue to Act " + (act + 1), onClick: () => { this.ui.closeModal(); this.startAct(act + 1); } }
+      ]);
+    } else {
+      this.computeEnding();
+    }
+    this.refreshUI();
+  }
+
+  /* ---------- ending ---------- */
+  computeEnding() {
+    const d = this.state.data;
+    d.gameCompleted = true;
+    const s = d.timelineStability;
+    let ending;
+    if (s >= 95) ending = { title: "🏆 PERFECT RESTORATION", text: "Every distortion undone, every era intact. The timeline hums exactly as it should. Franklin's kite, the looms, the scholars' manuscripts, the biplane — all stand in their proper centuries. You are a legend among Restorers." };
+    else if (s >= 80) ending = { title: "🌟 SUCCESSFUL RESTORATION", text: "The timeline is stable and the anomalies are gone. A few small ripples remain — a word here, a sketch there — but history stands. The Chronarch nods: well done, Restorer." };
+    else if (s >= 50) ending = { title: "⚠ DAMAGED TIMELINE", text: "The Core is sealed, but the timeline carries scars. Some things are subtly wrong — a date shifted, a name forgotten. History survives, but it will take other Restorers to smooth what you could not." };
+    else ending = { title: "💥 CATASTROPHIC PARADOX", text: "The Core is sealed, but the paradox was too deep. Eras bleed into each other; the past is a patchwork of impossible things. The timeline endures — barely. Somewhere, a pedlar is laughing." };
+    let rank;
+    if (s >= 95 && d.score >= 3000) rank = "S — Master Chronologist";
+    else if (s >= 80) rank = "A — Timeline Guardian";
+    else if (s >= 50) rank = "B — Historical Investigator";
+    else if (s >= 30) rank = "C — Temporal Apprentice";
+    else rank = "D — Timeline Tourist";
+    const quizLines = Object.keys(d.quizResults).map((q) => {
+      const r = d.quizResults[q];
+      return GAME_DATA.quizzes[q] ? GAME_DATA.quizzes[q].title + ": " + r.correct + "/" + r.total : q;
+    });
+    $("ending-title").textContent = ending.title;
+    $("ending-body").innerHTML =
+      "<p>" + ending.text + "</p>" +
+      "<h3>Your Record</h3>" +
+      "<table class='score-table'><tbody>" +
+      "<tr><td>Final Score</td><td>" + d.score + "</td></tr>" +
+      "<tr><td>Timeline Stability</td><td>" + d.timelineStability + "%</td></tr>" +
+      "<tr><td>Paradox Level</td><td>" + d.paradoxLevel + "%</td></tr>" +
+      "<tr><td>Rank</td><td><strong>" + rank + "</strong></td></tr>" +
+      "<tr><td>Historical Knowledge</td><td>" + d.categories.knowledge + "</td></tr>" +
+      "<tr><td>Puzzle Solving</td><td>" + d.categories.puzzles + "</td></tr>" +
+      "<tr><td>Truth Discoveries</td><td>" + d.categories.truths + " (" + d.discoveredTruths.length + " truths)</td></tr>" +
+      "<tr><td>Artifacts Collected</td><td>" + d.categories.artifacts + " (" + d.inventory.length + " items)</td></tr>" +
+      "<tr><td>Timeline Restoration</td><td>" + d.categories.restoration + "</td></tr>" +
+      "<tr><td>Exploration</td><td>" + d.categories.exploration + " (" + d.visitedScenes.length + " scenes)</td></tr>" +
+      "<tr><td>Puzzles Solved</td><td>" + d.solvedPuzzles.length + "</td></tr>" +
+      "</tbody></table>" +
+      (quizLines.length ? "<h3>Quiz Results</h3><p>" + quizLines.map(esc).join("<br>") + "</p>" : "") +
+      "<p class='fact'>Key digits recovered: " + esc(this.keyDigitsText()) + " — the code of the Core, 7-3-1-9.</p>" +
+      "<p>Your Historical Archive persists — open it from the title screen or the ending screen.</p>";
+    this.saveGame(false);
+    this.ui.showScreen("ending");
+    logEvent("INFO", "Game completed. Ending: " + ending.title + " rank " + rank);
+  }
+  replayAct5() {
+    const d = this.state.data;
+    d.gameCompleted = false;
+    d.solvedPuzzles = d.solvedPuzzles.filter((p) => p !== "final_code" && p !== "memory_recall");
+    delete d.quizResults.final;
+    delete d.quizResults.act5;
+    Object.keys(d.timelineFlags).forEach((k) => { if (k.indexOf("a5_") === 0 || k.indexOf("puzzle_final_code") === 0 || k.indexOf("puzzle_memory_recall") === 0) delete d.timelineFlags[k]; });
+    this.startAct(5);
+  }
+
+  /* ---------- panels ---------- */
+  showArchive() {
+    const archived = this.saves.archiveGet();
+    const body = document.createElement("div");
+    if (!archived.length) {
+      body.innerHTML = "<p>Your Historical Archive is empty. Discover truths with TRUTH CHECK — every verified fact is kept here across replays.</p>";
+    } else {
+      const list = archived.map((id) => {
+        const t = GAME_DATA.truths[id];
+        if (!t) return "";
+        return "<p><strong>" + esc(t.object) + "</strong> — " + (t.status === "anachronistic" ? "⚠ Anachronistic" : "✓ Authentic") + "<br><span class='fact'>" + esc(t.fact) + "</span></p>";
+      }).join("");
+      body.innerHTML = "<p>" + archived.length + " verified fact" + (archived.length > 1 ? "s" : "") + " discovered across all timelines.</p>" + list;
+    }
+    this.ui.openModal("📚 Historical Archive", body, [{ label: "Close", onClick: () => this.ui.closeModal() }]);
+  }
+  showTimeline() {
+    const d = this.state.data;
+    const act = GAME_DATA.acts[d.currentAct];
+    const PUZZLE_ACTS = { anachronism_workshop: 1, sequence_franklin: 1, sequence_loom: 2, testimony: 2, cipher_letter: 3, sequence_discovery: 3, parts_pick: 4, sequence_assembly: 4, memory_recall: 5, final_code: 5 };
+    const actPuzzles = Object.keys(GAME_DATA.puzzles).filter((p) => PUZZLE_ACTS[p] === d.currentAct);
+    const solved = actPuzzles.filter((p) => this.puzzles.isSolved(p));
+    const body = document.createElement("div");
+    body.innerHTML =
+      "<h3>" + esc(act.title) + "</h3>" +
+      "<p>Timeline Stability: <strong>" + d.timelineStability + "%</strong> · Paradox: <strong>" + d.paradoxLevel + "%</strong> (" + esc(this.timeline.bandLabel()) + ")</p>" +
+      "<p>Score: <strong>" + d.score + "</strong> · Key digits: " + esc(this.keyDigitsText()) + "</p>" +
+      "<p>Truths discovered: " + d.discoveredTruths.length + " · Puzzles solved in this act: " + solved.length + " / " + actPuzzles.length + "</p>" +
+      "<p>Anomaly: " + (d.timelineFlags["a" + d.currentAct + "_repaired"] ? "✅ Repaired" : "⚠ Still active — " + esc(act.anomaly)) + "</p>" +
+      (actPuzzles.length ? "<p>Puzzles this act: " + actPuzzles.map((p) => (this.puzzles.isSolved(p) ? "✅ " : "☐ ") + esc(GAME_DATA.puzzles[p].title)).join("<br>") + "</p>" : "") +
+      "<p class='kbd-hint'>Press ESC to close.</p>";
+    this.ui.openModal("⏳ Timeline Status", body, [
+      { label: "Take the Act Quiz", onClick: () => { this.ui.closeModal(); this.actQuiz(d.currentAct); } },
+      { label: "Close", secondary: true, onClick: () => this.ui.closeModal() }
+    ]);
+  }
+  showInventory() {
+    const items = this.inventory.list();
+    const body = document.createElement("div");
+    if (!items.length) {
+      body.innerHTML = "<p>Your inventory is empty. Click objects in the scene to collect useful items.</p>";
+    } else {
+      body.appendChild(makeEl("p", null, "Click an item to inspect it. To combine: click a first item, then a second item — if they fit together, you will make something new."));
+      items.forEach((item) => {
+        const b = makeEl("button", "choice-btn", item.icon + " " + item.name + " — " + item.desc);
+        b.addEventListener("click", () => this.selectInventoryItem(item.id));
+        body.appendChild(b);
+      });
+    }
+    const actions = [];
+    if (this.selectedItem) {
+      actions.push({ label: "Combine selected item…", onClick: () => this.combinePrompt(this.selectedItem) });
+      actions.push({ label: "Use selected item", onClick: () => { this.ui.closeModal(); this.doUse(); } });
+    }
+    actions.push({ label: "Close", secondary: true, onClick: () => this.ui.closeModal() });
+    this.ui.openModal("🎒 Inventory", body, actions);
+  }
+  combinePrompt(firstId) {
+    const first = GAME_DATA.items[firstId];
+    const body = document.createElement("div");
+    body.appendChild(makeEl("p", null, "Combine “" + first.name + "” with:"));
+    const others = this.inventory.list().filter((i) => i.id !== firstId);
+    if (!others.length) body.appendChild(makeEl("p", null, "No other items to combine with yet."));
+    others.forEach((item) => {
+      const b = makeEl("button", "choice-btn", item.icon + " " + item.name);
+      b.addEventListener("click", () => {
+        this.ui.closeModal();
+        const result = this.inventory.combine(firstId, item.id);
+        if (result) this.scenes.render(this.state.data.currentScene);
+        else this.showInventory();
+      });
+      body.appendChild(b);
+    });
+    this.ui.openModal("🔧 Combine Items", body, [{ label: "Cancel", secondary: true, onClick: () => this.ui.closeModal() }]);
+  }
+
+  /* ---------- debug ---------- */
+  debugRefresh() {
+    const d = this.state.data;
+    $("debug-state").innerHTML =
+      "Act: " + d.currentAct + " · Scene: " + esc(d.currentScene) + "<br>" +
+      "Score: " + d.score + " · Stability: " + d.timelineStability + "% · Paradox: " + d.paradoxLevel + "%<br>" +
+      "Inventory: " + (d.inventory.join(", ") || "(empty)") + "<br>" +
+      "Solved: " + (d.solvedPuzzles.join(", ") || "(none)") + "<br>" +
+      "Truths: " + d.discoveredTruths.length + " · Flags: " + JSON.stringify(d.timelineFlags) + "<br>" +
+      "Key digits: " + esc(this.keyDigitsText());
+  }
+  debugAction(kind) {
+    const d = this.state.data;
+    if (kind === "score") this.scores.add(10, "knowledge");
+    else if (kind === "paradox-plus") this.timeline.addParadox(10);
+    else if (kind === "paradox-minus") this.timeline.addParadox(-10);
+    else if (kind === "add-item") {
+      const id = prompt("Item id to add (e.g. magnifier, copper_wire, resonator):");
+      if (id) this.inventory.addItem(id.trim());
+    }
+    else if (kind === "complete-puzzle") {
+      const id = prompt("Puzzle id to mark solved (e.g. anachronism_workshop):");
+      if (id && GAME_DATA.puzzles[id.trim()]) { this.puzzles.solve(GAME_DATA.puzzles[id.trim()]); }
+      else if (id) this.ui.toast("Unknown puzzle id.");
+    }
+    else if (kind === "set-flag") {
+      const kv = prompt("Flag name=value (e.g. a1_repaired=true):");
+      if (kv) { const parts = kv.split("="); this.timeline.setFlag(parts[0].trim(), parts[1] ? parts[1].trim() === "true" : true); }
+    }
+    else if (kind === "next-act") {
+      const next = Math.min(5, d.currentAct + 1);
+      this.startAct(next);
+    }
+    else if (kind === "reset-act") {
+      this.startAct(d.currentAct);
+    }
+    this.debugRefresh();
+    this.refreshUI();
+  }
+  onKey(e) {
+    if (e.ctrlKey && e.shiftKey && (e.key === "D" || e.key === "d")) {
+      e.preventDefault();
+      const panel = $("debug-panel");
+      panel.classList.toggle("hidden");
+      if (!panel.classList.contains("hidden")) this.debugRefresh();
+      return;
+    }
+    if (e.key === "Escape") {
+      if (this.ui.modalOpen()) { this.ui.closeModal(); this.dialogues.end(); }
+      else $("debug-panel").classList.add("hidden");
+      return;
+    }
+    if (this.dialogues.current && ["1", "2", "3", "4"].indexOf(e.key) !== -1) {
+      const idx = parseInt(e.key, 10) - 1;
+      if (idx < (this.dialogues._choiceCount || 0)) this.dialogues.choose(idx);
+    }
+  }
+}
+
+/* ---------------- boot ---------------- */
+const engine = new GameEngine();
+document.addEventListener("DOMContentLoaded", () => engine.init());
+if (document.readyState !== "loading") engine.init();
+</script>
+</body>
+</html>
