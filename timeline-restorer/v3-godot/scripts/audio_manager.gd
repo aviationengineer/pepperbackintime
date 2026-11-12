@@ -48,6 +48,24 @@ func set_act(p_act: int) -> void:
 	if was_playing:
 		music_player.play()
 
+var _intro_music := false
+
+func play_intro_music() -> void:
+	# v3.1: the intro cinematic gets a grander procedural motif (see
+	# _make_intro_loop); stop_intro_music restores the current act loop.
+	_intro_music = true
+	music_player.stream = _make_intro_loop()
+	music_player.volume_db = -13.0
+	music_player.play()
+
+func stop_intro_music() -> void:
+	if not _intro_music:
+		return
+	_intro_music = false
+	music_player.stream = _make_music_loop(act)
+	music_player.volume_db = [-16.0, -22.0, -30.0][volume_step]
+	music_player.play()
+
 func toggle_mute() -> bool:
 	muted = not muted
 	AudioServer.set_bus_mute(0, muted)
@@ -199,6 +217,54 @@ func _make_music_loop(p_act: int) -> AudioStreamWAV:
 		var edge := minf(t, seconds - t)
 		if edge < 0.05:
 			v *= edge / 0.05
+		samples[i] = v
+	var wav := _samples_to_wav(samples)
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.loop_begin = 0
+	wav.loop_end = count
+	return wav
+
+func _make_intro_loop() -> AudioStreamWAV:
+	# The intro theme: 16 seconds in E minor — a fuller pad (root, minor
+	# third, fifth, octave), a slow rising melody in long notes, a deep
+	# pulse every two seconds and a high shimmer every four. Grander
+	# than the per-act loops, same synthesis approach, no audio files.
+	var root := 164.81  # E3
+	var third := root * pow(2.0, 3.0 / 12.0)
+	var fifth := root * pow(2.0, 7.0 / 12.0)
+	var octave := root * 2.0
+	var melody := [0, 3, 7, 12, 15, 19, 15, 12, 10, 12, 7, 3]
+	var seconds := 16.0
+	var count := int(MIX_RATE * seconds)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	var note_len := 0.8
+	for i in range(count):
+		var t := float(i) / MIX_RATE
+		var v := 0.0
+		var swell := 0.7 + 0.3 * sin(TAU * t / seconds)
+		v += 0.05 * swell * sin(TAU * root * t)
+		v += 0.035 * swell * sin(TAU * third * t)
+		v += 0.035 * swell * sin(TAU * fifth * t)
+		v += 0.02 * swell * sin(TAU * octave * t)
+		# Long-note melody.
+		var idx := int(t / note_len) % melody.size()
+		var age := t - idx * note_len
+		if age < note_len:
+			var f := root * pow(2.0, float(melody[idx]) / 12.0)
+			var env := exp(-2.2 * age / note_len)
+			v += 0.17 * env * sin(TAU * f * t)
+			v += 0.05 * env * sin(TAU * f * 2.0 * t)
+		# Deep pulse on each 2-second beat.
+		var pulse_age := fmod(t, 2.0)
+		v += 0.10 * exp(-3.0 * pulse_age) * sin(TAU * 55.0 * t)
+		v += 0.05 * exp(-3.0 * pulse_age) * sin(TAU * 82.41 * t)
+		# Shimmer: a soft high note every 4 seconds.
+		var shim_age := fmod(t, 4.0)
+		v += 0.045 * exp(-2.0 * shim_age) * sin(TAU * root * 4.0 * t)
+		var edge := minf(t, seconds - t)
+		if edge < 0.08:
+			v *= edge / 0.08
 		samples[i] = v
 	var wav := _samples_to_wav(samples)
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD

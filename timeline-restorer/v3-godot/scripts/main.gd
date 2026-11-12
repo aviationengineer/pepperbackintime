@@ -85,6 +85,9 @@ var autodemo_act1_only := false
 var shots_dir := ""
 var clicktest := false
 var autocontinue := false
+var walktest := false
+var uitest := false
+var introtest := ""
 var scene_shot := ""
 var _shots_taken := {}
 var shot_path := ""
@@ -124,6 +127,28 @@ var _dialogue_choices: VBoxContainer
 var _dialogue_id := ""
 var _dialogue_node := ""
 var _dialogue_npc := ""
+var _dialogue_portrait: TextureRect
+var _dialogue_ring: TextureRect
+var _dialogue_panel: PanelContainer
+var _portrait_cache := {}
+# v3.1 typewriter dialogue state.
+var _dlg_tween: Tween
+var _dlg_revealing := false
+var _dlg_state := ""  # "node" (choices pending) | "response" (Continue pending)
+var _dlg_pending_choices: Array = []
+# v3.1 intro cinematic state.
+var _intro_layer: CanvasLayer
+var _intro_playing := false
+var _intro_gen := 0
+var _intro_on_done: Callable
+var _intro_tweens: Array = []
+var _intro_img_a: TextureRect
+var _intro_img_b: TextureRect
+var _intro_front_is_a := true
+var _intro_caption: Label
+var _intro_cadet: TextureRect
+var _intro_title_box: VBoxContainer
+var _intro_black: ColorRect
 var _truth_layer: CanvasLayer
 var _truth_title: Label
 var _truth_status: Label
@@ -134,6 +159,7 @@ var _truth_conf: Label
 var _truth_paradox: Label
 var _truth_clue: Label
 var _truth_note: Label
+var _truth_lamp: PanelContainer
 var _action_layer: CanvasLayer
 var _action_panel: PanelContainer
 var _action_title: Label
@@ -182,6 +208,14 @@ func _ready() -> void:
 	if scene_shot != "":
 		_new_game()
 		_run_scene_shot()
+	elif introtest != "":
+		_run_introtest()
+	elif walktest:
+		_new_game()
+		_run_walktest()
+	elif uitest:
+		_new_game()
+		_run_uitest()
 	elif autocontinue:
 		_show_title_screen()
 		_run_autocontinue()
@@ -230,6 +264,14 @@ func _parse_args() -> void:
 			DirAccess.make_dir_recursive_absolute(shots_dir)
 		elif a == "--clicktest":
 			clicktest = true
+		elif a == "--walktest":
+			walktest = true
+		elif a == "--uitest":
+			uitest = true
+		elif a == "--introtest":
+			introtest = "skip"
+		elif a.begins_with("--introtest="):
+			introtest = a.trim_prefix("--introtest=")
 		elif a == "--autocontinue":
 			autocontinue = true
 		elif a.begins_with("--scene-shot="):
@@ -310,6 +352,155 @@ func _run_clicktest() -> void:
 	_capture_shot("clicktest-after", 0.3)
 	await get_tree().create_timer(1.0).timeout
 	get_tree().quit()
+
+func _inject_click(pos: Vector2) -> void:
+	# A REAL mouse click (motion + press + release) through the input
+	# pipeline, exactly like _run_clicktest does — used by the uitest to
+	# prove the new dialogue UI responds to genuine clicks, not calls.
+	var mv := InputEventMouseMotion.new()
+	mv.position = pos
+	Input.parse_input_event(mv)
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = pos
+	Input.parse_input_event(press)
+	var rel := InputEventMouseButton.new()
+	rel.button_index = MOUSE_BUTTON_LEFT
+	rel.pressed = false
+	rel.position = pos
+	Input.parse_input_event(rel)
+
+func _run_walktest() -> void:
+	# Verification: walk the Cadet across the workshop and capture three
+	# different walk-cycle frames mid-stride (distance-driven frames, so
+	# the leg poses in the shots prove the cycle really animates).
+	await get_tree().create_timer(4.5).timeout
+	var seen := {}
+	var targets := {20.0: "v31-walk-1", 85.0: "v31-walk-2", 150.0: "v31-walk-3"}
+	cadet.walk_to(Vector2(1120, 665))
+	while cadet.moving and seen.size() < 3:
+		await get_tree().create_timer(0.05).timeout
+		var cyc := fmod(cadet.walk_distance, Cadet.CYCLE_DISTANCE)
+		for th in targets.keys():
+			if not seen.has(th) and cyc >= th and cadet.walk_distance > 40.0:
+				seen[th] = cadet.walk_frame_index
+				_capture_shot(targets[th], 0.01)
+	await get_tree().create_timer(1.2).timeout
+	var distinct := {}
+	for f in seen.values():
+		distinct[f] = true
+	print("WALKTEST frames=", seen.values(), " distinct=", distinct.size(),
+		" ", "PASS" if distinct.size() == 3 else "FAIL")
+	get_tree().quit()
+
+func _run_uitest() -> void:
+	# Verification of the v3.1 presentation layer with REAL mouse
+	# clicks: anchored action menu, typewriter dialogue (click completes
+	# the line), a choice picked by clicking its button, Truth Engine.
+	await get_tree().create_timer(4.5).timeout
+	_ad_arrived = false
+	_go_to_hotspot("franklin_ws")
+	var w := 0.0
+	while not _ad_arrived and w < 15.0:
+		await get_tree().create_timer(0.1).timeout
+		w += 0.1
+	await get_tree().create_timer(0.7).timeout
+	print("UITEST menu_visible=", _action_layer.visible,
+		" panel_pos=", _action_panel.position, " panel_size=", _action_panel.size)
+	_capture_shot("v31-menu", 0.1)
+	await get_tree().create_timer(0.5).timeout
+	# Talk: the dialogue bar opens; mid-reveal, a real click on the bar
+	# must complete the line and reveal the choices.
+	_do_talk("franklin_ws")
+	await get_tree().create_timer(0.35).timeout
+	var mid_chars := _dialogue_text.visible_characters
+	var full_len := _dialogue_text.text.length()
+	_inject_click(Vector2(700, 640))
+	await get_tree().create_timer(0.5).timeout
+	var completed := not _dlg_revealing and (_dialogue_text.visible_characters == -1 or _dialogue_text.visible_characters >= full_len - 1)
+	print("UITEST typewriter mid=", mid_chars, " full=", full_len,
+		" after_click=", _dialogue_text.visible_characters,
+		" completed=", completed, " choices=", _dialogue_choices.get_child_count())
+	await get_tree().create_timer(0.6).timeout
+	_capture_shot("v31-dialogue", 0.1)
+	var rw := 0.0
+	while _dlg_revealing and rw < 3.0:
+		await get_tree().create_timer(0.1).timeout
+		rw += 0.1
+	await get_tree().create_timer(0.3).timeout
+	# Pick the first choice with a real click on its button.
+	var choice_btn: Button = null
+	for c in _dialogue_choices.get_children():
+		if c is Button:
+			choice_btn = c
+			break
+	if choice_btn:
+		_inject_click(choice_btn.get_global_rect().get_center())
+		await get_tree().create_timer(0.5).timeout
+	print("UITEST after_choice state=", _dlg_state,
+		" dialogue_open=", _dialogue_layer.visible)
+	_capture_shot("v31-dialogue-response", 0.1)
+	await get_tree().create_timer(0.3).timeout
+	# Click once to complete the response line, again to continue:
+	# the dialogue must move on to the choice's next node (n2).
+	_inject_click(Vector2(700, 640))
+	await get_tree().create_timer(0.4).timeout
+	_inject_click(Vector2(700, 640))
+	await get_tree().create_timer(0.5).timeout
+	print("UITEST after_advance dialogue_open=", _dialogue_layer.visible,
+		" node=", _dialogue_node)
+	if _dialogue_layer.visible:
+		_close_dialogue()
+	# Truth Engine panel (handler flow, same as the menu's button).
+	_do_truth("music_player")
+	await get_tree().create_timer(0.7).timeout
+	print("UITEST truth_visible=", _truth_layer.visible)
+	_capture_shot("v31-truth", 0.1)
+	await get_tree().create_timer(0.4).timeout
+	_close_truth()
+	print("UITEST DONE")
+	get_tree().quit()
+
+func _run_introtest() -> void:
+	# Verification of the intro: skip at ~2 s from New Game (must land
+	# in Act 1), skip from Watch Intro (must return to the title), a
+	# full-length run (timed), and a frames run (screenshots only).
+	print("INTROTEST scripted_duration_s=", snappedf(intro_scripted_duration(), 0.1))
+	if introtest == "watch":
+		_show_title_screen()
+		await get_tree().create_timer(1.0).timeout
+		_on_watch_intro()
+		await get_tree().create_timer(2.0).timeout
+		_skip_intro()
+		await get_tree().create_timer(0.5).timeout
+		var okw := _title_layer != null and not _intro_playing and _intro_layer == null
+		print("INTROTEST_WATCH ", "PASS" if okw else "FAIL", " title_present=", _title_layer != null)
+		get_tree().quit()
+		return
+	_new_game()
+	if introtest == "skip":
+		await get_tree().create_timer(2.0).timeout
+		_skip_intro()
+		var t0 := Time.get_ticks_msec()
+		# "In Act 1" = intro gone, a scene loaded, input unlocked.
+		while (_intro_layer != null or scene_root == null or input_locked) and Time.get_ticks_msec() - t0 < 12000:
+			await get_tree().create_timer(0.25).timeout
+		var oks := _intro_layer == null and scene_root != null and not input_locked and current_scene == "workshop"
+		print("INTROTEST_SKIP ", "PASS" if oks else "FAIL", " scene=", current_scene)
+		get_tree().quit()
+	elif introtest == "frames":
+		await get_tree().create_timer(26.0).timeout
+		print("INTROTEST_FRAMES done playing=", _intro_playing)
+		get_tree().quit()
+	elif introtest == "full":
+		await get_tree().create_timer(0.3).timeout
+		var t0 := Time.get_ticks_msec()
+		while (_intro_layer != null or scene_root == null or input_locked) and Time.get_ticks_msec() - t0 < 45000:
+			await get_tree().create_timer(0.25).timeout
+		print("INTROTEST_FULL scene=", current_scene,
+			" elapsed_s=", snappedf((Time.get_ticks_msec() - t0) / 1000.0, 0.1))
+		get_tree().quit()
 
 func _check_web_autodemo() -> void:
 	if not OS.has_feature("web"):
@@ -1006,16 +1197,15 @@ func _build_modal_ui() -> void:
 	dim.color = Color(0, 0, 0, 0.45)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_modal_layer.add_child(dim)
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(680, 420)
-	panel.add_theme_stylebox_override("panel", _panel_style(Color(0.97, 0.92, 0.80), Color(0.72, 0.55, 0.20), 12, 3))
+	# v3.1: the shared modal (puzzles, quizzes, endings, menus) gets the
+	# same dark-wood frame + parchment inlay as the dialogue bar.
+	var framed := _framed_panel(Vector2(700, 440))
+	var panel := framed["outer"] as PanelContainer
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_modal_layer.add_child(center)
 	center.add_child(panel)
-	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 8)
-	panel.add_child(vb)
+	var vb := framed["box"] as VBoxContainer
 	_modal_title = Label.new()
 	_modal_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_modal_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1023,7 +1213,7 @@ func _build_modal_ui() -> void:
 	_modal_title.add_theme_color_override("font_color", Color(0.45, 0.25, 0.08))
 	vb.add_child(_modal_title)
 	_modal_scroll = ScrollContainer.new()
-	_modal_scroll.custom_minimum_size = Vector2(640, 330)
+	_modal_scroll.custom_minimum_size = Vector2(656, 336)
 	_modal_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	vb.add_child(_modal_scroll)
 	_modal_box = VBoxContainer.new()
@@ -1057,17 +1247,21 @@ func _modal_button(vb: VBoxContainer, text: String, on_press: Callable, bg: Colo
 	b.text = text
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.custom_minimum_size = Vector2(0, 44)
-	_style_button(b, bg)
+	_style_button(b, bg, true)
 	b.pressed.connect(on_press)
 	vb.add_child(b)
 	return b
 
 func _refresh_blocking() -> void:
-	ui_blocking = input_locked or _action_layer.visible or _dialogue_layer.visible or _truth_layer.visible or _modal_layer.visible or _title_layer != null or _debug_layer.visible
+	ui_blocking = input_locked or _action_layer.visible or _dialogue_layer.visible or _truth_layer.visible or _modal_layer.visible or _title_layer != null or _intro_layer != null or _debug_layer.visible
 
 # --- dialogue UI ---------------------------------------------------------------
 
 func _build_dialogue_ui() -> void:
+	# v3.1: the dialogue is a storybook bar, not an office window — dark
+	# wood frame, parchment inlay, the speaker's portrait in a brass
+	# medallion on the left, their name on a brass plate, typewriter
+	# text, and the choices as parchment buttons inside the same bar.
 	_dialogue_layer = CanvasLayer.new()
 	_dialogue_layer.layer = 20
 	_dialogue_layer.visible = false
@@ -1075,35 +1269,166 @@ func _build_dialogue_ui() -> void:
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.25)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.gui_input.connect(_on_dialogue_gui_input)
 	_dialogue_layer.add_child(dim)
-	var panel := PanelContainer.new()
+	var framed := _framed_panel(Vector2(0, 0))
+	var panel := framed["outer"] as PanelContainer
+	_dialogue_panel = panel
 	panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	panel.offset_left = -560
-	panel.offset_right = 560
-	panel.offset_top = -270
-	panel.offset_bottom = -16
-	panel.add_theme_stylebox_override("panel", _panel_style(Color(0.97, 0.92, 0.80), Color(0.72, 0.55, 0.20), 10, 3))
+	panel.offset_left = -572
+	panel.offset_right = 572
+	panel.offset_top = -296
+	panel.offset_bottom = -14
+	panel.gui_input.connect(_on_dialogue_gui_input)
 	_dialogue_layer.add_child(panel)
+	# Replace the framed panel's plain VBox with the portrait row.
+	var inner := panel.get_child(0) as PanelContainer
+	var plain_box := framed["box"] as VBoxContainer
+	inner.remove_child(plain_box)
+	plain_box.queue_free()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	inner.add_child(row)
+	var portrait_wrap := Control.new()
+	portrait_wrap.custom_minimum_size = Vector2(148, 148)
+	portrait_wrap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	portrait_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(portrait_wrap)
+	_dialogue_ring = TextureRect.new()
+	_dialogue_ring.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_dialogue_ring.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dialogue_ring.texture = _medallion_ring_texture(288)
+	_dialogue_ring.stretch_mode = TextureRect.STRETCH_SCALE
+	_dialogue_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_wrap.add_child(_dialogue_ring)
+	_dialogue_portrait = TextureRect.new()
+	_dialogue_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_dialogue_portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dialogue_portrait.offset_left = 9
+	_dialogue_portrait.offset_top = 9
+	_dialogue_portrait.offset_right = -9
+	_dialogue_portrait.offset_bottom = -9
+	_dialogue_portrait.stretch_mode = TextureRect.STRETCH_SCALE
+	_dialogue_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	portrait_wrap.add_child(_dialogue_portrait)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 10)
-	panel.add_child(vb)
+	vb.add_theme_constant_override("separation", 8)
+	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(vb)
+	var plate := PanelContainer.new()
+	plate.add_theme_stylebox_override("panel", _plate_style())
+	plate.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(plate)
 	_dialogue_speaker = Label.new()
-	_dialogue_speaker.add_theme_font_size_override("font_size", 20)
-	_dialogue_speaker.add_theme_color_override("font_color", Color(0.45, 0.25, 0.08))
-	vb.add_child(_dialogue_speaker)
+	_dialogue_speaker.add_theme_font_size_override("font_size", 19)
+	_dialogue_speaker.add_theme_color_override("font_color", Color(0.98, 0.93, 0.78))
+	_dialogue_speaker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.add_child(_dialogue_speaker)
 	_dialogue_text = RichTextLabel.new()
 	_dialogue_text.bbcode_enabled = false
 	_dialogue_text.fit_content = true
 	_dialogue_text.scroll_active = false
-	_dialogue_text.custom_minimum_size = Vector2(0, 84)
+	_dialogue_text.custom_minimum_size = Vector2(0, 80)
+	_dialogue_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dialogue_text.add_theme_font_size_override("normal_font_size", 18)
 	_dialogue_text.add_theme_color_override("default_color", Color(0.12, 0.10, 0.06))
 	vb.add_child(_dialogue_text)
 	_dialogue_choices = VBoxContainer.new()
 	_dialogue_choices.add_theme_constant_override("separation", 6)
 	vb.add_child(_dialogue_choices)
+	# Godot delivers a click to the DEEPEST control under the mouse and
+	# a container with the default STOP filter ends propagation there —
+	# gui_input does not bubble up to the panel. So the advance handler
+	# is connected to every non-button control in the bar; whichever one
+	# is hit fires it, exactly once. (Buttons accept their own clicks.)
+	inner.gui_input.connect(_on_dialogue_gui_input)
+	row.gui_input.connect(_on_dialogue_gui_input)
+	vb.gui_input.connect(_on_dialogue_gui_input)
+	_dialogue_choices.gui_input.connect(_on_dialogue_gui_input)
+
+func _fit_dialogue_bar() -> void:
+	# The bar hugs its content: re-measure a frame after each content
+	# change (choices appearing must never be clipped by the frame).
+	await get_tree().process_frame
+	if _dialogue_panel and _dialogue_layer.visible:
+		var h := _dialogue_panel.get_combined_minimum_size().y
+		_dialogue_panel.offset_top = -(h + 14.0)
+
+func _on_dialogue_gui_input(event: InputEvent) -> void:
+	# Clicking the bar (or the dim behind it) advances the typewriter:
+	# first click completes the line, the next continues the dialogue.
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			_dlg_advance()
+			get_viewport().set_input_as_handled()
+
+func _medallion_ring_texture(size: int) -> ImageTexture:
+	# Brass ring for the portrait medallion: bright rim, dark inner line.
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var c := size / 2.0
+	for y in range(size):
+		for x in range(size):
+			var d := Vector2(x - c, y - c).length() / c
+			var col := Color(0, 0, 0, 0)
+			if d >= 0.90 and d <= 1.0:
+				col = Color(0.72, 0.55, 0.20, 1.0)
+				if d < 0.925 or d > 0.985:
+					col = Color(0.45, 0.33, 0.10, 1.0)
+			img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
+
+func _portrait_texture(npc_id: String) -> Texture2D:
+	# The speaker's head/shoulders, cropped from their sprite into a
+	# circular medallion portrait. Built once per character, then cached.
+	if _portrait_cache.has(npc_id):
+		return _portrait_cache[npc_id]
+	var result: Texture2D = null
+	var tex_id := "chronarch" if npc_id == "chronarch_final" else npc_id
+	var path := "res://art/npc-%s.png" % tex_id
+	if ResourceLoader.exists(path):
+		var src := (load(path) as Texture2D).get_image()
+		if src:
+			if src.is_compressed():
+				src.decompress()
+			src.convert(Image.FORMAT_RGBA8)
+			var w := src.get_width()
+			var h := src.get_height()
+			var min_x := w
+			var min_y := h
+			var max_x := -1
+			var max_y := -1
+			for y in range(h):
+				for x in range(w):
+					if src.get_pixel(x, y).a > 0.05:
+						min_x = mini(min_x, x)
+						max_x = maxi(max_x, x)
+						min_y = mini(min_y, y)
+						max_y = maxi(max_y, y)
+			if max_x >= 0:
+				var side := int((max_y - min_y + 1) * 0.42)
+				var cx := (min_x + max_x) / 2
+				var x0 := clampi(cx - side / 2, 0, w - side)
+				var y0 := clampi(min_y, 0, h - side)
+				var head := Image.create(side, side, false, Image.FORMAT_RGBA8)
+				head.blit_rect(src, Rect2i(x0, y0, side, side), Vector2i(0, 0))
+				head.resize(256, 256, Image.INTERPOLATE_LANCZOS)
+				for y in range(256):
+					for x in range(256):
+						var d := Vector2(x - 128, y - 128).length() / 128.0
+						var f := clampf((1.0 - d) / 0.05, 0.0, 1.0)
+						var px := head.get_pixel(x, y)
+						px.a *= f
+						head.set_pixel(x, y, px)
+				result = ImageTexture.create_from_image(head)
+	_portrait_cache[npc_id] = result
+	return result
 
 func _build_truth_ui() -> void:
+	# v3.1: the Truth Check is presented as the in-world TRUTH ENGINE —
+	# a dark brass-and-wood field instrument with a status lamp and a
+	# parchment readout inside. Same fields, same content.
 	_truth_layer = CanvasLayer.new()
 	_truth_layer.layer = 21
 	_truth_layer.visible = false
@@ -1112,31 +1437,61 @@ func _build_truth_ui() -> void:
 	dim.color = Color(0, 0, 0, 0.45)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_truth_layer.add_child(dim)
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(640, 460)
-	panel.add_theme_stylebox_override("panel", _panel_style(Color(0.97, 0.92, 0.80), Color(0.72, 0.55, 0.20), 12, 3))
+	var device := PanelContainer.new()
+	device.custom_minimum_size = Vector2(680, 500)
+	device.add_theme_stylebox_override("panel", _panel_style(Color(0.14, 0.10, 0.06, 0.98), Color(0.72, 0.55, 0.20), 14, 4))
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_truth_layer.add_child(center)
-	center.add_child(panel)
+	center.add_child(device)
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 8)
-	panel.add_child(vb)
+	vb.add_theme_constant_override("separation", 10)
+	device.add_child(vb)
+	var header := PanelContainer.new()
+	header.add_theme_stylebox_override("panel", _plate_style())
+	vb.add_child(header)
+	var hrow := HBoxContainer.new()
+	hrow.add_theme_constant_override("separation", 10)
+	header.add_child(hrow)
+	_truth_lamp = PanelContainer.new()
+	_truth_lamp.custom_minimum_size = Vector2(18, 18)
+	_truth_lamp.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_truth_lamp.add_theme_stylebox_override("panel", _panel_style(Color(0.6, 0.6, 0.6), Color(0.3, 0.25, 0.1), 9, 1))
+	hrow.add_child(_truth_lamp)
+	var engine_l := Label.new()
+	engine_l.text = "TRUTH ENGINE"
+	engine_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	engine_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	engine_l.add_theme_font_size_override("font_size", 24)
+	engine_l.add_theme_color_override("font_color", Color(0.16, 0.11, 0.05))
+	hrow.add_child(engine_l)
+	var lamp2 := PanelContainer.new()
+	lamp2.custom_minimum_size = Vector2(18, 18)
+	lamp2.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lamp2.add_theme_stylebox_override("panel", _panel_style(Color(0.6, 0.6, 0.6), Color(0.3, 0.25, 0.1), 9, 1))
+	hrow.add_child(lamp2)
+	var inner := PanelContainer.new()
+	inner.add_theme_stylebox_override("panel", _parchment_style())
+	vb.add_child(inner)
+	var ivb := VBoxContainer.new()
+	ivb.add_theme_constant_override("separation", 8)
+	inner.add_child(ivb)
+	var vb2 := ivb
 	_truth_title = Label.new()
 	_truth_title.text = "TRUTH CHECK"
 	_truth_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_truth_title.add_theme_font_size_override("font_size", 26)
+	_truth_title.add_theme_font_size_override("font_size", 20)
 	_truth_title.add_theme_color_override("font_color", Color(0.45, 0.25, 0.08))
-	vb.add_child(_truth_title)
+	vb2.add_child(_truth_title)
 	_truth_status = Label.new()
 	_truth_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_truth_status.add_theme_font_size_override("font_size", 22)
-	vb.add_child(_truth_status)
+	vb2.add_child(_truth_status)
 	_truth_object = Label.new()
 	_truth_object.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_truth_object.add_theme_font_size_override("font_size", 18)
 	_truth_object.add_theme_color_override("font_color", Color(0.45, 0.25, 0.08))
-	vb.add_child(_truth_object)
+	vb2.add_child(_truth_object)
 	_truth_fact = RichTextLabel.new()
 	_truth_fact.bbcode_enabled = false
 	_truth_fact.fit_content = true
@@ -1144,50 +1499,58 @@ func _build_truth_ui() -> void:
 	_truth_fact.custom_minimum_size = Vector2(0, 110)
 	_truth_fact.add_theme_font_size_override("normal_font_size", 17)
 	_truth_fact.add_theme_color_override("default_color", Color(0.12, 0.10, 0.06))
-	vb.add_child(_truth_fact)
+	vb2.add_child(_truth_fact)
 	_truth_era = Label.new()
 	_truth_era.add_theme_font_size_override("font_size", 16)
 	_truth_era.add_theme_color_override("font_color", Color(0.12, 0.10, 0.06))
-	vb.add_child(_truth_era)
+	vb2.add_child(_truth_era)
 	_truth_conf = Label.new()
 	_truth_conf.add_theme_font_size_override("font_size", 16)
 	_truth_conf.add_theme_color_override("font_color", Color(0.12, 0.10, 0.06))
-	vb.add_child(_truth_conf)
+	vb2.add_child(_truth_conf)
 	_truth_paradox = Label.new()
 	_truth_paradox.add_theme_font_size_override("font_size", 16)
 	_truth_paradox.add_theme_color_override("font_color", Color(0.12, 0.10, 0.06))
-	vb.add_child(_truth_paradox)
+	vb2.add_child(_truth_paradox)
 	_truth_clue = Label.new()
 	_truth_clue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_truth_clue.add_theme_font_size_override("font_size", 16)
 	_truth_clue.add_theme_color_override("font_color", Color(0.10, 0.45, 0.10))
-	vb.add_child(_truth_clue)
+	vb2.add_child(_truth_clue)
 	_truth_note = Label.new()
 	_truth_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_truth_note.add_theme_font_size_override("font_size", 16)
 	_truth_note.add_theme_color_override("font_color", Color(0.45, 0.25, 0.08))
-	vb.add_child(_truth_note)
+	vb2.add_child(_truth_note)
 	var close := Button.new()
 	close.text = "Close"
-	_style_button(close, Color(0.85, 0.75, 0.55))
+	_style_button(close, Color(0.85, 0.75, 0.55), true)
 	close.pressed.connect(_close_truth)
-	vb.add_child(close)
+	vb2.add_child(close)
 
 func _build_action_ui() -> void:
+	# v3.1: the interaction menu wears the same wood + parchment dress
+	# as the dialogue bar, and (see _open_action_popup) opens beside
+	# the thing you clicked instead of at a fixed screen position.
 	_action_layer = CanvasLayer.new()
 	_action_layer.layer = 22
 	_action_layer.visible = false
 	add_child(_action_layer)
-	_action_panel = PanelContainer.new()
-	_action_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.97, 0.92, 0.80), Color(0.72, 0.55, 0.20), 8, 2))
+	var framed := _framed_panel(Vector2(0, 0))
+	_action_panel = framed["outer"] as PanelContainer
 	_action_layer.add_child(_action_panel)
-	var vb := VBoxContainer.new()
+	var vb := framed["box"] as VBoxContainer
 	vb.add_theme_constant_override("separation", 6)
-	_action_panel.add_child(vb)
 	_action_title = Label.new()
 	_action_title.add_theme_font_size_override("font_size", 18)
 	_action_title.add_theme_color_override("font_color", Color(0.45, 0.25, 0.08))
 	vb.add_child(_action_title)
+	var sep := HSeparator.new()
+	var line := StyleBoxLine.new()
+	line.color = Color(0.72, 0.55, 0.20)
+	line.thickness = 2
+	sep.add_theme_stylebox_override("separator", line)
+	vb.add_child(sep)
 	_action_desc = RichTextLabel.new()
 	_action_desc.bbcode_enabled = false
 	_action_desc.fit_content = true
@@ -1270,10 +1633,51 @@ func _panel_style(bg: Color, border: Color, radius: int, border_w: int) -> Style
 	s.content_margin_bottom = 12
 	return s
 
-func _style_button(b: Button, bg: Color) -> void:
+# --- v3.1 storybook frame styles (dark wood + parchment + brass) ------------
+
+func _wood_style() -> StyleBoxFlat:
+	# Outer frame of every v3.1 panel: dark wood with a brass edge.
+	var s := _panel_style(Color(0.16, 0.11, 0.06, 0.98), Color(0.72, 0.55, 0.20), 12, 3)
+	s.content_margin_left = 10
+	s.content_margin_right = 10
+	s.content_margin_top = 10
+	s.content_margin_bottom = 10
+	return s
+
+func _parchment_style() -> StyleBoxFlat:
+	# Inner inlay the content sits on.
+	return _panel_style(Color(0.97, 0.92, 0.80), Color(0.55, 0.40, 0.15), 8, 2)
+
+func _plate_style() -> StyleBoxFlat:
+	# Brass name plate (speaker names, the Truth Engine header).
+	var s := _panel_style(Color(0.55, 0.40, 0.16), Color(0.35, 0.25, 0.08), 6, 2)
+	s.content_margin_left = 12
+	s.content_margin_right = 12
+	s.content_margin_top = 4
+	s.content_margin_bottom = 4
+	return s
+
+func _framed_panel(min_size: Vector2) -> Dictionary:
+	# A wood-framed panel with a parchment inlay; returns the outer panel
+	# plus the VBox to fill. Shared by the modal, dialogue and truth UI.
+	var outer := PanelContainer.new()
+	outer.custom_minimum_size = min_size
+	outer.add_theme_stylebox_override("panel", _wood_style())
+	var inner := PanelContainer.new()
+	inner.add_theme_stylebox_override("panel", _parchment_style())
+	outer.add_child(inner)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 8)
+	inner.add_child(vb)
+	return {"outer": outer, "box": vb}
+
+func _style_button(b: Button, bg: Color, bordered := false) -> void:
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = bg
 	normal.set_corner_radius_all(8)
+	if bordered:
+		normal.border_color = Color(0.45, 0.32, 0.12)
+		normal.set_border_width_all(2)
 	normal.content_margin_left = 14
 	normal.content_margin_right = 14
 	normal.content_margin_top = 8
@@ -1320,10 +1724,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		var k := event as InputEventKey
 		if k.pressed and not k.echo:
-			if k.keycode == KEY_F1:
+			if _intro_playing:
+				# The intro swallows keys; only Esc (skip) gets through.
+				if k.keycode == KEY_ESCAPE:
+					_skip_intro()
+			elif k.keycode == KEY_F1:
 				_toggle_debug()
 			elif k.keycode == KEY_M:
 				audio.toggle_mute()
+			elif _dialogue_layer.visible and _dlg_revealing and (k.keycode == KEY_ENTER or k.keycode == KEY_KP_ENTER or k.keycode == KEY_SPACE):
+				_dlg_advance()
 			elif k.keycode == KEY_ESCAPE:
 				_close_topmost()
 		return
@@ -1445,7 +1855,7 @@ func _open_action_popup(id: String) -> void:
 			"interact":
 				b.text = "Interact"
 				b.pressed.connect(_do_interact.bind(id))
-		_style_button(b, Color(0.85, 0.75, 0.55))
+		_style_button(b, Color(0.85, 0.75, 0.55), true)
 		_action_buttons.add_child(b)
 	# USE: only meaningful with a selected inventory item.
 	var use_b := Button.new()
@@ -1453,19 +1863,36 @@ func _open_action_popup(id: String) -> void:
 		use_b.text = "Use: %s" % String(ITEMS[selected_item].get("name", selected_item))
 	else:
 		use_b.text = "Use... (select an item from your pack first)"
-	_style_button(use_b, Color(0.72, 0.85, 0.60))
+	_style_button(use_b, Color(0.72, 0.85, 0.60), true)
 	use_b.pressed.connect(_do_use.bind(id))
 	_action_buttons.add_child(use_b)
 	var close_b := Button.new()
 	close_b.text = "Close"
-	_style_button(close_b, Color(0.75, 0.70, 0.62))
+	_style_button(close_b, Color(0.75, 0.70, 0.62), true)
 	close_b.pressed.connect(_close_action_popup)
 	_action_buttons.add_child(close_b)
-	# Fixed position (top centre-right) so the layout is deterministic.
+	# Anchored beside the clicked hotspot (settled next frame, once
+	# the panel has its real size).
+	_action_panel.custom_minimum_size = Vector2(400, 0)
 	_action_panel.position = Vector2(430, 150)
-	_action_panel.custom_minimum_size = Vector2(420, 0)
 	_action_layer.visible = true
 	_refresh_blocking()
+	_position_action_popup(id)
+
+func _position_action_popup(id: String) -> void:
+	await get_tree().process_frame
+	if _action_hotspot != id or not _action_layer.visible:
+		return
+	var anchor := Vector2(640, 300)
+	var area := _hotspot_areas.get(id, null) as Node2D
+	if area:
+		anchor = area.global_position
+	var size := _action_panel.size
+	var x := clampf(anchor.x - size.x * 0.5, 10.0, VIEW_W - size.x - 10.0)
+	var y := anchor.y - size.y - 96.0
+	if y < 84.0:
+		y = anchor.y + 46.0
+	_action_panel.position = Vector2(x, y)
 
 func _close_action_popup() -> void:
 	if _action_layer:
@@ -1708,37 +2135,83 @@ func _start_dialogue(npc_id: String) -> void:
 	_dialogue_id = dialogue_id
 	_dialogue_npc = npc_id
 	_dialogue_speaker.text = String(ch.get("name", npc_id))
+	var ptex := _portrait_texture(npc_id)
+	_dialogue_portrait.texture = ptex
+	_dialogue_portrait.visible = ptex != null
+	_dialogue_ring.visible = ptex != null
 	audio.play_dialogue_blip()
 	_dialogue_layer.visible = true
 	_refresh_blocking()
 	_show_dialogue_node(String(DIALOGUES[dialogue_id].get("start", "n1")))
-	_capture_shot("dialogue-" + npc_id, 0.5)
+	_capture_shot("dialogue-" + npc_id, 2.2)
+
+func _dlg_set_text(text: String) -> void:
+	# Typewriter reveal: ~90 chars/sec, clamped so long lines still land.
+	if _dlg_tween and _dlg_tween.is_valid():
+		_dlg_tween.kill()
+	_dialogue_text.text = text
+	_dialogue_text.visible_characters = 0
+	_dlg_revealing = true
+	var dur := clampf(float(text.length()) / 90.0, 0.25, 1.8)
+	_dlg_tween = create_tween()
+	_dlg_tween.tween_property(_dialogue_text, "visible_characters", text.length(), dur)
+	_dlg_tween.tween_callback(_dlg_on_reveal_done)
+
+func _dlg_on_reveal_done() -> void:
+	if not _dlg_revealing:
+		return
+	_dlg_revealing = false
+	_dialogue_text.visible_characters = -1
+	if _dlg_state == "node":
+		_dlg_build_choices()
+
+func _dlg_advance() -> void:
+	if not _dialogue_layer.visible:
+		return
+	if _dlg_revealing:
+		# First click: complete the line.
+		if _dlg_tween and _dlg_tween.is_valid():
+			_dlg_tween.kill()
+		_dlg_on_reveal_done()
+	elif _dlg_state == "response":
+		# Next click: press the Continue / End button.
+		for c in _dialogue_choices.get_children():
+			if c is Button:
+				(c as Button).pressed.emit()
+				return
+
+func _dlg_build_choices() -> void:
+	for child in _dialogue_choices.get_children():
+		child.queue_free()
+	if _dlg_pending_choices.is_empty():
+		var end_b := Button.new()
+		end_b.text = "End conversation"
+		_style_button(end_b, Color(0.85, 0.75, 0.55), true)
+		end_b.pressed.connect(_close_dialogue)
+		_dialogue_choices.add_child(end_b)
+		return
+	for choice in _dlg_pending_choices:
+		var c: Dictionary = choice
+		var b := Button.new()
+		b.text = String(c.get("text", ""))
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.custom_minimum_size = Vector2(0, 44)
+		_style_button(b, Color(0.88, 0.80, 0.62), true)
+		b.pressed.connect(_on_choice_pressed.bind(c))
+		_dialogue_choices.add_child(b)
+	_fit_dialogue_bar()
 
 func _show_dialogue_node(node_id: String) -> void:
 	_dialogue_node = node_id
 	var dlg: Dictionary = DIALOGUES.get(_dialogue_id, {})
 	var nodes: Dictionary = dlg.get("nodes", {})
 	var node: Dictionary = nodes.get(node_id, {})
-	_dialogue_text.text = String(node.get("text", ""))
+	_dlg_state = "node"
+	_dlg_pending_choices = Array(node.get("choices", []))
 	for child in _dialogue_choices.get_children():
 		child.queue_free()
-	var choices: Array = node.get("choices", [])
-	if choices.is_empty():
-		var end_b := Button.new()
-		end_b.text = "End conversation"
-		_style_button(end_b, Color(0.85, 0.75, 0.55))
-		end_b.pressed.connect(_close_dialogue)
-		_dialogue_choices.add_child(end_b)
-		return
-	for choice in choices:
-		var c: Dictionary = choice
-		var b := Button.new()
-		b.text = String(c.get("text", ""))
-		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		b.custom_minimum_size = Vector2(0, 44)
-		_style_button(b, Color(0.88, 0.80, 0.62))
-		b.pressed.connect(_on_choice_pressed.bind(c))
-		_dialogue_choices.add_child(b)
+	_dlg_set_text(String(node.get("text", "")))
+	_fit_dialogue_bar()
 
 func _on_choice_pressed(choice: Dictionary) -> void:
 	var eff: Dictionary = choice.get("effects", {})
@@ -1747,8 +2220,11 @@ func _on_choice_pressed(choice: Dictionary) -> void:
 	if int(eff.get("paradox", 0)) != 0:
 		var p := int(eff["paradox"])
 		_show_toast("Paradox %+d" % p if p > 0 else "Paradox %d" % p)
-	# Show the response, then continue to the next node (or close).
-	_dialogue_text.text = String(choice.get("response", ""))
+	# Show the response, then continue to the next node (or close). The
+	# Continue button is created at once (the reveal types over it) so
+	# scripted drivers and impatient clickers both work.
+	_dlg_state = "response"
+	_dlg_pending_choices = []
 	for child in _dialogue_choices.get_children():
 		child.queue_free()
 	# Terminal choices carry "next": null in the JSON — String(null) throws.
@@ -1756,14 +2232,19 @@ func _on_choice_pressed(choice: Dictionary) -> void:
 	var next_node := "" if next_raw == null else String(next_raw)
 	var cont := Button.new()
 	cont.text = "Continue" if next_node != "" else "End conversation"
-	_style_button(cont, Color(0.85, 0.75, 0.55))
+	_style_button(cont, Color(0.85, 0.75, 0.55), true)
 	if next_node != "":
 		cont.pressed.connect(_show_dialogue_node.bind(next_node))
 	else:
 		cont.pressed.connect(_close_dialogue)
 	_dialogue_choices.add_child(cont)
+	_dlg_set_text(String(choice.get("response", "")))
+	_fit_dialogue_bar()
 
 func _close_dialogue() -> void:
+	if _dlg_tween and _dlg_tween.is_valid():
+		_dlg_tween.kill()
+	_dlg_revealing = false
 	_dialogue_layer.visible = false
 	var npc: Npc = _npcs.get(_dialogue_npc, null)
 	if npc:
@@ -1806,6 +2287,9 @@ func _open_truth(truth_id: String) -> void:
 	else:
 		_truth_status.text = "AUTHENTIC"
 		_truth_status.add_theme_color_override("font_color", Color(0.10, 0.55, 0.20))
+	# The Truth Engine's lamp burns red for a distortion, green for truth.
+	var lamp_col := Color(0.85, 0.25, 0.15) if String(truth.get("status", "")) == "anachronistic" else Color(0.35, 0.85, 0.35)
+	_truth_lamp.add_theme_stylebox_override("panel", _panel_style(lamp_col, lamp_col.darkened(0.35), 9, 1))
 	_truth_fact.text = String(truth.get("fact", ""))
 	_truth_era.text = "Expected era: %s    •    Current era: %s" % [String(truth.get("expectedEra", "?")), String(truth.get("currentEra", "?"))]
 	_truth_conf.text = "Truth confidence: %d%%" % int(truth.get("confidence", 0))
@@ -2093,7 +2577,7 @@ func _show_quiz_question() -> void:
 		b.text = String(options[i])
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.custom_minimum_size = Vector2(0, 44)
-		_style_button(b, Color(0.85, 0.75, 0.55))
+		_style_button(b, Color(0.85, 0.75, 0.55), true)
 		b.pressed.connect(_on_quiz_option.bind(i, b))
 		vb.add_child(b)
 
@@ -2314,6 +2798,11 @@ func _show_title_screen() -> void:
 		_style_button(cont_b, Color(0.85, 0.75, 0.55))
 		cont_b.pressed.connect(_continue_game)
 		vb.add_child(cont_b)
+	var intro_b := Button.new()
+	intro_b.text = "Watch Intro"
+	_style_button(intro_b, Color(0.85, 0.75, 0.55))
+	intro_b.pressed.connect(_on_watch_intro)
+	vb.add_child(intro_b)
 	var arch_b := Button.new()
 	arch_b.text = "Historical Archive"
 	_style_button(arch_b, Color(0.75, 0.70, 0.62))
@@ -2332,11 +2821,245 @@ func _free_title_layer() -> void:
 		_title_layer = null
 	_refresh_blocking()
 
+# --- intro cinematic (v3.1) ----------------------------------------------------
+# A ~25 s storybook montage over the game's own painted backgrounds:
+# the fracturing Core, flashes of the four eras, the pedlar's deal, the
+# Bureau dispatching the Cadet, and the title reveal. Plays on New Game
+# and from the title screen's "Watch Intro"; a Skip button (and Esc)
+# ends it instantly, from the very first frame, to the same destination
+# finishing it would reach.
+
+const INTRO_BEATS := [
+	{"bg": "core", "dur": 4.0, "zoom": 1.10, "caption": "The Temporal Core holds every era in its proper century. Tonight, it is fracturing."},
+	{"bg": "workshop", "dur": 1.7, "zoom": 1.05, "caption": "Four eras are bleeding into one another: 1764, the 1830s, the 1690s, 1912."},
+	{"bg": "mill", "dur": 1.7, "zoom": 0.96, "caption": ""},
+	{"bg": "observatory", "dur": 1.7, "zoom": 1.05, "caption": ""},
+	{"bg": "airfield", "dur": 1.7, "zoom": 0.96, "caption": ""},
+	{"bg": "marketplace", "dur": 3.6, "zoom": 1.08, "caption": "A travelling pedlar is selling tomorrow itself — wonders from centuries yet to come — to anyone with coin."},
+	{"bg": "dais", "dur": 3.6, "zoom": 1.02, "cadet": true, "caption": "The Temporal Restoration Bureau has one cadet left to send."},
+	{"bg": "gallery", "dur": 3.2, "zoom": 1.06, "caption": "Find what does not belong. Prove it with the Truth Engine. Repair the timeline."},
+]
+const INTRO_TITLE_HOLD := 3.8
+
+func intro_scripted_duration() -> float:
+	var total := INTRO_TITLE_HOLD
+	for b in INTRO_BEATS:
+		total += float(b["dur"])
+	return total
+
+func _on_watch_intro() -> void:
+	# From the title screen: play the intro over it, return to it.
+	_play_intro(func() -> void: pass)
+
+func _play_intro(on_done: Callable) -> void:
+	if _intro_playing:
+		return
+	_intro_playing = true
+	_intro_on_done = on_done
+	_intro_gen += 1
+	var gen := _intro_gen
+	input_locked = true
+	audio.play_intro_music()
+	_intro_layer = CanvasLayer.new()
+	_intro_layer.layer = 40
+	add_child(_intro_layer)
+	var back := ColorRect.new()
+	back.color = Color(0, 0, 0, 1)
+	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_intro_layer.add_child(back)
+	_intro_img_a = _make_intro_image()
+	_intro_img_b = _make_intro_image()
+	_intro_layer.add_child(_intro_img_a)
+	_intro_layer.add_child(_intro_img_b)
+	_intro_front_is_a = true
+	# The Cadet, composited over the dais for the dispatch beat.
+	_intro_cadet = TextureRect.new()
+	_intro_cadet.texture = load("res://art/cadet.png")
+	_intro_cadet.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_intro_cadet.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_intro_cadet.position = Vector2(541, 190)
+	_intro_cadet.size = Vector2(198, 480)
+	_intro_cadet.modulate.a = 0.0
+	_intro_cadet.z_index = 2
+	_intro_cadet.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_intro_layer.add_child(_intro_cadet)
+	# Caption strip.
+	var cap_panel := PanelContainer.new()
+	cap_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	cap_panel.offset_left = -520
+	cap_panel.offset_right = 520
+	cap_panel.offset_top = -132
+	cap_panel.offset_bottom = -72
+	cap_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.08, 0.06, 0.04, 0.82), Color(0.72, 0.55, 0.20), 8, 2))
+	cap_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cap_panel.z_index = 3
+	_intro_layer.add_child(cap_panel)
+	_intro_caption = Label.new()
+	_intro_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_intro_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_intro_caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_intro_caption.add_theme_font_size_override("font_size", 20)
+	_intro_caption.add_theme_color_override("font_color", Color(0.96, 0.93, 0.84))
+	_intro_caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cap_panel.add_child(_intro_caption)
+	# Fade-to-black for the title reveal.
+	_intro_black = ColorRect.new()
+	_intro_black.color = Color(0, 0, 0, 0)
+	_intro_black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_intro_black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_intro_black.z_index = 4
+	_intro_layer.add_child(_intro_black)
+	# Title group (revealed at the end).
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center.z_index = 5
+	_intro_layer.add_child(center)
+	_intro_title_box = VBoxContainer.new()
+	_intro_title_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	_intro_title_box.add_theme_constant_override("separation", 10)
+	_intro_title_box.modulate.a = 0.0
+	_intro_title_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center.add_child(_intro_title_box)
+	var t1 := Label.new()
+	t1.text = "TIMELINE RESTORER"
+	t1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t1.add_theme_font_size_override("font_size", 64)
+	t1.add_theme_color_override("font_color", Color(0.91, 0.71, 0.30))
+	t1.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_intro_title_box.add_child(t1)
+	var t2 := Label.new()
+	t2.text = "Back in Time"
+	t2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t2.add_theme_font_size_override("font_size", 30)
+	t2.add_theme_color_override("font_color", Color(0.95, 0.90, 0.78))
+	t2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_intro_title_box.add_child(t2)
+	# Skip: visible for the WHOLE intro, from the first frame.
+	var skip := Button.new()
+	skip.text = "Skip »"
+	skip.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	skip.offset_left = -156
+	skip.offset_right = -24
+	skip.offset_top = 20
+	skip.offset_bottom = 66
+	_style_button(skip, Color(0.16, 0.11, 0.06), true)
+	skip.add_theme_color_override("font_color", Color(0.96, 0.93, 0.84))
+	skip.add_theme_color_override("font_hover_color", Color(1.0, 0.97, 0.88))
+	skip.z_index = 6
+	skip.pressed.connect(_skip_intro)
+	_intro_layer.add_child(skip)
+	_refresh_blocking()
+	if shots_dir != "":
+		_capture_shot("v31-intro-opening", 1.2)
+		_capture_shot("v31-intro-era", 6.0)
+		_capture_shot("v31-intro-title", 23.2)
+	_intro_run(gen)
+
+func _make_intro_image() -> TextureRect:
+	var tr := TextureRect.new()
+	tr.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	tr.pivot_offset = Vector2(640, 360)
+	tr.modulate.a = 0.0
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return tr
+
+func _intro_track(tw: Tween) -> void:
+	_intro_tweens.append(tw)
+
+func _intro_show(bg_id: String, dur: float, zoom_to: float, fade: bool) -> void:
+	var back_img := _intro_img_a if _intro_front_is_a else _intro_img_b
+	var front_img := _intro_img_b if _intro_front_is_a else _intro_img_a
+	var path := "res://art/bg-%s.png" % bg_id
+	front_img.texture = load(path) if ResourceLoader.exists(path) else _fallback_bg_texture()
+	# Ken Burns: a slow push (or gentle pull-back) across the beat.
+	var zoom_from := 1.0
+	if zoom_to > 1.0:
+		zoom_from = 1.0
+	elif zoom_to < 1.0:
+		zoom_from = 1.12
+	else:
+		zoom_from = 0.98
+	front_img.scale = Vector2(zoom_from, zoom_from)
+	var tw := front_img.create_tween()
+	tw.tween_property(front_img, "scale", Vector2(zoom_to, zoom_to), dur)
+	if fade:
+		tw.parallel().tween_property(front_img, "modulate:a", 1.0, 0.55)
+	else:
+		front_img.modulate.a = 1.0
+	_intro_track(tw)
+	_intro_front_is_a = not _intro_front_is_a
+	back_img.z_index = 0
+	front_img.z_index = 1
+
+func _intro_set_caption(text: String) -> void:
+	_intro_caption.text = text
+
+func _intro_run(gen: int) -> void:
+	var first := true
+	for beat in INTRO_BEATS:
+		if gen != _intro_gen or not _intro_playing:
+			return
+		_intro_show(String(beat["bg"]), float(beat["dur"]), float(beat["zoom"]), not first)
+		first = false
+		var cap := String(beat.get("caption", ""))
+		if cap != "":
+			_intro_set_caption(cap)
+		var cadet_tw := _intro_cadet.create_tween()
+		if bool(beat.get("cadet", false)):
+			cadet_tw.tween_property(_intro_cadet, "modulate:a", 1.0, 0.7)
+		else:
+			cadet_tw.tween_property(_intro_cadet, "modulate:a", 0.0, 0.4)
+		_intro_track(cadet_tw)
+		await get_tree().create_timer(float(beat["dur"])).timeout
+	# Title reveal.
+	if gen != _intro_gen or not _intro_playing:
+		return
+	_intro_set_caption("")
+	var tw := create_tween()
+	tw.tween_property(_intro_black, "color:a", 1.0, 0.7)
+	tw.parallel().tween_property(_intro_title_box, "modulate:a", 1.0, 1.1)
+	_intro_track(tw)
+	await get_tree().create_timer(INTRO_TITLE_HOLD).timeout
+	if gen != _intro_gen or not _intro_playing:
+		return
+	_finish_intro()
+
+func _skip_intro() -> void:
+	_finish_intro()
+
+func _finish_intro() -> void:
+	if not _intro_playing:
+		return
+	_intro_playing = false
+	_intro_gen += 1  # stops the runner coroutine at its next checkpoint
+	for tw in _intro_tweens:
+		if tw and tw.is_valid():
+			tw.kill()
+	_intro_tweens.clear()
+	if _intro_layer:
+		_intro_layer.queue_free()
+		_intro_layer = null
+	audio.stop_intro_music()
+	_refresh_blocking()
+	var cb := _intro_on_done
+	_intro_on_done = Callable()
+	if cb.is_valid():
+		cb.call()
+
 func _new_game() -> void:
 	_reset_state()
 	_free_title_layer()
 	_log("INFO", "New game started")
-	start_act(1)
+	# v3.1: New Game opens with the intro cinematic (skippable).
+	# Verification modes drive the game directly and skip it.
+	if autodemo != "" or clicktest or scene_shot != "" or walktest or uitest:
+		start_act(1)
+	else:
+		_play_intro(func() -> void: start_act(1))
 
 func _reset_state() -> void:
 	score = 0
