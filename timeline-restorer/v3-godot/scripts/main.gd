@@ -74,6 +74,7 @@ var archive_truths: Array[String] = []
 var event_log: Array[String] = []
 var selected_item := ""
 var use_mode := false
+var coat_worn := false  # v3.2: optional Colonial Coat costume state
 var input_locked := true
 var ui_blocking := false
 var pending_hotspot := ""
@@ -84,6 +85,8 @@ var autodemo_act1_only := false
 #   truth, quiz, ending); --clicktest injects one real mouse click and reports.
 var shots_dir := ""
 var clicktest := false
+var coattest := false
+var v32shots := ""
 var autocontinue := false
 var walktest := false
 var uitest := false
@@ -115,6 +118,14 @@ var _paradox_overlay: ColorRect
 var _hotspot_areas := {}
 var _hotspot_glows := {}
 var _hotspot_labels := {}
+# v3.2: visible props replace the coloured hotspot rings.
+var _hotspot_props := {}  # hid -> {root, halo, spr, base_scale, base_pos}
+var _hotspot_labels_by_id := {}
+var _hover_id := ""
+var _sparkle_tex: ImageTexture
+var _icon_cache := {}
+var _fx_layer: CanvasLayer
+var _fx_count := 0
 var _npcs := {}
 var _toast_tween: Tween
 var _caption_tween: Tween
@@ -222,6 +233,12 @@ func _ready() -> void:
 	elif clicktest:
 		_new_game()
 		_run_clicktest()
+	elif coattest:
+		_new_game()
+		_run_coattest()
+	elif v32shots != "":
+		_new_game()
+		_run_v32shots()
 	elif autodemo != "":
 		_new_game()
 	else:
@@ -229,6 +246,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_update_hover()
+	_update_hover_visuals(delta)
 	if _candle_light:
 		_candle_light.energy = 0.85 + 0.07 * sin(_time * 11.0) + 0.05 * sin(_time * 5.7 + 1.3)
 	if _paradox_overlay:
@@ -264,6 +283,10 @@ func _parse_args() -> void:
 			DirAccess.make_dir_recursive_absolute(shots_dir)
 		elif a == "--clicktest":
 			clicktest = true
+		elif a == "--coattest":
+			coattest = true
+		elif a.begins_with("--v32shots="):
+			v32shots = a.trim_prefix("--v32shots=")
 		elif a == "--walktest":
 			walktest = true
 		elif a == "--uitest":
@@ -370,6 +393,128 @@ func _inject_click(pos: Vector2) -> void:
 	rel.pressed = false
 	rel.position = pos
 	Input.parse_input_event(rel)
+
+func _run_coattest() -> void:
+	# v3.2 verification: coat pickup -> wear (+25 once, sprites swap) ->
+	# save -> reload -> still worn -> toggle off. Plus prop hover checks.
+	await get_tree().create_timer(1.5).timeout
+	var ok := true
+	if _find_hotspot("coat_stand").is_empty():
+		print("COATTEST FAIL: coat_stand hotspot missing")
+		get_tree().quit()
+		return
+	_do_interact("coat_stand")
+	if not inventory.has("colonial_coat"):
+		print("COATTEST FAIL: coat not in inventory after pickup")
+		get_tree().quit()
+		return
+	print("COATTEST pickup OK (props in workshop: ", _hotspot_props.size(), ")")
+	var score_before := score
+	selected_item = "colonial_coat"
+	_do_use("coat_stand")
+	if not coat_worn or not cadet.coat_worn:
+		ok = false
+		print("COATTEST FAIL: coat not worn after Use")
+	if score - score_before != 25:
+		ok = false
+		print("COATTEST FAIL: expected +25 on first wear, got ", score - score_before)
+	var idle_tex := cadet.sprite.texture
+	print("COATTEST worn idle texture: ",
+		idle_tex.resource_path if idle_tex else "null")
+	if idle_tex == null or not idle_tex.resource_path.ends_with("cadet-coat.png"):
+		ok = false
+		print("COATTEST FAIL: idle sprite did not swap to the coat variant")
+	_save_game(true)
+	var data := _load_save_dict()
+	_reset_state()
+	if coat_worn or cadet.coat_worn:
+		ok = false
+		print("COATTEST FAIL: reset did not clear the coat")
+	_apply_save_dict(data)
+	if not coat_worn or not cadet.coat_worn:
+		ok = false
+		print("COATTEST FAIL: coat not worn after save/load")
+	else:
+		print("COATTEST save/load OK: still worn")
+	selected_item = "colonial_coat"
+	_on_inventory_item_pressed("colonial_coat")
+	if coat_worn or cadet.coat_worn:
+		ok = false
+		print("COATTEST FAIL: coat still worn after toggle off")
+	else:
+		print("COATTEST toggle-off OK")
+	# Hover visuals: drive the lerp directly (headless has no real mouse;
+	# the real-mouse path is covered by --clicktest and the Xvfb shots).
+	if _hotspot_props.has("leyden_jar"):
+		_hover_id = "leyden_jar"
+		for i in 12:
+			_update_hover_visuals(0.05)
+		var d: Dictionary = _hotspot_props["leyden_jar"]
+		var halo := d["halo"] as Sprite2D
+		print("COATTEST hover halo alpha: ", snappedf(halo.modulate.a, 0.01))
+		if halo.modulate.a < 0.5:
+			ok = false
+			print("COATTEST FAIL: hover glow did not fade in")
+		_hover_id = ""
+	else:
+		ok = false
+		print("COATTEST FAIL: no prop registered for leyden_jar")
+	print("COATTEST ", "PASS" if ok else "FAIL")
+	get_tree().quit()
+
+func _save_viewport_png(path: String) -> void:
+	var img := get_viewport().get_texture().get_image()
+	if img == null:
+		print("V32SHOT_SKIP ", path)
+		return
+	print("V32SHOT ", path, " err=", img.save_png(path))
+
+func _run_v32shots() -> void:
+	# v3.2 screenshot session (needs a real display — run under Xvfb):
+	# idle+props, real mouse hover, verb bar, coat worn, coat walk frame.
+	DirAccess.make_dir_recursive_absolute(v32shots)
+	# Wait for the act title card to finish and the workshop to load.
+	var waited := 0.0
+	while not _hotspot_areas.has("leyden_jar") and waited < 20.0:
+		await get_tree().create_timer(0.25).timeout
+		waited += 0.25
+	await get_tree().create_timer(0.6).timeout
+	_save_viewport_png(v32shots + "/v32-workshop-props.png")
+	# Real mouse hover over the Leyden Jar prop.
+	var jar := _hotspot_areas.get("leyden_jar", null) as Node2D
+	if jar:
+		# Warp the real pointer over the prop (Viewport.warp_mouse moves
+		# the OS cursor; injected motion events alone do not).
+		get_viewport().warp_mouse(jar.global_position)
+		var mv := InputEventMouseMotion.new()
+		mv.position = jar.global_position
+		Input.parse_input_event(mv)
+		await get_tree().create_timer(0.8).timeout
+		print("V32SHOT hover_id=", _hover_id, " mouse=", get_global_mouse_position(),
+			" locked=", input_locked, " blocking=", ui_blocking)
+		_save_viewport_png(v32shots + "/v32-hover-leyden.png")
+	# Verb-icon action bar on the magnifier.
+	_open_action_popup("magnifier_ws")
+	await get_tree().create_timer(0.8).timeout
+	_save_viewport_png(v32shots + "/v32-verb-bar.png")
+	_close_action_popup()
+	# Pick up and wear the coat, then talk to Franklin for his line.
+	_do_interact("coat_stand")
+	selected_item = "colonial_coat"
+	_do_use("coat_stand")
+	await get_tree().create_timer(0.6).timeout
+	_save_viewport_png(v32shots + "/v32-coat-worn.png")
+	_start_dialogue("franklin")
+	await get_tree().create_timer(2.2).timeout
+	_save_viewport_png(v32shots + "/v32-coat-franklin-line.png")
+	_dialogue_layer.visible = false
+	_refresh_blocking()
+	# One coat walk frame mid-stride.
+	cadet.walk_to(Vector2(1050, 665))
+	await get_tree().create_timer(0.55).timeout
+	_save_viewport_png(v32shots + "/v32-coat-walk.png")
+	print("V32SHOTS DONE")
+	get_tree().quit()
 
 func _run_walktest() -> void:
 	# Verification: walk the Cadet across the workshop and capture three
@@ -587,6 +732,9 @@ func add_score(n: int, category: String) -> void:
 	if categories.has(category):
 		categories[category] = int(categories[category]) + n
 	_update_labels()
+	# v3.2: a small "+N" floats up from the score readout on every gain.
+	if n > 0:
+		_spawn_score_floater(n)
 
 func apply_effects(effects: Dictionary) -> void:
 	if effects.is_empty():
@@ -744,6 +892,9 @@ func _load_scene(scene_id: String) -> void:
 	_hotspot_areas.clear()
 	_hotspot_glows.clear()
 	_hotspot_labels.clear()
+	_hotspot_props.clear()
+	_hotspot_labels_by_id.clear()
+	_hover_id = ""
 	_npcs.clear()
 	_build_background(scene_id)
 	_build_navigation()
@@ -827,7 +978,7 @@ func _build_scene_hotspots(scene: Dictionary) -> void:
 			npc.set_meta("hotspot_id", hid)
 			_npcs[npc_id] = npc
 			_hotspot_areas[hid] = npc
-			_add_hotspot_label(pos, String(ch.get("name", npc_id)), Color(1.0, 0.85, 0.45))
+			_add_hotspot_label(Vector2(pos.x, pos.y - 67.0), String(ch.get("name", npc_id)), Color(1.0, 0.85, 0.45))
 			continue
 		var area := Area2D.new()
 		area.name = "Hotspot_" + hid
@@ -842,32 +993,136 @@ func _build_scene_hotspots(scene: Dictionary) -> void:
 		area.add_child(shape)
 		scene_root.add_child(area)
 		_hotspot_areas[hid] = area
-		var glow_color := Color(1.0, 0.8, 0.3, 0.9)
-		if bool(h.get("anomaly", false)):
-			glow_color = Color(1.0, 0.35, 0.3, 0.95)
-		elif h.has("puzzle"):
-			glow_color = Color(0.4, 0.8, 1.0, 0.9)
-		elif h.has("item"):
-			glow_color = Color(0.5, 1.0, 0.5, 0.9)
-		_add_glow(pos, glow_color, hid)
-		_add_hotspot_label(pos, String(h.get("name", hid)), Color(0.95, 0.9, 0.78))
+		# v3.2: a visible painted prop stands in the scene instead of the
+		# old coloured ring; its name label appears only while hovered.
+		_add_prop(pos, h, hid)
+		var disp_h := 0.0
+		if _hotspot_props.has(hid):
+			disp_h = float(_hotspot_props[hid].get("disp_h", 0.0))
+		var lab := _add_hotspot_label(
+			Vector2(pos.x, pos.y - disp_h * 0.5 - 22.0),
+			String(h.get("name", hid)), Color(0.95, 0.9, 0.78), false)
+		_hotspot_labels_by_id[hid] = lab
 
-func _add_glow(pos: Vector2, color: Color, id: String) -> void:
-	var glow := Sprite2D.new()
-	glow.texture = _ring_texture(128, color)
-	glow.position = pos
-	glow.scale = Vector2(0.9, 0.9)
-	glow.z_index = 5
-	scene_root.add_child(glow)
-	_hotspot_glows[id] = glow
-	var tw := glow.create_tween().set_loops()
-	tw.tween_property(glow, "modulate:a", 0.45, 0.8)
-	tw.tween_property(glow, "modulate:a", 1.0, 0.8)
+func _add_prop(pos: Vector2, h: Dictionary, hid: String) -> void:
+	# v3.2: the hotspot IS a painted object in the scene (art/props/),
+	# with a hidden golden halo for hover and a few tiny sparkles that
+	# pulse gently so young players can spot that it is interactive.
+	var key := String(h.get("prop", ""))
+	if key == "":
+		return
+	var tex := load("res://art/props/prop-%s.png" % key) as Texture2D
+	if tex == null:
+		_log("WARNING", "Missing prop art: " + key)
+		return
+	var disp_w := float(h.get("propW", 110))
+	var sc := disp_w / float(tex.get_width())
+	var disp_h := float(tex.get_height()) * sc
+	var root := Node2D.new()
+	root.name = "Prop_" + hid
+	root.position = pos
+	root.z_index = 4
+	var halo := Sprite2D.new()
+	halo.texture = _radial_texture(160, Color(1.0, 0.85, 0.4, 0.55), Color(1.0, 0.85, 0.4, 0.0))
+	var halo_d := maxf(disp_w, disp_h) * 1.8
+	halo.scale = Vector2(halo_d / 160.0, halo_d / 160.0)
+	halo.modulate.a = 0.0
+	halo.z_index = 0
+	root.add_child(halo)
+	var spr := Sprite2D.new()
+	spr.texture = tex
+	spr.scale = Vector2(sc, sc)
+	spr.z_index = 1
+	root.add_child(spr)
+	var sparkles := Node2D.new()
+	sparkles.z_index = 2
+	var star_offsets := [
+		Vector2(-0.30, -0.28), Vector2(0.32, 0.05), Vector2(0.06, -0.42)]
+	for i in star_offsets.size():
+		var star := Sprite2D.new()
+		star.texture = _get_sparkle_texture()
+		star.position = Vector2(star_offsets[i].x * disp_w, star_offsets[i].y * disp_h)
+		var ss: float = [13.0, 10.0, 15.0][i] / 48.0
+		star.scale = Vector2(ss, ss)
+		sparkles.add_child(star)
+	root.add_child(sparkles)
+	scene_root.add_child(root)
+	_hotspot_props[hid] = {
+		"root": root, "halo": halo, "spr": spr,
+		"base_scale": sc, "base_pos": pos, "disp_h": disp_h,
+	}
+	var tw := sparkles.create_tween().set_loops()
+	tw.tween_interval(randf() * 1.6)
+	tw.tween_property(sparkles, "modulate:a", 0.95, 0.8)
+	tw.tween_property(sparkles, "modulate:a", 0.30, 0.8)
+	var tw2 := sparkles.create_tween().set_loops()
+	tw2.tween_interval(randf() * 1.6)
+	tw2.tween_property(sparkles, "scale", Vector2(1.18, 1.18), 0.8)
+	tw2.tween_property(sparkles, "scale", Vector2(0.92, 0.92), 0.8)
 
-func _add_hotspot_label(pos: Vector2, text: String, color: Color) -> void:
+func _get_sparkle_texture() -> ImageTexture:
+	# One soft four-point star, drawn once and reused by every prop.
+	if _sparkle_tex:
+		return _sparkle_tex
+	var size := 48
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var c := size / 2.0
+	for y in range(size):
+		for x in range(size):
+			var dx := absf((x - c) / c)
+			var dy := absf((y - c) / c)
+			var v := pow(1.0 - dx, 2.0) * pow(1.0 - dy, 0.45) \
+				+ pow(1.0 - dy, 2.0) * pow(1.0 - dx, 0.45)
+			var a := clampf(v - 0.55, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 0.93, 0.62, a))
+	_sparkle_tex = ImageTexture.create_from_image(img)
+	return _sparkle_tex
+
+func _update_hover() -> void:
+	# Poll the mouse each frame (Godot 4 has no Area2D hover signal that
+	# fits the existing physics-pick input path). Reuses _pick_hotspot,
+	# so the hover target is exactly the click target.
+	if input_locked or ui_blocking or _intro_playing:
+		_set_hover("")
+		return
+	_set_hover(_pick_hotspot(get_global_mouse_position()))
+
+func _set_hover(id: String) -> void:
+	if id == _hover_id:
+		return
+	if _hover_id != "" and _hotspot_labels_by_id.has(_hover_id):
+		(_hotspot_labels_by_id[_hover_id] as Label).visible = false
+	_hover_id = id
+	if id != "" and _hotspot_labels_by_id.has(id):
+		(_hotspot_labels_by_id[id] as Label).visible = true
+	Input.set_default_cursor_shape(
+		Input.CURSOR_POINTING_HAND if id != "" else Input.CURSOR_ARROW)
+
+func _update_hover_visuals(delta: float) -> void:
+	# Smoothly ease the hovered prop's halo in and lift/scale it a touch;
+	# every other prop eases back to rest. Lerped per-frame, so there are
+	# no competing tweens on the same properties.
+	if _hotspot_props.is_empty():
+		return
+	var w := clampf(delta * 14.0, 0.0, 1.0)
+	for hid in _hotspot_props.keys():
+		var d: Dictionary = _hotspot_props[hid]
+		var on: bool = hid == _hover_id
+		var halo := d["halo"] as Sprite2D
+		var spr := d["spr"] as Sprite2D
+		var root := d["root"] as Node2D
+		halo.modulate.a = lerpf(halo.modulate.a, 0.9 if on else 0.0, w)
+		var target_s := float(d["base_scale"]) * (1.07 if on else 1.0)
+		var cs := lerpf(spr.scale.x, target_s, w)
+		spr.scale = Vector2(cs, cs)
+		var bp := d["base_pos"] as Vector2
+		root.position = root.position.lerp(
+			bp + (Vector2(0, -4) if on else Vector2.ZERO), w)
+
+func _add_hotspot_label(center: Vector2, text: String, color: Color, start_visible := true) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.position = Vector2(pos.x - 70, pos.y - 78)
+	l.position = center - Vector2(70, 11)
 	l.size = Vector2(140, 22)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -877,8 +1132,10 @@ func _add_hotspot_label(pos: Vector2, text: String, color: Color) -> void:
 	l.add_theme_constant_override("shadow_offset_x", 1)
 	l.add_theme_constant_override("shadow_offset_y", 1)
 	l.z_index = 6
+	l.visible = start_visible
 	scene_root.add_child(l)
 	_hotspot_labels[text] = l
+	return l
 
 func _build_scene_lights() -> void:
 	var tints := {
@@ -1061,7 +1318,7 @@ func _build_hud() -> void:
 	_inventory_box.add_child(inv_label)
 
 	_hint_label = Label.new()
-	_hint_label.text = "Click to walk  •  Click glowing objects  •  F1 for debug"
+	_hint_label.text = "Click to walk  •  Click the objects you find  •  F1 for debug"
 	_hint_label.position = Vector2(790, 680)
 	_hint_label.size = Vector2(474, 20)
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -1109,6 +1366,11 @@ func _build_hud() -> void:
 	_toast_label.visible = false
 	toast_layer.add_child(_toast_label)
 
+	# v3.2: score floaters ("+N") rise from the score readout on this layer.
+	_fx_layer = CanvasLayer.new()
+	_fx_layer.layer = 15
+	add_child(_fx_layer)
+
 	_paradox_overlay = ColorRect.new()
 	_paradox_overlay.color = Color(0.25, 0.8, 1.0, 0.0)
 	_paradox_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1119,6 +1381,30 @@ func _build_hud() -> void:
 	add_child(overlay_layer)
 
 	_update_labels()
+
+func _spawn_score_floater(n: int) -> void:
+	# v3.2: a small golden "+N" rises and fades beside the score readout.
+	if _fx_layer == null:
+		return
+	_fx_count += 1
+	# Rapid successive gains stack downwards instead of overlapping.
+	var stack := _fx_layer.get_child_count() % 3
+	var start_y := 30.0 + float(stack) * 24.0
+	var l := Label.new()
+	l.text = "+%d" % n
+	l.position = Vector2(1096.0 + float((_fx_count % 3) - 1) * 16.0, start_y)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.add_theme_font_size_override("font_size", 22)
+	l.add_theme_color_override("font_color", Color(1.0, 0.88, 0.5))
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+	l.add_theme_constant_override("shadow_offset_x", 2)
+	l.add_theme_constant_override("shadow_offset_y", 2)
+	_fx_layer.add_child(l)
+	var tw := l.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(l, "position:y", start_y - 46.0, 1.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(l, "modulate:a", 0.0, 0.55).set_delay(0.6)
+	tw.chain().tween_callback(l.queue_free)
 
 func _update_labels() -> void:
 	# The PoC flaw: the paradox meter did not move when a Truth was found.
@@ -1829,6 +2115,19 @@ func _find_hotspot_anywhere(id: String) -> Dictionary:
 
 # --- hotspot popup ---------------------------------------------------------------
 
+func _verb_icon(key: String) -> Texture2D:
+	# v3.2: storybook verb icons (art/icons/), pre-scaled to button size.
+	if _icon_cache.has(key):
+		return _icon_cache[key]
+	var tex := load("res://art/icons/icon-%s.png" % key) as Texture2D
+	if tex == null:
+		return null
+	var img := tex.get_image()
+	img.resize(36, 36, Image.INTERPOLATE_LANCZOS)
+	var out := ImageTexture.create_from_image(img)
+	_icon_cache[key] = out
+	return out
+
 func _open_action_popup(id: String) -> void:
 	var hs := _find_hotspot(id)
 	if hs.is_empty():
@@ -1843,17 +2142,21 @@ func _open_action_popup(id: String) -> void:
 		match String(action):
 			"look":
 				b.text = "Look"
+				b.icon = _verb_icon("look")
 				b.pressed.connect(_do_look.bind(id))
 			"talk":
 				var npc_id := String(hs.get("npc", ""))
 				var ch: Dictionary = CHARACTERS.get(npc_id, {})
 				b.text = "Talk to %s" % String(ch.get("name", "them"))
+				b.icon = _verb_icon("talk")
 				b.pressed.connect(_do_talk.bind(id))
 			"truth":
 				b.text = "Truth Check"
+				b.icon = _verb_icon("truth")
 				b.pressed.connect(_do_truth.bind(id))
 			"interact":
 				b.text = "Interact"
+				b.icon = _verb_icon("interact")
 				b.pressed.connect(_do_interact.bind(id))
 		_style_button(b, Color(0.85, 0.75, 0.55), true)
 		_action_buttons.add_child(b)
@@ -1863,11 +2166,13 @@ func _open_action_popup(id: String) -> void:
 		use_b.text = "Use: %s" % String(ITEMS[selected_item].get("name", selected_item))
 	else:
 		use_b.text = "Use... (select an item from your pack first)"
+	use_b.icon = _verb_icon("use")
 	_style_button(use_b, Color(0.72, 0.85, 0.60), true)
 	use_b.pressed.connect(_do_use.bind(id))
 	_action_buttons.add_child(use_b)
 	var close_b := Button.new()
 	close_b.text = "Close"
+	close_b.icon = _verb_icon("close")
 	_style_button(close_b, Color(0.75, 0.70, 0.62), true)
 	close_b.pressed.connect(_close_action_popup)
 	_action_buttons.add_child(close_b)
@@ -1892,6 +2197,9 @@ func _position_action_popup(id: String) -> void:
 	var y := anchor.y - size.y - 96.0
 	if y < 84.0:
 		y = anchor.y + 46.0
+	# v3.2: with icon buttons the panel is taller — never let it slide
+	# off the bottom of the screen for mid-height hotspots.
+	y = clampf(y, 84.0, maxf(84.0, VIEW_H - size.y - 10.0))
 	_action_panel.position = Vector2(x, y)
 
 func _close_action_popup() -> void:
@@ -1930,9 +2238,32 @@ func _do_use(id: String) -> void:
 		_show_caption("Use mode: first select an item from your pack below, then click a hotspot.")
 		_close_action_popup()
 		return
+	# v3.2: the Colonial Coat is used on the Cadet himself — it toggles
+	# the costume on any hotspot (even the coat stand it came from).
+	if selected_item == "colonial_coat":
+		_close_action_popup()
+		selected_item = ""
+		_toggle_coat()
+		return
 	var hs := _find_hotspot(id)
 	_close_action_popup()
 	_resolve_use(selected_item, hs)
+
+func _toggle_coat() -> void:
+	# v3.2: wearing the coat swaps the Cadet's idle + walk sprites.
+	# First wear only: +25 style points. Toggling off is always free.
+	coat_worn = not coat_worn
+	cadet.set_coat(coat_worn)
+	audio.play_pickup()
+	if coat_worn:
+		if not bool(timeline_flags.get("coat_scored", false)):
+			timeline_flags["coat_scored"] = true
+			add_score(25, "exploration")
+		_show_caption("You slip on the Colonial Coat. The brass buttons gleam — a proper young Philadelphian! Franklin may have something to say about this.")
+	else:
+		_show_caption("You take off the Colonial Coat and fold it over your arm. The Cadet is back in his teal jacket.")
+	_rebuild_inventory()
+	_save_game(true)
 
 func _do_interact(id: String) -> void:
 	_close_action_popup()
@@ -2078,6 +2409,8 @@ func _rebuild_inventory() -> void:
 		var def: Dictionary = ITEMS.get(item_id, {})
 		var b := Button.new()
 		b.text = String(def.get("name", item_id))
+		if item_id == "colonial_coat" and coat_worn:
+			b.text += " (worn)"
 		b.custom_minimum_size = Vector2(0, 34)
 		b.add_theme_font_size_override("font_size", 13)
 		var bg := Color(0.97, 0.92, 0.80)
@@ -2090,6 +2423,12 @@ func _rebuild_inventory() -> void:
 func _on_inventory_item_pressed(item_id: String) -> void:
 	audio.play_click()
 	if selected_item == item_id:
+		# v3.2: clicking the selected Colonial Coat again wears/removes it.
+		if item_id == "colonial_coat":
+			selected_item = ""
+			_rebuild_inventory()
+			_toggle_coat()
+			return
 		# Click again: inspect.
 		var def: Dictionary = ITEMS.get(item_id, {})
 		_show_caption("%s — %s" % [String(def.get("name", item_id)), String(def.get("desc", ""))])
@@ -2098,7 +2437,10 @@ func _on_inventory_item_pressed(item_id: String) -> void:
 		_try_combine(selected_item, item_id)
 	else:
 		selected_item = item_id
-		_show_caption("Selected: %s. Click a hotspot and press USE, or click another item to combine." % String(ITEMS.get(item_id, {}).get("name", item_id)))
+		if item_id == "colonial_coat":
+			_show_caption("Selected: Colonial Coat. Click it once more to put it on — and the same again to take it off.")
+		else:
+			_show_caption("Selected: %s. Click a hotspot and press USE, or click another item to combine." % String(ITEMS.get(item_id, {}).get("name", item_id)))
 	_rebuild_inventory()
 
 func _try_combine(a: String, b: String) -> void:
@@ -2142,7 +2484,16 @@ func _start_dialogue(npc_id: String) -> void:
 	audio.play_dialogue_blip()
 	_dialogue_layer.visible = true
 	_refresh_blocking()
-	_show_dialogue_node(String(DIALOGUES[dialogue_id].get("start", "n1")))
+	# v3.2: the first time the Cadet talks to Franklin while wearing his
+	# coat, Franklin opens with a one-off acknowledgement line instead.
+	var start_node := String(DIALOGUES[dialogue_id].get("start", "n1"))
+	if npc_id == "franklin" and coat_worn \
+			and not bool(timeline_flags.get("coat_franklin_line", false)):
+		var dlg_nodes: Dictionary = DIALOGUES[dialogue_id].get("nodes", {})
+		if dlg_nodes.has("coat_line"):
+			timeline_flags["coat_franklin_line"] = true
+			start_node = "coat_line"
+	_show_dialogue_node(start_node)
 	_capture_shot("dialogue-" + npc_id, 2.2)
 
 func _dlg_set_text(text: String) -> void:
@@ -3056,7 +3407,7 @@ func _new_game() -> void:
 	_log("INFO", "New game started")
 	# v3.1: New Game opens with the intro cinematic (skippable).
 	# Verification modes drive the game directly and skip it.
-	if autodemo != "" or clicktest or scene_shot != "" or walktest or uitest:
+	if autodemo != "" or clicktest or coattest or v32shots != "" or scene_shot != "" or walktest or uitest:
 		start_act(1)
 	else:
 		_play_intro(func() -> void: start_act(1))
@@ -3079,6 +3430,9 @@ func _reset_state() -> void:
 	game_completed = false
 	selected_item = ""
 	use_mode = false
+	coat_worn = false
+	if cadet:
+		cadet.set_coat(false)
 	_update_labels()
 
 func _continue_game() -> void:
@@ -3138,10 +3492,11 @@ func _show_travel() -> void:
 
 func _show_how_to_play() -> void:
 	var vb := _modal_open("How to Play")
-	_modal_label(vb, "Click anywhere on the floor to walk. Click a glowing object, then choose Look, Talk, Truth Check or Interact.", 17)
+	_modal_label(vb, "Click anywhere on the floor to walk. The useful things around you are real objects in the room, sparkling gently — click one, then choose Look, Talk, Truth Check or Interact.", 17)
 	_modal_label(vb, "Truth Check: is this object from this era, or a distortion? First discoveries earn +50 points and +2 Stability.", 17)
 	_modal_label(vb, "Pack (bottom left): click an item to select it. Click it again to inspect it. Click a second item to try combining them. With an item selected, click a hotspot and press USE to use it there.", 17)
-	_modal_label(vb, "Repair: solve the act's puzzles, build the right tool, then USE it on the glowing anomaly. Repair earns a Temporal Key digit — four digits seal the Core (Kite, Loom, Lens, Wing).", 17)
+	_modal_label(vb, "Style bonus: a Colonial Coat hangs in Franklin's workshop. Borrow it from your pack (select it, then click it again) to wear it for +25 points — completely optional, and Franklin approves.", 17)
+	_modal_label(vb, "Repair: solve the act's puzzles, build the right tool, then USE it on the anomaly (the strange object that does not belong). Repair earns a Temporal Key digit — four digits seal the Core (Kite, Loom, Lens, Wing).", 17)
 	_modal_label(vb, "Quizzes: after each repair, answer 5 questions. 2 or more correct passes. 5/5 earns +500 points.", 17)
 	_modal_label(vb, "Keys: F1 debug panel, M mute, Esc close a panel. Your game saves automatically; Continue on the title screen picks it up.", 17)
 	_modal_button(vb, "Close", _modal_close, Color(0.72, 0.85, 0.60))
@@ -3177,7 +3532,7 @@ func _state_dict() -> Dictionary:
 		"timelineFlags": timeline_flags.duplicate(), "dialogueFlags": dialogue_flags.duplicate(),
 		"visitedScenes": visited_scenes.duplicate(), "quizResults": quiz_results.duplicate(),
 		"keyDigits": key_digits.duplicate(), "categories": categories.duplicate(),
-		"gameCompleted": game_completed,
+		"gameCompleted": game_completed, "coatWorn": coat_worn,
 	}
 
 func _apply_save_dict(d: Dictionary) -> void:
@@ -3204,8 +3559,12 @@ func _apply_save_dict(d: Dictionary) -> void:
 	key_digits = Dictionary(d.get("keyDigits", {}))
 	categories = Dictionary(d.get("categories", {"knowledge": 0, "puzzles": 0, "truths": 0, "artifacts": 0, "restoration": 0, "exploration": 0}))
 	game_completed = bool(d.get("gameCompleted", false))
+	coat_worn = bool(d.get("coatWorn", false))
+	if cadet:
+		cadet.set_coat(coat_worn)
 	audio.set_act(current_act)
 	_update_labels()
+	_rebuild_inventory()
 
 func _save_game(silent: bool) -> bool:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)

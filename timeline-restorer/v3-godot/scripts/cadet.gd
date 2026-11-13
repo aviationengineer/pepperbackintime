@@ -19,8 +19,11 @@ signal arrived
 
 const SPEED := 190.0
 const WALK_SHEET := "res://art/cadet-walk.png"
-const WALK_FRAMES := 8
-const WALK_CELL := Vector2(447, 900)
+const WALK_CELL_W := 447.0
+# v3.2: the optional Colonial Coat costume swaps both sprite sets.
+const COAT_IDLE := "res://art/cadet-coat.png"
+const COAT_SHEET := "res://art/cadet-walk-coat.png"
+const COAT_CELL_W := 535.0
 const CYCLE_DISTANCE := 190.0  # one full walk cycle per 190 px
 
 var agent: NavigationAgent2D
@@ -35,6 +38,38 @@ var walk_frame_index := -1  # live cycle frame while walking (-1 = idle)
 var _step_accum := 0.0
 var _idle_texture: Texture2D
 var _walk_frames: Array[Texture2D] = []
+var coat_worn := false
+var _idle_texture_coat: Texture2D
+var _walk_frames_coat: Array[Texture2D] = []
+
+func _load_frames(sheet_path: String, cell_w: float) -> Array[Texture2D]:
+	var frames: Array[Texture2D] = []
+	var sheet := load(sheet_path) as Texture2D
+	if sheet:
+		var count := int(sheet.get_width() / cell_w)
+		for i in count:
+			var at := AtlasTexture.new()
+			at.atlas = sheet
+			at.region = Rect2(i * cell_w, 0, cell_w, sheet.get_height())
+			frames.append(at)
+	return frames
+
+func _active_frames() -> Array[Texture2D]:
+	return _walk_frames_coat if coat_worn else _walk_frames
+
+func _active_idle() -> Texture2D:
+	return _idle_texture_coat if coat_worn else _idle_texture
+
+## v3.2: toggle the Colonial Coat costume. Sprites swap immediately,
+## whether the Cadet is standing or mid-walk.
+func set_coat(worn: bool) -> void:
+	coat_worn = worn
+	if moving:
+		if walk_frame_index >= 0:
+			_set_walk_frame(mini(walk_frame_index,
+					_active_frames().size() - 1))
+	else:
+		_show_idle()
 
 func _ready() -> void:
 	agent = NavigationAgent2D.new()
@@ -43,13 +78,9 @@ func _ready() -> void:
 	add_child(agent)
 
 	_idle_texture = load("res://art/cadet.png")
-	var sheet := load(WALK_SHEET) as Texture2D
-	if sheet:
-		for i in WALK_FRAMES:
-			var at := AtlasTexture.new()
-			at.atlas = sheet
-			at.region = Rect2(i * WALK_CELL.x, 0, WALK_CELL.x, WALK_CELL.y)
-			_walk_frames.append(at)
+	_idle_texture_coat = load(COAT_IDLE)
+	_walk_frames = _load_frames(WALK_SHEET, WALK_CELL_W)
+	_walk_frames_coat = _load_frames(COAT_SHEET, COAT_CELL_W)
 
 	visual = Node2D.new()
 	visual.name = "Visual"
@@ -78,7 +109,7 @@ func walk_to(target: Vector2) -> void:
 	anim_player.stop()
 	visual.position = Vector2.ZERO
 	visual.scale = Vector2.ONE
-	if not _walk_frames.is_empty():
+	if not _active_frames().is_empty():
 		_set_walk_frame(0)
 
 func stop() -> void:
@@ -108,9 +139,10 @@ func _physics_process(delta: float) -> void:
 		return
 	walk_distance += travelled
 	# Stride sync: frame = position inside the current cycle.
-	if not _walk_frames.is_empty():
+	var frames := _active_frames()
+	if not frames.is_empty():
 		var phase := fmod(walk_distance, CYCLE_DISTANCE) / CYCLE_DISTANCE
-		var idx := int(phase * WALK_FRAMES) % WALK_FRAMES
+		var idx := int(phase * frames.size()) % frames.size()
 		if idx != walk_frame_index:
 			_set_walk_frame(idx)
 	# One footstep per half-cycle — each time a foot lands.
@@ -128,15 +160,15 @@ func _stop() -> void:
 
 func _set_walk_frame(i: int) -> void:
 	walk_frame_index = i
-	sprite.texture = _walk_frames[i]
-	# Walk cells are 447x900 (idle art is 372x900): same height and the
-	# same 0.34 scale keep the Cadet the same size, feet at the origin.
+	sprite.texture = _active_frames()[i]
+	# Walk cells share the idle art's 900 px height: the same 0.34 scale
+	# keeps the Cadet the same size, feet at the origin.
 	sprite.scale = Vector2(0.34, 0.34)
 	sprite.position = Vector2(0, -153)
 
 func _show_idle() -> void:
 	walk_frame_index = -1
-	sprite.texture = _idle_texture
+	sprite.texture = _active_idle()
 	sprite.scale = Vector2(0.34, 0.34)
 	sprite.position = Vector2(0, -153)
 	anim_player.play("idle")

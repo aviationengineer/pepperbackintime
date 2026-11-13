@@ -98,7 +98,9 @@
      ],
      "truth": "music_player",
      "anomaly": true,
-     "useTarget": "music_player"
+     "useTarget": "music_player",
+     "prop": "music_player",
+     "propW": 100
     },
     {
      "id": "bench_puzzle",
@@ -111,7 +113,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "anachronism_workshop"
+     "puzzle": "anachronism_workshop",
+     "prop": "workbench",
+     "propW": 250
     },
     {
      "id": "magnifier_ws",
@@ -124,7 +128,9 @@
       "look",
       "interact"
      ],
-     "item": "magnifier"
+     "item": "magnifier",
+     "prop": "magnifier",
+     "propW": 95
     },
     {
      "id": "leyden_jar",
@@ -137,7 +143,9 @@
       "look",
       "truth"
      ],
-     "truth": "leyden_jar"
+     "truth": "leyden_jar",
+     "prop": "leyden_jar",
+     "propW": 100
     },
     {
      "id": "franklin_ws",
@@ -165,7 +173,24 @@
       "look",
       "interact"
      ],
-     "item": "journal"
+     "item": "journal",
+     "prop": "notes_stack",
+     "propW": 120
+    },
+    {
+     "id": "coat_stand",
+     "name": "Colonial Coat",
+     "icon": "🧥",
+     "x": 9,
+     "y": 44,
+     "desc": "A handsome burgundy frock coat hangs on a stand by the door, its brass buttons polished bright. It looks about your size... Franklin would not mind a young friend borrowing a little Philadelphia style, surely.",
+     "actions": [
+      "look",
+      "interact"
+     ],
+     "item": "colonial_coat",
+     "prop": "colonial_coat",
+     "propW": 100
     }
    ],
    "exits": [
@@ -201,7 +226,9 @@
       "interact"
      ],
      "truth": "press",
-     "item": "printing_type"
+     "item": "printing_type",
+     "prop": "printing_press",
+     "propW": 250
     },
     {
      "id": "printer_npc",
@@ -229,7 +256,9 @@
       "look",
       "interact"
      ],
-     "item": "copper_wire"
+     "item": "copper_wire",
+     "prop": "copper_spool",
+     "propW": 95
     },
     {
      "id": "ink_pot",
@@ -242,7 +271,9 @@
       "look",
       "interact"
      ],
-     "item": "ink_pot"
+     "item": "ink_pot",
+     "prop": "ink_pot",
+     "propW": 85
     }
    ],
    "exits": [
@@ -291,7 +322,9 @@
       "look",
       "interact"
      ],
-     "item": "lodestone"
+     "item": "lodestone",
+     "prop": "lodestone",
+     "propW": 95
     },
     {
      "id": "plastic_bottle",
@@ -304,7 +337,9 @@
       "look",
       "truth"
      ],
-     "truth": "plastic_bottle"
+     "truth": "plastic_bottle",
+     "prop": "plastic_bottle",
+     "propW": 70
     },
     {
      "id": "apprentice_npc",
@@ -372,7 +407,9 @@
       "look",
       "interact"
      ],
-     "item": "glass_tube"
+     "item": "glass_tube",
+     "prop": "glass_tube",
+     "propW": 75
     },
     {
      "id": "electric_lamp",
@@ -385,7 +422,9 @@
       "look",
       "truth"
      ],
-     "truth": "electric_lamp"
+     "truth": "electric_lamp",
+     "prop": "electric_lamp",
+     "propW": 100
     },
     {
      "id": "shelf_books",
@@ -398,7 +437,9 @@
       "look",
       "truth"
      ],
-     "truth": "library_company"
+     "truth": "library_company",
+     "prop": "books_row",
+     "propW": 190
     },
     {
      "id": "franklin_timeline",
@@ -411,7 +452,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "sequence_franklin"
+     "puzzle": "sequence_franklin",
+     "prop": "timeline_chart",
+     "propW": 200
     }
    ],
    "exits": [
@@ -445,7 +488,9 @@
       "look",
       "interact"
      ],
-     "item": "brass_key"
+     "item": "brass_key",
+     "prop": "notice_board",
+     "propW": 200
     },
     {
      "id": "candle_stall",
@@ -458,7 +503,9 @@
       "look",
       "interact"
      ],
-     "item": "candle"
+     "item": "candle",
+     "prop": "candles",
+     "propW": 90
     },
     {
      "id": "kite_sketch",
@@ -471,7 +518,9 @@
       "look",
       "truth"
      ],
-     "truth": "kite_experiment"
+     "truth": "kite_experiment",
+     "prop": "kite_sketch",
+     "propW": 110
     }
    ],
    "exits": [
@@ -513,7 +562,9 @@
      "requirement": {
       "item": "brass_key"
      },
-     "lockedMsg": "The box is locked. It needs a brass key — the notice board in the street mentioned one lost near the market."
+     "lockedMsg": "The box is locked. It needs a brass key — the notice board in the street mentioned one lost near the market.",
+     "prop": "document_box",
+     "propW": 150
     },
     {
      "id": "sealing_wax",
@@ -526,7 +577,9 @@
       "look",
       "interact"
      ],
-     "item": "sealing_wax"
+     "item": "sealing_wax",
+     "prop": "sealing_wax",
+     "propW": 130
     },
     {
      "id": "compass",
@@ -539,7 +592,9 @@
       "look",
       "interact"
      ],
-     "item": "compass"
+     "item": "compass",
+     "prop": "compass",
+     "propW": 110
     },
     {
      "id": "globe",
@@ -552,7 +607,9 @@
       "look",
       "truth"
      ],
-     "truth": "globe_1764"
+     "truth": "globe_1764",
+     "prop": "globe",
+     "propW": 120
     }
    ],
    "exits": [
@@ -589,7 +646,9 @@
      ],
      "truth": "radio_set",
      "anomaly": true,
-     "useTarget": "radio_set"
+     "useTarget": "radio_set",
+     "prop": "radio",
+     "propW": 140
     },
     {
      "id": "mill_owner",
@@ -617,7 +676,9 @@
       "look",
       "interact"
      ],
-     "item": "wrench"
+     "item": "wrench",
+     "prop": "wrench",
+     "propW": 130
     },
     {
      "id": "power_loom",
@@ -630,7 +691,9 @@
       "look",
       "truth"
      ],
-     "truth": "power_loom"
+     "truth": "power_loom",
+     "prop": "power_loom",
+     "propW": 265
     },
     {
      "id": "loom_sequence",
@@ -643,7 +706,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "sequence_loom"
+     "puzzle": "sequence_loom",
+     "prop": "work_chart",
+     "propW": 140
     }
    ],
    "exits": [
@@ -692,7 +757,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "testimony"
+     "puzzle": "testimony",
+     "prop": "accounts_papers",
+     "propW": 150
     },
     {
      "id": "oil_can",
@@ -705,7 +772,9 @@
       "look",
       "interact"
      ],
-     "item": "oil_can"
+     "item": "oil_can",
+     "prop": "oil_can",
+     "propW": 110
     },
     {
      "id": "cotton_bale",
@@ -718,7 +787,9 @@
       "look",
       "truth"
      ],
-     "truth": "cotton_trade"
+     "truth": "cotton_trade",
+     "prop": "cotton_bale",
+     "propW": 170
     }
    ],
    "exits": [
@@ -767,7 +838,9 @@
       "look",
       "interact"
      ],
-     "item": "loom_shuttle"
+     "item": "loom_shuttle",
+     "prop": "loom_shuttle",
+     "propW": 150
     },
     {
      "id": "ledger_book",
@@ -780,7 +853,9 @@
       "look",
       "interact"
      ],
-     "item": "ledger"
+     "item": "ledger",
+     "prop": "ledger",
+     "propW": 140
     },
     {
      "id": "wire_warehouse",
@@ -793,7 +868,9 @@
       "look",
       "interact"
      ],
-     "item": "copper_wire"
+     "item": "copper_wire",
+     "prop": "copper_spool",
+     "propW": 95
     }
    ],
    "exits": [
@@ -842,7 +919,9 @@
       "look",
       "truth"
      ],
-     "truth": "telescope"
+     "truth": "telescope",
+     "prop": "telescope",
+     "propW": 190
     },
     {
      "id": "star_chart",
@@ -855,7 +934,9 @@
       "look",
       "interact"
      ],
-     "item": "star_chart"
+     "item": "star_chart",
+     "prop": "star_chart",
+     "propW": 150
     },
     {
      "id": "wax_observatory",
@@ -868,7 +949,9 @@
       "look",
       "interact"
      ],
-     "item": "sealing_wax"
+     "item": "sealing_wax",
+     "prop": "sealing_wax",
+     "propW": 130
     }
    ],
    "exits": [
@@ -905,7 +988,9 @@
      ],
      "truth": "germ_chart",
      "anomaly": true,
-     "useTarget": "germ_chart"
+     "useTarget": "germ_chart",
+     "prop": "germ_chart",
+     "propW": 200
     },
     {
      "id": "apothecary_npc",
@@ -933,7 +1018,9 @@
       "look",
       "interact"
      ],
-     "item": "ink_pot"
+     "item": "ink_pot",
+     "prop": "ink_pot",
+     "propW": 85
     },
     {
      "id": "microscope",
@@ -946,7 +1033,9 @@
       "look",
       "truth"
      ],
-     "truth": "microscope"
+     "truth": "microscope",
+     "prop": "microscope",
+     "propW": 110
     },
     {
      "id": "traveller_note",
@@ -959,7 +1048,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "cipher_letter"
+     "puzzle": "cipher_letter",
+     "prop": "sealed_letter",
+     "propW": 130
     }
    ],
    "exits": [
@@ -1008,7 +1099,9 @@
       "look",
       "interact"
      ],
-     "item": "manuscript"
+     "item": "manuscript",
+     "prop": "manuscript",
+     "propW": 110
     },
     {
      "id": "quill",
@@ -1021,7 +1114,9 @@
       "look",
       "interact"
      ],
-     "item": "quill"
+     "item": "quill",
+     "prop": "quill",
+     "propW": 70
     },
     {
      "id": "principia",
@@ -1034,7 +1129,9 @@
       "look",
       "truth"
      ],
-     "truth": "principia"
+     "truth": "principia",
+     "prop": "principia",
+     "propW": 140
     },
     {
      "id": "scholar_slate",
@@ -1047,7 +1144,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "sequence_discovery"
+     "puzzle": "sequence_discovery",
+     "prop": "slate",
+     "propW": 170
     }
    ],
    "exits": [
@@ -1096,7 +1195,9 @@
       "look",
       "truth"
      ],
-     "truth": "biplane"
+     "truth": "biplane",
+     "prop": "biplane",
+     "propW": 300
     },
     {
      "id": "flight_log",
@@ -1109,7 +1210,9 @@
       "look",
       "interact"
      ],
-     "item": "flight_log"
+     "item": "flight_log",
+     "prop": "flight_log",
+     "propW": 110
     },
     {
      "id": "spark_plug",
@@ -1122,7 +1225,9 @@
       "look",
       "interact"
      ],
-     "item": "spark_plug"
+     "item": "spark_plug",
+     "prop": "spark_plug",
+     "propW": 70
     },
     {
      "id": "assembly_notes",
@@ -1135,7 +1240,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "sequence_assembly"
+     "puzzle": "sequence_assembly",
+     "prop": "assembly_notes",
+     "propW": 150
     }
    ],
    "exits": [
@@ -1172,7 +1279,9 @@
      ],
      "truth": "turbine_blade",
      "anomaly": true,
-     "useTarget": "turbine_blade"
+     "useTarget": "turbine_blade",
+     "prop": "turbine_blade",
+     "propW": 170
     },
     {
      "id": "mechanic_npc",
@@ -1200,7 +1309,9 @@
       "look",
       "interact"
      ],
-     "item": "wrench"
+     "item": "wrench",
+     "prop": "wrench",
+     "propW": 130
     },
     {
      "id": "fabric_roll",
@@ -1213,7 +1324,9 @@
       "look",
       "interact"
      ],
-     "item": "fabric_roll"
+     "item": "fabric_roll",
+     "prop": "fabric_roll",
+     "propW": 80
     },
     {
      "id": "parts_bench",
@@ -1226,7 +1339,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "parts_pick"
+     "puzzle": "parts_pick",
+     "prop": "parts_bench",
+     "propW": 240
     }
    ],
    "exits": [
@@ -1275,7 +1390,9 @@
       "look",
       "truth"
      ],
-     "truth": "blueprint"
+     "truth": "blueprint",
+     "prop": "blueprint",
+     "propW": 200
     },
     {
      "id": "rivet_box",
@@ -1288,7 +1405,9 @@
       "look",
       "interact"
      ],
-     "item": "rivet"
+     "item": "rivet",
+     "prop": "rivet_box",
+     "propW": 140
     },
     {
      "id": "propeller_blade",
@@ -1301,7 +1420,9 @@
       "look",
       "interact"
      ],
-     "item": "propeller_blade"
+     "item": "propeller_blade",
+     "prop": "propeller_blade",
+     "propW": 55
     }
    ],
    "exits": [
@@ -1338,7 +1459,9 @@
      ],
      "truth": "core_fracture",
      "anomaly": true,
-     "puzzle": "final_code"
+     "puzzle": "final_code",
+     "prop": "fracture",
+     "propW": 170
     },
     {
      "id": "chronarch_npc",
@@ -1366,7 +1489,9 @@
       "look",
       "truth"
      ],
-     "truth": "stream_1764"
+     "truth": "stream_1764",
+     "prop": "stream",
+     "propW": 190
     }
    ],
    "exits": [
@@ -1400,7 +1525,9 @@
       "look",
       "interact"
      ],
-     "puzzle": "memory_recall"
+     "puzzle": "memory_recall",
+     "prop": "memory_franklin",
+     "propW": 150
     },
     {
      "id": "memory_mill",
@@ -1413,7 +1540,9 @@
       "look",
       "truth"
      ],
-     "truth": "stream_mill"
+     "truth": "stream_mill",
+     "prop": "memory_mill",
+     "propW": 150
     },
     {
      "id": "chronarch_sigil",
@@ -1426,7 +1555,9 @@
       "look",
       "interact"
      ],
-     "item": "chronarch_sigil"
+     "item": "chronarch_sigil",
+     "prop": "sigil",
+     "propW": 120
     }
    ],
    "exits": [
@@ -1476,7 +1607,9 @@
      "requirement": {
       "flag": "a5_core_sealed"
      },
-     "lockedMsg": "The seal is inert. The Core's fracture must be repaired first."
+     "lockedMsg": "The seal is inert. The Core's fracture must be repaired first.",
+     "prop": "final_seal",
+     "propW": 190
     }
    ],
    "exits": [
@@ -1716,6 +1849,16 @@
         "flag": "franklin_knows_light"
        },
        "next": null
+      }
+     ]
+    },
+    "coat_line": {
+     "text": "Franklin sets down his pen and beams. “Well, well! With my old coat upon your shoulders, you look a proper young Philadelphian, fit for any parlour in the city. It suits you, Cadet.”",
+     "choices": [
+      {
+       "text": "“Thank you, Mr. Franklin!”",
+       "response": "“Ha! Wear it in good health. Only mind you return it before you hop home — Deborah keeps a careful tally of my wardrobe.”",
+       "next": "n1"
       }
      ]
     }
@@ -2778,6 +2921,17 @@
    "icon": "🗝️",
    "era": "outside time",
    "category": "key",
+   "usableWith": [],
+   "combineWith": [],
+   "paradoxValue": 0
+  },
+  "colonial_coat": {
+   "id": "colonial_coat",
+   "name": "Colonial Coat",
+   "desc": "A fine burgundy frock coat with brass buttons, hanging in Franklin's workshop. Wearing it is pure style — and entirely optional. Use it from your pack to put it on or take it off.",
+   "icon": "🧥",
+   "era": "1764",
+   "category": "wardrobe",
    "usableWith": [],
    "combineWith": [],
    "paradoxValue": 0

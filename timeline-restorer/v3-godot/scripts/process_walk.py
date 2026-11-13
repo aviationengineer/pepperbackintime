@@ -85,8 +85,8 @@ def column_runs(alpha: np.ndarray):
     return [tuple(r) for r in merged]
 
 
-def slice_frames(rgba: Image.Image, alpha: np.ndarray):
-    """Split the sheet into its 8 figures. Adjacent figures overlap in
+def slice_frames(rgba: Image.Image, alpha: np.ndarray, n_frames: int = 8):
+    """Split the sheet into its figures. Adjacent figures overlap in
     column projection (stride poses are wider than the pitch) and touch in
     a few pixels, so: cut at the column-count valleys between figures,
     then keep only the largest connected component inside each slice —
@@ -95,15 +95,15 @@ def slice_frames(rgba: Image.Image, alpha: np.ndarray):
 
     counts = (alpha > 30).sum(axis=0)
     w = rgba.width
-    pitch = w / 8.0
+    pitch = w / float(n_frames)
     bounds = [0]
-    for i in range(1, 8):
+    for i in range(1, n_frames):
         cx = int(pitch * i)
         lo, hi = max(0, cx - 90), min(w, cx + 90)
         bounds.append(lo + int(np.argmin(counts[lo:hi])))
     bounds.append(w)
     frames = []
-    for i in range(8):
+    for i in range(n_frames):
         x0, x1 = bounds[i], bounds[i + 1]
         crop = np.array(rgba.crop((x0, 0, x1, rgba.height)))
         mask = crop[:, :, 3] > 30
@@ -143,14 +143,11 @@ def slice_frames(rgba: Image.Image, alpha: np.ndarray):
     return frames, bounds
 
 
-def main():
-    srcs = sorted(RAW.glob("media-generation-cadet-walk-sheet-*.png"))
-    assert srcs, "walk sheet not found in art/raw/"
-    src = srcs[-1]
+def build(src: Path, out: Path, n_frames: int):
     im = Image.open(src)
     print(f"source: {src.name} {im.size}")
     rgba, alpha = remove_background(im)
-    frames, bounds = slice_frames(rgba, alpha)
+    frames, bounds = slice_frames(rgba, alpha, n_frames)
     print(f"sliced {len(frames)} frames at bounds {bounds}")
     print("frame sizes:", [f.size for f in frames])
     # One shared scale factor: tallest frame becomes TARGET_H tall.
@@ -163,28 +160,36 @@ def main():
         x = i * cell_w + (cell_w - f.width) // 2
         y = TARGET_H - f.height  # feet on the common baseline
         strip.paste(f, (x, y), f)
-    strip.save(OUT, "PNG", optimize=True)
-    print(f"wrote {OUT.name}: {strip.size} cell={cell_w}x{TARGET_H} "
+    strip.save(out, "PNG", optimize=True)
+    print(f"wrote {out.name}: {strip.size} cell={cell_w}x{TARGET_H} "
           f"frames={len(frames)} scale={scale:.3f}")
+    return cell_w
 
 
-def clean_strip():
+def main():
+    srcs = sorted(RAW.glob("media-generation-cadet-walk-sheet-*.png"))
+    assert srcs, "walk sheet not found in art/raw/"
+    build(srcs[-1], OUT, 8)
+
+
+def clean_strip(out: Path = OUT, n_frames: int = 8, corner_cuts: bool = True):
     """Final pass on the assembled strip: in each cell, drop alpha
     components that are tiny (< 2% of the cell's main figure) and sit in
     the cell's outer 15% side bands — the last slivers of neighbouring
     figures that were painted overlapping the hero figure itself."""
     from scipy import ndimage as _ndi
 
-    strip = Image.open(OUT)
+    strip = Image.open(out)
     arr = np.array(strip)
-    cell_w = strip.width // 8
-    # Hand-verified corner cuts for cell 5 of THIS sheet: the neighbours'
-    # boot tips are painted into the hero figure's silhouette there (one
-    # connected component, so the generic passes cannot remove them).
-    # Rects are (x0, y0, x1, y1) in cell space; the hero spans x 44-402.
-    for (cx0, cy0, cx1, cy1) in [(0, 780, 42, 900), (404, 650, cell_w, 900)]:
-        arr[cy0:cy1, 5 * cell_w + cx0:5 * cell_w + cx1, 3] = 0
-    for i in range(8):
+    cell_w = strip.width // n_frames
+    if corner_cuts:
+        # Hand-verified corner cuts for cell 5 of THIS sheet: the neighbours'
+        # boot tips are painted into the hero figure's silhouette there (one
+        # connected component, so the generic passes cannot remove them).
+        # Rects are (x0, y0, x1, y1) in cell space; the hero spans x 44-402.
+        for (cx0, cy0, cx1, cy1) in [(0, 780, 42, 900), (404, 650, cell_w, 900)]:
+            arr[cy0:cy1, 5 * cell_w + cx0:5 * cell_w + cx1, 3] = 0
+    for i in range(n_frames):
         cell = arr[:, i * cell_w:(i + 1) * cell_w, 3]
         mask = cell > 30
         lab, n = _ndi.label(mask)
@@ -200,10 +205,20 @@ def clean_strip():
             if in_band:
                 cell[lab == c] = 0
         arr[:, i * cell_w:(i + 1) * cell_w, 3] = cell
-    Image.fromarray(arr, "RGBA").save(OUT, "PNG", optimize=True)
+    Image.fromarray(arr, "RGBA").save(out, "PNG", optimize=True)
     print("strip cleaned")
 
 
 if __name__ == "__main__":
-    main()
-    clean_strip()
+    import sys
+    if "--coat" in sys.argv:
+        # v3.2: the Colonial Coat walk sheet has 7 frames and gets the
+        # generic band cleanup only (no hand-tuned corner cuts).
+        coat_srcs = sorted(RAW.glob("*v32-cadet-coat-walk-sheet*.webp"))
+        assert coat_srcs, "coat walk sheet not found in art/raw/"
+        coat_out = ROOT / "art" / "cadet-walk-coat.png"
+        build(coat_srcs[-1], coat_out, 7)
+        clean_strip(coat_out, 7, corner_cuts=False)
+    else:
+        main()
+        clean_strip()
